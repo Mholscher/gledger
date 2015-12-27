@@ -1,7 +1,3 @@
-#    Copyright 2015 Menno Hölscher
-#
-#    This file is part of gledger.
-
 #    gledger is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Lesser General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
@@ -15,21 +11,13 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-import configparser
-from flask_wtf.csrf import CsrfProtect
+from flask.ext.wtf import Form
+from wtforms import StringField, TextAreaField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, ValidationError, Length
 
-app = Flask(__name__)
-config = configparser.ConfigParser()
-config.read('localgledger.cfg')
-app.config['SQLALCHEMY_DATABASE_URI'] = config['DATABASE']['SQLALCHEMY_DATABASE_URI']
-db = SQLAlchemy(app)
-app.config['SECRET_KEY'] = config['KEYS']['SECRET_KEY']
-CsrfProtect(app)
+class AccountForm(Form) :
+    name = StringField('Account', validators = [DataRequired()])
+    parent = StringField('Parent')
+    role = StringField('Type', validators = [Length(min=1, max=1)])
+    update = SubmitField('Update account')
 
-from glmodels.glaccount import Accounts
-from glmodels.glaccount import Balances
-from glmodels.glposting import Postings
-from glmodels.glposting import Journals
-from . import views

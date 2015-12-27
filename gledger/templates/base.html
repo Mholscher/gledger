@@ -1,0 +1,14 @@
+<!doctype html>
+<title>{{localtitle}} : General Ledger</title>
+<head>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class=page>
+  {% for message in get_flashed_messages() %}
+    <div class=flash>{{ message }}</div>
+  {% endfor %}
+  {% block searches %}{%endblock%}
+  {% block content %}{% endblock %}
+</div>
+</body>

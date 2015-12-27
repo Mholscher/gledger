@@ -1,5 +1,22 @@
+#    Copyright 2015 Menno Hölscher
+#
+#    This file is part of gledger.
+
+#    gledger is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Lesser General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+
+#    gledger is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Lesser General Public License for more details.
+
+#    You should have received a copy of the GNU Lesser General Public License
+#    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
+
 from gledger import db
-import flask.ext.sqlalchemy
+import flask_sqlalchemy
 from sqlalchemy.orm import validates
 from datetime import date
 
@@ -41,15 +58,32 @@ class Accounts(db.Model) :
             
     @classmethod
     def get_by_id(cls, requested_id) :
+        """ Get an account form the database by id """
         return db.session.query(Accounts).filter_by(id=requested_id).one()
 
     @classmethod
     def get_by_name(cls, requested_name) :
-        return db.session.query(Accounts).filter_by(name=requested_name).one()
+        """ Get an account form the database by name
+        
+        The name of an account is pointing to a single account row."""
+        acc = db.session.query(Accounts).filter_by(name=requested_name).one()
+        return acc
 
     def _balance_for(self) :
         """ Set up a query for the balance(s) of this account """
         return db.session.query(Balances).filter_by(accounts=self)
+    
+    def parentaccount(self) :
+        """ Get the parent of this account as an account """
+        if hasattr(self, 'parent_account') :
+            return self.parent_account
+        else :
+            parent_accounts = db.session.query(Accounts).filter_by(id=self.parent).all()
+            if len(parent_accounts) > 0 :
+                self.parentaccount = parent_accounts[0]
+                return parent_accounts[0]
+            else :
+                return None
     
     def __repr__(self) :
         return 'Account {} id {}'.format(self.name, self.id)
@@ -66,13 +100,15 @@ class Accounts(db.Model) :
         else :
             return balance_last_known[0].amount
         
-    def balance_ultimo(self, postmonth) :
+    def balance_ultimo(self, postmonth, balance_so_far = 0) :
         """ Return the balance of the account at the end of the postmonth """
         balance_requested = self._balance_for().filter(Balances.postmonth <= postmonth).order_by(Balances.postmonth.desc()).all()
-        if balance_requested == [] :
-            return 0
-        else :
-            return balance_requested[0].amount
+        if balance_requested != [] :
+ ###           print('Adding balance ' + format(balance_requested[0].amount) + ' for ' + self.name)
+            balance_so_far += balance_requested[0].amount
+        for child in self.children :
+            balance_so_far = child.balance_ultimo(postmonth, balance_so_far)
+        return balance_so_far
         
     
 class Balances(db.Model) :
@@ -100,8 +136,7 @@ class Balances(db.Model) :
     account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
     postmonth = db.Column(db.Numeric(precision = 6))
     value_date = db.Column(db.DateTime, nullable=False)
-    currency = db.Column(db.String(3))
-    amount = db.Column(db.Numeric(precision = 12, scale = 2))
+    amount = db.Column(db.Numeric(precision = 14))
     updated_at = db.Column(db.DateTime) 
     db.Index('bymonth', 'account_id', 'postmonth')
     
@@ -110,7 +145,7 @@ class Balances(db.Model) :
         """ the post month can only be the current or an existing, active month"""
         months_db = db.session.query(Postmonths).filter_by(postmonth=postmonth).all()
         if (months_db != []) :
-            if (months_db[0].monthstat == 'a') :
+            if (months_db[0].monthstat == ACTIVE) :
                 return postmonth
             else :
                 raise ValueError('Postmonth not active')       
@@ -126,7 +161,7 @@ class Balances(db.Model) :
         db.session.update(self)
 
     def __repr__(self) :
-        return 'Account balance {}, account {}, id {}'.format(self.amount, self.account_id, self.id)
+        return 'Account balance {} account {} id {}'.format(self.amount, self.account_id, self.id)
     
 class Postmonths(db.Model) :
     

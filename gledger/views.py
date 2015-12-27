@@ -1,11 +1,14 @@
 from . import app
 import glmodels.glaccount as accmodel
+from flask import render_template
+from glviews.accountviews import AccountView
+from glviews.forms import AccountForm
 
 @app.route('/')
 def index() :
     """This is the index page of the application. It shows
     a list of accounts """
-    return 'Index pagina'
+    return 'De index pagina'
 
 @app.route('/accounts/new', methods=['GET', 'POST'])
 def createaccount() :
@@ -30,8 +33,9 @@ def accounts(accountName=None) :
     """    
     if accountName is None :
         return 'Rekeningen lijst'
-#    localAccount = accmodel.Accounts.get_by_name(accountName)
-    return 'Rekening ' + accountName
+    accountview = AccountView(name=accountName).asDictionary()
+    accountForm = AccountForm()
+    return render_template('account.html', localtitle=accountName, accountview=accountview, form = accountForm)
 
 @app.route('/balance/<accountName>/month/<postmonth>', strict_slashes=False)
 @app.route('/balance/<accountName>', strict_slashes=False)
