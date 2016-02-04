@@ -1,8 +1,9 @@
-from . import app
+from . import app, db
 import glmodels.glaccount as accmodel
-from flask import render_template
+from flask import render_template, flash, request, redirect, url_for
 from glviews.accountviews import AccountView
 from glviews.forms import AccountForm
+import logging
 
 @app.route('/')
 def index() :
@@ -32,10 +33,29 @@ def accounts(accountName=None) :
     If an account name is given, it shows the information for that account
     """    
     if accountName is None :
-        return 'Rekeningen lijst'
+        logging.debug('Aborting: account name is None')
+        abort(500)
+    logging.debug('Get account from database')
+    account = accmodel.Accounts.get_by_name(accountName)
+    logging.debug('Account gelezen: ' + account.name + '(id '+ str(account.id) + ')')
+    accountForm = AccountForm(formdata = request.form, obj = account)
+    logging.debug('accountForm name '+ accountForm.name.data)
+    if accountForm.validate_on_submit() :
+        logging.debug('Validated as correct')
+        account.role = accountForm.role.data
+        if accountForm.parent.data :
+            parent = accmodel.Accounts.get_by_name(accountForm.parent.data)
+            account.parent = parent.id
+        else :
+            parent = None
+        account.add()
+        logging.debug('Added account ' + account.name + ' to session')
+        db.session.commit()
+        flash('Account '+ accountName + ' changed')
+        logging.debug('Account '+ accountName + ' changed')
+        return redirect(url_for('accountList'))
     accountview = AccountView(name=accountName).asDictionary()
-    accountForm = AccountForm()
-    return render_template('account.html', localtitle=accountName, accountview=accountview, form = accountForm)
+    return render_template('account.html', accountview=accountview, form = accountForm)
 
 @app.route('/balance/<accountName>/month/<postmonth>', strict_slashes=False)
 @app.route('/balance/<accountName>', strict_slashes=False)

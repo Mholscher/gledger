@@ -22,6 +22,7 @@ import glmodels.glaccount as accmodel
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import date
+import logging
 
 class TestDBCreation(unittest.TestCase) :
     def setUp(self) :
@@ -60,8 +61,11 @@ class TestDBCreation(unittest.TestCase) :
         
     def test_can_add_balance(self) :
         """We can add a balance to an account """
-        acc6 = accmodel.Accounts(name='creditors', role='L')
-        acc6.add()
+        try :
+            acc6 = accmodel.Accounts.get_by_name('creditors')
+        except  NoResultFound :
+            acc6 = accmodel.Accounts(name='creditors', role='L')
+            acc6.add()
         bal1 = accmodel.Balances(postmonth=accmodel.postmonth_for(date.today()), amount=1215, value_date='2015-07-21')
         bal1.add()
         acc6.balances.append(bal1)
@@ -296,21 +300,63 @@ class TestViewFunction(unittest.TestCase) :
     
     def setUp(self) :
         self.app = gledger.app.test_client()
+        self.app.testing = True
         acc23 = accmodel.Accounts(name='creditors', role='L')
         acc23.add()
         acc24 = accmodel.Accounts(name='creditorparent', role='L')
         acc24.add()
         acc24.children.append(acc23)
-        gledger.db.session.flush()
+        gledger.db.session.commit()
         
     def tearDown(self) :
-        gledger.db.session.rollback() 
+        try :
+            acc23 = accmodel.Accounts.get_by_name('creditors')
+            gledger.db.session.delete(acc23)
+        except SQLAlchemyEror :
+            pass
+        try :
+            acc24 = accmodel.Accounts.get_by_name('creditorparent')
+            gledger.db.session.delete(acc24)
+        except SQLAlchemyEror :
+            pass
+        gledger.db.session.commit() 
+        
         
     def test_account_view(self) :
+        """ Test if the account page returns the account name """
+        logging.debug('Test getting account view') 
         rv = self.app.get('/accounts/creditors')
         assert b'creditors' in rv.data
-    
         
+    def test_account_post(self) :
+        """ Test if account role can be changed """
+        logging.debug('before posting')
+        import pdb ; pdb.set_trace()
+        rv = self.app.post('/accounts/creditors', data = dict(Account = "creditors", Parent = None, Type = "A"),
+            follow_redirects=True)
+        logging.debug('Posting change of role done')
+        acc25 = accmodel.Accounts.get_by_name("creditors")
+        self.assertEqual(acc25.role, 'A', 'Creditors account should be changed to asset')
+    
+    def test_set_parent(self) :
+        """ Test if account parentage can be set """
+        logging.debug('Before setting parent')
+        acc26 = accmodel.Accounts(name='creditorgranny', role='L')
+        acc26.add()
+        gledger.db.session.commit()
+        logging.debug('Granny added to database; now the transaction')
+        rv = self.app.post('/accounts/creditorparent', data = dict(Account = "creditorparent", 
+                                                            Parent = 'creditorgranny', Type = "A"),
+            follow_redirects=True)
+        logging.debug('Transaction done, now re-read accounts...')
+        parent = accmodel.Accounts.get_by_name('creditorparent')
+        acc26 = accmodel.Accounts.get_by_name('creditorgranny')
+        self.assertEqual(acc26.id, parent.parent, 'Not able to set parent property') 
+        gledger.db.session.delete(parent)
+        gledger.db.session.delete(acc26)
+        gledger.db.session.commit()
+
+
 def add_postmonths(monthlist) :
     """Add the postmonths requested in the list to the session """
     for postmonth in monthlist :

@@ -32,8 +32,12 @@ class AccountView() :
             self.account = model.Accounts.get_by_id(self.id)
         else :
             self.account = model.Accounts.get_by_name(self.name)
-        self.parent = self.account.parentaccount()
-        self.children = self.account.children
+        if self.account :
+            self.parent = self.account.parentaccount()
+            self.children = self.account.children
+        else :
+            self.parent = None
+            self.children = []
         
     def _account_dictionary(self) :
         if (not hasattr(self, 'account')) or (self.account is None) :

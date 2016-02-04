@@ -11,13 +11,17 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask.ext.wtf import Form
-from wtforms import StringField, TextAreaField, PasswordField, SubmitField
+from flask_wtf import Form
+from wtforms import StringField, TextAreaField, PasswordField, SubmitField, SelectField
 from wtforms.validators import DataRequired, ValidationError, Length
 
 class AccountForm(Form) :
+    """ The form for creating and updating accounts.
+    
+    All fields of the account can be updated. For now the role is
+    hardcoded in the form. Should be refactored to come from the model. """
     name = StringField('Account', validators = [DataRequired()])
     parent = StringField('Parent')
-    role = StringField('Type', validators = [Length(min=1, max=1)])
+    role = SelectField('Type', choices = [('A', 'Assets'), ('L', 'Liabilities'), ('I', 'Income'), ('E', 'Expense')])
     update = SubmitField('Update account')
 
