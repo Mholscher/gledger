@@ -1,0 +1,38 @@
+GLedger GLModels - The GLedger model classes
+============================================
+    
+The GLModels module contains the classes of the General Ledger model.
+
+These models are the building blocks for the application. They contain the fields in the database specified as SQLAlchemy mappers. The classes these mappers describe are also the classes where the system calls functions on, to return instances of the classes and to alter the attributes of the classes.
+
+The account
+-----------
+
+
+
+The account balance
+-------------------
+
+
+
+Interlude - the ledger structure
+--------------------------------
+
+Accounts are structured as a tree. At the top there is the trial balance account. All accounts link to their parent, when you want to know what children an account has, you find the ones that link to this one as its parent. Any account can only have one parent, one account has no parent.
+
+..  image:: _static/Rekeningstructuur.png
+
+The posting
+-----------
+
+
+
+The journal
+-----------
+Journals can be entered through the API. Journals need to balance, the debit and credit entries need to add up to zero for each journal. Journals, contain postings that will contain the account to post to, the value dat and the posting month. The posting month defaults to the current month, but for corrections it is possible to post to another posting month.
+
+The posting month
+-----------------
+To prevent accidental updating of posting months that are considered done, these can be closed. This prevents the system from accepting postings, actually all of the journal will be rejected.
+
+

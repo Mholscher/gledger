@@ -1,0 +1,184 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>glviews.accountviews &mdash; GLedger : General Ledger 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/bizstyle.js"></script>
+    <link rel="top" title="GLedger : General Ledger 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">GLedger : General Ledger 1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for glviews.accountviews</h1><div class="highlight"><pre>
+<span class="c">#    gledger is free software: you can redistribute it and/or modify</span>
+<span class="c">#    it under the terms of the GNU Lesser General Public License as published by</span>
+<span class="c">#    the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c">#    (at your option) any later version.</span>
+
+<span class="c">#    gledger is distributed in the hope that it will be useful,</span>
+<span class="c">#    but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c">#    GNU Lesser General Public License for more details.</span>
+
+<span class="c">#    You should have received a copy of the GNU Lesser General Public License</span>
+<span class="c">#    along with gledger.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="kn">import</span> <span class="nn">glmodels.glaccount</span> <span class="kn">as</span> <span class="nn">model</span> 
+
+<div class="viewcode-block" id="AccountView"><a class="viewcode-back" href="../../GLAPI.html#glviews.accountviews.AccountView">[docs]</a><span class="k">class</span> <span class="nc">AccountView</span><span class="p">()</span> <span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; This class collects the data for displaying an existing account</span>
+<span class="sd">    </span>
+<span class="sd">    The view is a data collection which concerns everything</span>
+<span class="sd">    viewed on the accounts maintenance screen. </span>
+<span class="sd">..  note:: </span>
+
+<span class="sd">        The way the collection is produced is as a dictionary with</span>
+<span class="sd">        embedded data, for the account itself as strings,</span>
+<span class="sd">        for the dependents as dictionaries. </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">account</span> <span class="o">=</span> <span class="bp">None</span>
+        
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AccountView.createView"><a class="viewcode-back" href="../../GLAPI.html#glviews.accountviews.AccountView.createView">[docs]</a>    <span class="k">def</span> <span class="nf">createView</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span>  <span class="nb">id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span> <span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Creates a view for the id (preferred) or</span>
+<span class="sd">        name passed as an argument. If the account does</span>
+<span class="sd">        not exist, caller will receive the exception. It is</span>
+<span class="sd">        not caught...</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;An id or name for an account must be given&#39;</span><span class="p">)</span>
+        <span class="c"># prefer id to name for fetching an account:</span>
+        <span class="n">accountView</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="p">:</span>
+            <span class="n">accountView</span><span class="o">.</span><span class="n">account</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">Accounts</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+        <span class="k">else</span> <span class="p">:</span>
+            <span class="n">accountView</span><span class="o">.</span><span class="n">account</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">Accounts</span><span class="o">.</span><span class="n">get_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">accountView</span><span class="o">.</span><span class="n">account</span> <span class="p">:</span>
+            <span class="n">accountView</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">accountView</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">parentaccount</span><span class="p">()</span>
+            <span class="n">accountView</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">accountView</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">children</span>
+        <span class="k">else</span> <span class="p">:</span>
+            <span class="n">accountView</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">accountView</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">accountView</span></div>
+        
+    <span class="k">def</span> <span class="nf">_account_dictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;account&#39;</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">account</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="p">:</span>
+            <span class="k">raise</span><span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="s">&#39;Account should exist and be populated&#39;</span><span class="p">)</span>
+        <span class="c"># Dispatch on columns in account, default use value </span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;role&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">role</span> <span class="p">}</span>
+    
+    <span class="k">def</span> <span class="nf">_parent_name_and_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="c"># The check should not be necessary. The contract is: call ONLY if parent exists</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;parent&#39;</span><span class="p">))</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;id&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;name&#39;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+    
+    <span class="k">def</span> <span class="nf">_dictionary_from_childlist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="n">childlist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">children</span> <span class="p">:</span>
+            <span class="n">childlist</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s">&#39;id&#39;</span> <span class="p">:</span> <span class="n">child</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">child</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">childlist</span>
+            
+<div class="viewcode-block" id="AccountView.asDictionary"><a class="viewcode-back" href="../../GLAPI.html#glviews.accountviews.AccountView.asDictionary">[docs]</a>    <span class="k">def</span> <span class="nf">asDictionary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the accountview as a dictionary.</span>
+<span class="sd">        </span>
+<span class="sd">        This is primarily thought of as a halfway house</span>
+<span class="sd">        to create the views, be it json or html. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">asDictionary</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;account&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_account_dictionary</span><span class="p">(),</span> <span class="s">&quot;children&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dictionary_from_childlist</span><span class="p">()</span> <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">:</span>
+            <span class="n">asDictionary</span><span class="p">[</span><span class="s">&quot;parent&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent_name_and_id</span><span class="p">()</span>
+        <span class="n">asDictionary</span><span class="p">[</span><span class="s">&quot;localtitle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Account &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">asDictionary</span></div></div>
+    
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">GLedger : General Ledger 1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Menno Hölscher.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+    </div>
+  </body>
+</html>

@@ -22,13 +22,10 @@ from flask_wtf.csrf import CsrfProtect
 import logging
 
 app = Flask(__name__)
-config = configparser.ConfigParser()
-config.read('localgledger.cfg')
-app.config['SQLALCHEMY_DATABASE_URI'] = config['DATABASE']['SQLALCHEMY_DATABASE_URI']
+app.config.from_pyfile('localgledger.cfg')
+
 db = SQLAlchemy(app)
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
-app.config['SECRET_KEY'] = config['KEYS']['SECRET_KEY']
-CsrfProtect(app)
+# CsrfProtect(app)
 logging.basicConfig(filename='gledger.log', level=logging.DEBUG) 
 logging.debug('Debug logging')
 

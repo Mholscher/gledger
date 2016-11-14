@@ -1,0 +1,126 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>glviews.forms &mdash; GLedger : General Ledger 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/bizstyle.js"></script>
+    <link rel="top" title="GLedger : General Ledger 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">GLedger : General Ledger 1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for glviews.forms</h1><div class="highlight"><pre>
+<span class="c">#    gledger is free software: you can redistribute it and/or modify</span>
+<span class="c">#    it under the terms of the GNU Lesser General Public License as published by</span>
+<span class="c">#    the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c">#    (at your option) any later version.</span>
+
+<span class="c">#    gledger is distributed in the hope that it will be useful,</span>
+<span class="c">#    but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c">#    GNU Lesser General Public License for more details.</span>
+
+<span class="c">#    You should have received a copy of the GNU Lesser General Public License</span>
+<span class="c">#    along with gledger.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="kn">from</span> <span class="nn">flask_wtf</span> <span class="kn">import</span> <span class="n">Form</span>
+<span class="kn">from</span> <span class="nn">wtforms</span> <span class="kn">import</span> <span class="n">StringField</span><span class="p">,</span> <span class="n">TextAreaField</span><span class="p">,</span> <span class="n">PasswordField</span><span class="p">,</span> <span class="n">SubmitField</span><span class="p">,</span> <span class="n">SelectField</span>
+<span class="kn">from</span> <span class="nn">wtforms.validators</span> <span class="kn">import</span> <span class="n">DataRequired</span><span class="p">,</span> <span class="n">ValidationError</span><span class="p">,</span> <span class="n">Length</span>
+
+<div class="viewcode-block" id="AccountForm"><a class="viewcode-back" href="../../GLAPI.html#glviews.forms.AccountForm">[docs]</a><span class="k">class</span> <span class="nc">AccountForm</span><span class="p">(</span><span class="n">Form</span><span class="p">)</span> <span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; The form for creating and updating accounts.</span>
+<span class="sd">    </span>
+<span class="sd">    All fields of the account can be updated. For now the role is</span>
+<span class="sd">    hardcoded in the form. #TODO Should be refactored to come from the model. &quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">StringField</span><span class="p">(</span><span class="s">&#39;Account&#39;</span><span class="p">,</span> <span class="n">validators</span> <span class="o">=</span> <span class="p">[</span><span class="n">DataRequired</span><span class="p">()])</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">StringField</span><span class="p">(</span><span class="s">&#39;Parent&#39;</span><span class="p">)</span>
+    <span class="n">role</span> <span class="o">=</span> <span class="n">SelectField</span><span class="p">(</span><span class="s">&#39;Type&#39;</span><span class="p">,</span> <span class="n">choices</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;Assets&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="s">&#39;Liabilities&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="s">&#39;Income&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;E&#39;</span><span class="p">,</span> <span class="s">&#39;Expense&#39;</span><span class="p">)])</span>
+    <span class="n">update</span> <span class="o">=</span> <span class="n">SubmitField</span><span class="p">(</span><span class="s">&#39;Update account&#39;</span><span class="p">)</span></div>
+    
+<span class="k">class</span> <span class="nc">NewAccountForm</span><span class="p">(</span><span class="n">AccountForm</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">update</span> <span class="o">=</span> <span class="n">SubmitField</span><span class="p">(</span><span class="s">&#39;Save and list&#39;</span><span class="p">)</span>
+    <span class="n">addmore</span> <span class="o">=</span> <span class="n">SubmitField</span><span class="p">(</span><span class="s">&#39;Save, add more&#39;</span><span class="p">)</span>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">GLedger : General Ledger 1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Menno Hölscher.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+    </div>
+  </body>
+</html>

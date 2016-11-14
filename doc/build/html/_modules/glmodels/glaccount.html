@@ -1,0 +1,345 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>glmodels.glaccount &mdash; GLedger : General Ledger 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/bizstyle.js"></script>
+    <link rel="top" title="GLedger : General Ledger 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">GLedger : General Ledger 1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for glmodels.glaccount</h1><div class="highlight"><pre>
+<span class="c">#    Copyright 2015 Menno Hölscher</span>
+<span class="c">#</span>
+<span class="c">#    This file is part of gledger.</span>
+
+<span class="c">#    gledger is free software: you can redistribute it and/or modify</span>
+<span class="c">#    it under the terms of the GNU Lesser General Public License as published by</span>
+<span class="c">#    the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c">#    (at your option) any later version.</span>
+
+<span class="c">#    gledger is distributed in the hope that it will be useful,</span>
+<span class="c">#    but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c">#    GNU Lesser General Public License for more details.</span>
+
+<span class="c">#    You should have received a copy of the GNU Lesser General Public License</span>
+<span class="c">#    along with gledger.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="kn">from</span> <span class="nn">gledger</span> <span class="kn">import</span> <span class="n">db</span>
+<span class="c"># import flask_sqlalchemy</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">validates</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
+
+
+<div class="viewcode-block" id="Accounts"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts">[docs]</a><span class="k">class</span> <span class="nc">Accounts</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Accounts models the &quot;immutable&quot; properties of an account</span>
+<span class="sd">    </span>
+<span class="sd">    Accounts have the following fields:</span>
+<span class="sd">        :id: a sequence number</span>
+<span class="sd">        :name: the accounts account &quot;number&quot; as the user wants to see it</span>
+<span class="sd">        :role: asset, liability, income, expense</span>
+<span class="sd">        :parent: its place in the hierarchy, like an adjacency list</span>
+<span class="sd">        :children: the list of dependents</span>
+<span class="sd">        :balances: the balances for the account</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">VALID_ROLES</span>
+    <span class="n">VALID_ROLES</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="s">&#39;E&#39;</span><span class="p">,</span> <span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;L&#39;</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot; The list of valid roles.</span>
+<span class="sd">    </span>
+<span class="sd">        :I: Income</span>
+<span class="sd">        :E: Expense</span>
+<span class="sd">        :A: Asset</span>
+<span class="sd">        :L: Liability </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;accounts&#39;</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">Sequence</span><span class="p">(</span><span class="s">&#39;account_id_seq&#39;</span><span class="p">),</span><span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="mi">15</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">unique</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">role</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;accounts.id&#39;</span><span class="p">))</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Accounts&#39;</span><span class="p">)</span>
+    <span class="n">balances</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Balances&#39;</span><span class="p">,</span> <span class="n">backref</span> <span class="o">=</span> <span class="s">&#39;accounts&#39;</span><span class="p">)</span>
+    <span class="n">updated_at</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">DateTime</span><span class="p">)</span> 
+    
+    <span class="nd">@validates</span><span class="p">(</span><span class="s">&#39;role&#39;</span><span class="p">)</span> 
+    <span class="k">def</span> <span class="nf">validate_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VALID_ROLES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Account role invalid&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">role</span>
+            
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Accounts.get_by_id"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.get_by_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_by_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">requested_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get an account form the database by id &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">requested_id</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Accounts.get_by_name"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.get_by_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_by_name</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">requested_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get an account from the database by name</span>
+<span class="sd">        </span>
+<span class="sd">        The name of an account is pointing to a single account row.</span>
+<span class="sd">        </span>
+<span class="sd">        #TODO protect to return an applicatioen specific ValueError</span>
+<span class="sd">        not a ResultNotFound.&quot;&quot;&quot;</span>
+        <span class="n">acc</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">requested_name</span><span class="p">)</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">acc</span></div>
+    
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Accounts.create_account"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.create_account">[docs]</a>    <span class="k">def</span> <span class="nf">create_account</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">parent_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                       <span class="n">parent_id</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create an account and add it as a child.</span>
+<span class="sd">        </span>
+<span class="sd">        This scripts all things to be done for adding an account</span>
+<span class="sd">        while also attaching it in the structure. If either</span>
+<span class="sd">        parent_id or parent_name is filled, the method adds the </span>
+<span class="sd">        account created to the children.</span>
+<span class="sd">        </span>
+<span class="sd">        Checks are made:</span>
+<span class="sd">        </span>
+<span class="sd">            1.   the account to be added doesn&#39;t exist</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">pdb</span><span class="p">;</span> <span class="n">pdb</span><span class="o">.</span><span class="n">set_trace</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="p">)</span></div>
+    
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Accounts.account_exists"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.account_exists">[docs]</a>    <span class="k">def</span> <span class="nf">account_exists</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">requested_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">requested_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Retrun if an account exists, presented with an ID or </span>
+<span class="sd">        an account name </span>
+<span class="sd">        #TODO Raise an exception if no ID or name is passed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">requested_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">requested_id</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="o">==</span> <span class="p">[])</span>
+        <span class="k">if</span> <span class="n">requested_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">requested_name</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="o">==</span> <span class="p">[])</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+    <span class="k">def</span> <span class="nf">_balance_for</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set up a query for the balance(s) of this account &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Balances</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">accounts</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+    
+<div class="viewcode-block" id="Accounts.parentaccount"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.parentaccount">[docs]</a>    <span class="k">def</span> <span class="nf">parentaccount</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the parent of this account as an account &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;parent_account&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent_account</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parent_accounts</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parent_accounts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parentaccount</span> <span class="o">=</span> <span class="n">parent_accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">parent_accounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span></div>
+    
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">displayStr</span> <span class="o">=</span> <span class="s">&#39;Account(name = {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">role</span><span class="p">:</span>
+            <span class="n">displayStr</span> <span class="o">=</span> <span class="n">displayStr</span> <span class="o">+</span> <span class="s">&#39;, role = {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">role</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;)&#39;</span>
+        <span class="k">return</span> <span class="n">displayStr</span>
+    
+<div class="viewcode-block" id="Accounts.add"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add this account to the session &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Accounts.update_role_or_parent"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.update_role_or_parent">[docs]</a>    <span class="k">def</span> <span class="nf">update_role_or_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_role</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">new_parent</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Update the parent and or role attribute.</span>
+<span class="sd">        </span>
+<span class="sd">        These are the only attributes that may be updated. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">new_parent</span><span class="p">:</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">Accounts</span><span class="o">.</span><span class="n">get_by_name</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">new_parent</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Account &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; (new parent) does not exist&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_role</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="n">new_role</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span></div>
+        
+<div class="viewcode-block" id="Accounts.current_balance"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.current_balance">[docs]</a>    <span class="k">def</span> <span class="nf">current_balance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the last known balance of the account &quot;&quot;&quot;</span>
+        <span class="n">balance_last_known</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_balance_for</span><span class="p">()</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Balances</span><span class="o">.</span><span class="n">postmonth</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">balance_last_known</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">balance_last_known</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">amount</span></div>
+        
+<div class="viewcode-block" id="Accounts.balance_ultimo"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.balance_ultimo">[docs]</a>    <span class="k">def</span> <span class="nf">balance_ultimo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">postmonth</span><span class="p">,</span> <span class="n">balance_so_far</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the balance of the account at the end of the postmonth &quot;&quot;&quot;</span>
+        <span class="n">balance_requested</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_balance_for</span><span class="p">()</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Balances</span><span class="o">.</span><span class="n">postmonth</span> <span class="o">&lt;=</span> <span class="n">postmonth</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Balances</span><span class="o">.</span><span class="n">postmonth</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">balance_requested</span> <span class="o">!=</span> <span class="p">[]:</span>
+ <span class="c">###           print(&#39;Adding balance &#39; + format(balance_requested[0].amount) + &#39; for &#39; + self.name)</span>
+            <span class="n">balance_so_far</span> <span class="o">+=</span> <span class="n">balance_requested</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">amount</span>
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">children</span><span class="p">:</span>
+            <span class="n">balance_so_far</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">balance_ultimo</span><span class="p">(</span><span class="n">postmonth</span><span class="p">,</span> <span class="n">balance_so_far</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">balance_so_far</span></div></div>
+        
+    
+<div class="viewcode-block" id="Balances"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Balances">[docs]</a><span class="k">class</span> <span class="nc">Balances</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Balances model the balances at different moments of time</span>
+<span class="sd">    </span>
+<span class="sd">    A balance is created for each accounting period of a month.</span>
+<span class="sd">    After the end of the month it retains the ultimo balance</span>
+<span class="sd">    for further reference. During the accounting month it contains the </span>
+<span class="sd">    current balance.</span>
+<span class="sd">    </span>
+<span class="sd">    A balance is made upon receiving the first posting of the accounting</span>
+<span class="sd">    month. If a record for an older month is returned, that is the current</span>
+<span class="sd">    balance; no postings for the current month have been received.</span>
+<span class="sd">    </span>
+<span class="sd">    Balances have the following fields:</span>
+<span class="sd">        :id: a sequence number</span>
+<span class="sd">        :account_id: the sequence number of the account this is the balance of</span>
+<span class="sd">        :postmonth: the postmonth in the format yyyymm</span>
+<span class="sd">        :currency: the currency code (preferably : use ISO)</span>
+<span class="sd">        :amount: the amount </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;balances&#39;</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">Sequence</span><span class="p">(</span><span class="s">&#39;balance_id_seq&#39;</span><span class="p">),</span><span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">account_id</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">db</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;accounts.id&#39;</span><span class="p">))</span>
+    <span class="n">postmonth</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Numeric</span><span class="p">(</span><span class="n">precision</span> <span class="o">=</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="n">value_date</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">amount</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Numeric</span><span class="p">(</span><span class="n">precision</span> <span class="o">=</span> <span class="mi">14</span><span class="p">))</span>
+    <span class="n">updated_at</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">DateTime</span><span class="p">)</span> 
+    <span class="n">db</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="s">&#39;bymonth&#39;</span><span class="p">,</span> <span class="s">&#39;account_id&#39;</span><span class="p">,</span> <span class="s">&#39;postmonth&#39;</span><span class="p">)</span>
+    
+    <span class="nd">@validates</span><span class="p">(</span><span class="s">&#39;postmonth&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="Balances.validate_postmonth"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Balances.validate_postmonth">[docs]</a>    <span class="k">def</span> <span class="nf">validate_postmonth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">postmonth</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; the post month can only be the current or an existing, active month&quot;&quot;&quot;</span>
+        <span class="n">months_db</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Postmonths</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">postmonth</span><span class="o">=</span><span class="n">postmonth</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">months_db</span> <span class="o">!=</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">months_db</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">monthstat</span> <span class="o">==</span> <span class="n">ACTIVE</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">postmonth</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Postmonth not active&#39;</span><span class="p">)</span>       
+        <span class="n">current_postmonth</span>  <span class="o">=</span> <span class="n">postmonth_for</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">postmonth</span> <span class="o">!=</span> <span class="n">current_postmonth</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Post month must exist or be current month&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">postmonth</span></div>
+    
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&#39;Balances(amount = {}, postmonth = {}, account {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">postmonth</span><span class="p">,</span>          <span class="bp">self</span><span class="o">.</span><span class="n">account_id</span><span class="p">)</span></div>
+    
+<span class="k">class</span> <span class="nc">Postmonths</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;postmnths&#39;</span>
+    <span class="n">postmonth</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">monthstat</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    
+    <span class="k">global</span> <span class="n">ACTIVE</span><span class="p">,</span> <span class="n">CLOSED</span>
+    <span class="n">ACTIVE</span> <span class="o">=</span> <span class="s">&#39;a&#39;</span>
+    <span class="n">CLOSED</span> <span class="o">=</span> <span class="s">&#39;c&#39;</span>
+    
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add this postmonth to the session &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    
+    <span class="nd">@validates</span><span class="p">(</span><span class="s">&#39;monthstat&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">validate_monthstat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">monthstat</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">monthstat</span> <span class="o">!=</span> <span class="n">ACTIVE</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">monthstat</span> <span class="o">!=</span> <span class="n">CLOSED</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid status in postmonth&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">monthstat</span>
+        
+<div class="viewcode-block" id="postmonth_for"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.postmonth_for">[docs]</a><span class="k">def</span> <span class="nf">postmonth_for</span><span class="p">(</span><span class="n">postdate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the postmonth from a postdate</span>
+<span class="sd">    </span>
+<span class="sd">    This is a function which determines for a date in which</span>
+<span class="sd">    postmonth it is. It is used for getting the correct balance of an account</span>
+<span class="sd">    as well as determining in which post month a posting belongs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">postdate</span><span class="o">.</span><span class="n">year</span> <span class="o">*</span> <span class="mi">100</span> <span class="o">+</span> <span class="n">postdate</span><span class="o">.</span><span class="n">month</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">GLedger : General Ledger 1.0 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Menno Hölscher.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+    </div>
+  </body>
+</html>

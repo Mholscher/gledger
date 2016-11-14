@@ -1,0 +1,146 @@
+
+
+<!doctype html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Journals - Postings and journals &mdash; GLedger : General Ledger 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/bizstyle.js"></script>
+    <link rel="top" title="GLedger : General Ledger 1.0 documentation" href="index.html" />
+    <link rel="next" title="API documentation" href="GLAPI.html" />
+    <link rel="prev" title="GLViews - the General Ledger views" href="GLView.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="GLAPI.html" title="API documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="GLView.html" title="GLViews - the General Ledger views"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GLedger : General Ledger 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Journals - Postings and journals</a><ul>
+<li><a class="reference internal" href="#postings">Postings</a></li>
+<li><a class="reference internal" href="#journals">Journals</a></li>
+<li><a class="reference internal" href="#example-of-a-journal">Example of a Journal</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="GLView.html"
+                        title="previous chapter">GLViews - the General Ledger views</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="GLAPI.html"
+                        title="next chapter">API documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Journals.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="journals-postings-and-journals">
+<h1>Journals - Postings and journals<a class="headerlink" href="#journals-postings-and-journals" title="Permalink to this headline">¶</a></h1>
+<p>Postings can only be added to the GL system by supplying Journals. Journals are lists of postings that in the end balance, the sum of debit amounts must be equal to the sum of credit amounts.</p>
+<p>The journal has some properties of itself, see <a class="reference internal" href="#journals"><span class="std std-ref">Journals</span></a></p>
+<div class="section" id="postings">
+<h2>Postings<a class="headerlink" href="#postings" title="Permalink to this headline">¶</a></h2>
+<p>Each posting applies an amount to the account in the posting, for the posting month mentioned. We refer to that as processing the posting. Each posting in the journal is for the same month.</p>
+</div>
+<div class="section" id="journals">
+<span id="id1"></span><h2>Journals<a class="headerlink" href="#journals" title="Permalink to this headline">¶</a></h2>
+<p>Journals are lists of postings where the total of debit amounts and credit amounts is equal. The individual amounts don&#8217;t need to be equal. For example sales may be counterposted by a combination of decreasing the value of stocks and increasing taxes to be paid.</p>
+<p>Processing of the postings is done by journal. The journal contains a flag whether it is successfully processed. As all postings are processed in journals that balance, it is guaranteed that the ledger balances. If a journal does not balance, or there is another error in the journal, it is not processed. Either a corrected version will be sent by the system that delivered it and the offending journal will remain as &#8220;unposted&#8221;, or the journal will be repaired by the system that delivered it and it will then be processed. A repair message for a journal that was successfully processed, will be ignored and will remain as &#8220;unposted&#8221;.</p>
+</div>
+<div class="section" id="example-of-a-journal">
+<h2>Example of a Journal<a class="headerlink" href="#example-of-a-journal" title="Permalink to this headline">¶</a></h2>
+<p>The example below will contain all possible fields. Fields that are mandatory, will be marked with an asterisk, that is not part of the definition.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="GLAPI.html" title="API documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="GLView.html" title="GLViews - the General Ledger views"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">GLedger : General Ledger 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, Menno Hölscher.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+    </div>
+  </body>
+</html>

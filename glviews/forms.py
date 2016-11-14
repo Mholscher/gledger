@@ -19,9 +19,13 @@ class AccountForm(Form) :
     """ The form for creating and updating accounts.
     
     All fields of the account can be updated. For now the role is
-    hardcoded in the form. Should be refactored to come from the model. """
+    hardcoded in the form. #TODO Should be refactored to come from the model. """
     name = StringField('Account', validators = [DataRequired()])
     parent = StringField('Parent')
     role = SelectField('Type', choices = [('A', 'Assets'), ('L', 'Liabilities'), ('I', 'Income'), ('E', 'Expense')])
     update = SubmitField('Update account')
+    
+class NewAccountForm(AccountForm) :
+    update = SubmitField('Save and list')
+    addmore = SubmitField('Save, add more')
 

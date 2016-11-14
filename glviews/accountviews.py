@@ -17,32 +17,49 @@ class AccountView() :
     """ This class collects the data for displaying an existing account
     
     The view is a data collection which concerns everything
-    viewed on the accounts maintenance screen. The way
-    the collection is produced is as a dictionary with
-    embedded data, for the account itself as strings,
-    for the dependents as dictionaries. """
+    viewed on the accounts maintenance screen. 
+..  note:: 
+
+        The way the collection is produced is as a dictionary with
+        embedded data, for the account itself as strings,
+        for the dependents as dictionaries. 
     
-    def __init__(self, id=None, name=None) :
-        self.id = id
-        self.name = name
+    """
+    
+    def __init__(self) :
+        self.id = 0
+        self.name = ''
+        self.account = None
+        
+    @classmethod
+    def createView(cls,  id=None, name=None) :
+        """ Creates a view for the id (preferred) or
+        name passed as an argument. If the account does
+        not exist, caller will receive the exception. It is
+        not caught...
+        """
+        
         if (id is None) and (name is None) :
             raise ValueError('An id or name for an account must be given')
         # prefer id to name for fetching an account:
-        if (self.id is not None) :
-            self.account = model.Accounts.get_by_id(self.id)
+        accountView = cls()
+        if (id is not None) :
+            accountView.account = model.Accounts.get_by_id(id)
         else :
-            self.account = model.Accounts.get_by_name(self.name)
-        if self.account :
-            self.parent = self.account.parentaccount()
-            self.children = self.account.children
+            accountView.account = model.Accounts.get_by_name(name)
+        if accountView.account :
+            accountView.parent = accountView.account.parentaccount()
+            accountView.children = accountView.account.children
         else :
-            self.parent = None
-            self.children = []
+            accountView.parent = None
+            accountView.children = []
+        return accountView
         
     def _account_dictionary(self) :
         if (not hasattr(self, 'account')) or (self.account is None) :
             raise(AttributeError, 'Account should exist and be populated')
-        return dict((col, getattr(self.account, col)) for col in self.account.__table__.columns.keys())
+        # Dispatch on columns in account, default use value 
+        return {'id': self.account.id, 'name': self.account.name, 'role' : self.account.role }
     
     def _parent_name_and_id(self) :
         # The check should not be necessary. The contract is: call ONLY if parent exists
@@ -57,12 +74,16 @@ class AccountView() :
         return childlist
             
     def asDictionary(self) :
-        """Return the accountview as a dictionary.
+        """
+        Return the accountview as a dictionary.
         
         This is primarily thought of as a halfway house
-        to create the views, be it json or htnl. """
+        to create the views, be it json or html. 
+        """
         asDictionary = {"account" : self._account_dictionary(), "children" : self._dictionary_from_childlist() }
         if self.parent is not None :
             asDictionary["parent"] = self._parent_name_and_id()
         asDictionary["localtitle"] = 'Account ' + self.account.name
         return asDictionary
+    
+
