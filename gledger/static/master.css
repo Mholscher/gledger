@@ -1,0 +1,63 @@
+
+
+body {
+    background-color : #ffffc6;
+    color : #000000;
+    font-family : arial,helvetica,sans-serif;
+  }
+
+
+A:link {
+    color : #ccb69d;
+  }
+
+
+A:active {
+    color : #363636;
+  }
+
+
+A:visited {
+    color : #555555;
+    font-weight : bold;
+  }
+
+
+A:hover {
+    font-weight : bold ;
+  }
+
+
+a.IMG {
+    vertical-align: middle;
+  }
+
+.page {
+    margin : 30px auto ;
+    width : 65em ;
+    }
+
+.lbl {
+    float : left ;
+    width : 20em ;
+    }
+    
+.inputline {
+    margin : 1em ;
+    background-color : bisque ;
+    }
+    
+.inlineform {
+    width : 50em ;
+    }
+
+.warning {
+    color : #4949c9 ;
+    }
+    
+.flash {
+    color : red ;
+    background-color : yellow ;
+    font-weight : bold
+    }
+    
