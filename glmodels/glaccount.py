@@ -21,6 +21,21 @@ from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import date, datetime
 
+    
+class NoAccountError(ValueError):
+    """ This is thrown when an account requested does not exist.
+    
+    The exception is thrown to be caught  by methods and  functions
+    that are expecting to find an account with the key provided.
+    """
+    
+    pass
+
+class AccountAlreadyExistsError(ValueError) :
+    """ This is thrown when an account created already exists.
+    """
+    
+    pass
 
 class Accounts(db.Model):
     """ Accounts models the "immutable" properties of an account
@@ -62,7 +77,10 @@ class Accounts(db.Model):
     def get_by_id(cls, requested_id):
         """ Get an account form the database by id """
         try:
-            return db.session.query(Accounts).filter_by(id=requested_id).one()
+            account = db.session.query(Accounts).filter_by(id=requested_id).first()
+            if not account:
+                raise NoAccountError('No account for id ' + str(requested_id))
+            return account
         except NoResultFound:
             raise NoAccountError('No account for id ' + str(requested_id))
 
@@ -75,7 +93,10 @@ class Accounts(db.Model):
         #TODO protect to return an application specific ValueError
         not a ResultNotFound."""
         try:
-            return db.session.query(Accounts).filter_by(name=requested_name).one()
+            account = db.session.query(Accounts).filter_by(name=requested_name).first()
+            if not account:
+                raise NoAccountError('No account for ' + str(requested_name))
+            return account
         except NoResultFound:
             raise NoAccountError('No account for ' + str(requested_name))
     
@@ -92,12 +113,13 @@ class Accounts(db.Model):
         Checks are made:
         
             1.   the account to be added doesn't exist
+            2.   the parent account does exist; if not, an exception will be thrown
         
         """
         if not name:
             raise ValueError('name cannot be None')
         if cls.account_exists(requested_name=name):
-            raise ValueError('Account with name ' + str(name) + 'already exists') 
+            raise AccountAlreadyExistsError('Account with name ' + str(name) + ' already exists') 
         account = cls(name=name, role=role)
         parent = None
         if parent_id:
@@ -203,7 +225,7 @@ class Balances(db.Model):
     
     __tablename__ = 'balances'
     id = db.Column(db.Integer, db.Sequence('balance_id_seq'),primary_key=True)
-    account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
+    account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
     postmonth = db.Column(db.Numeric(precision = 6))
     value_date = db.Column(db.DateTime, nullable=False)
     amount = db.Column(db.Numeric(precision = 14))
@@ -234,21 +256,6 @@ class Balances(db.Model):
 
     def __repr__(self):
         return 'Balances(amount = {}, postmonth = {}, account {})'.format(self.amount, self.postmonth,          self.account_id)
-    
-class NoAccountError(ValueError):
-    """ This is thrown when an account requested does not exist.
-    
-    The exception is thrown to be caught  by methods and  functions
-    that are expecting to find an account with the key provided.
-    """
-    
-    pass
-
-class AccountAlreadyExistsError(ValueError) :
-    """ This is thrown when an account created already exists.
-    """
-    
-    pass
     
 class Postmonths(db.Model):
     

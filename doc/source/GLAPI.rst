@@ -42,5 +42,11 @@ Module glviews
 
 ..  module:: glviews.forms
 
+..  autoclass:: AccountMustExist
+    :members:
+
 ..  autoclass:: AccountForm
+    :members:
+    
+..  autoclass:: NewAccountForm
     :members:

@@ -19,7 +19,7 @@ class AccountView() :
     The view is a data collection which concerns everything
     viewed on the accounts maintenance screen. 
 ..  note:: 
-
+        
         The way the collection is produced is as a dictionary with
         embedded data, for the account itself as strings,
         for the dependents as dictionaries. 

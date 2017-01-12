@@ -95,8 +95,8 @@ class TestDBCreation(unittest.TestCase) :
             acc6 = accmodel.Accounts(name='creditors', role='L')
             acc6.add()
         bal1 = accmodel.Balances(postmonth=accmodel.postmonth_for(date.today()), amount=1215, value_date='2015-07-21')
-        bal1.add()
         acc6.balances.append(bal1)
+        bal1.add()
         gledger.db.session.flush()
         self.assertEqual(bal1.account_id, acc6.id, 
                          'Balance not attached to account')

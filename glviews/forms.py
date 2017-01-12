@@ -14,18 +14,35 @@
 from flask_wtf import Form
 from wtforms import StringField, TextAreaField, PasswordField, SubmitField, SelectField
 from wtforms.validators import DataRequired, ValidationError, Length
+from glmodels.glaccount import Accounts
+
+class AccountMustExist(ValueError):
+    """WTForms validator for an account that must exist.
+    
+    The accounts existence is validated against the database.
+    """
+    def __init__(self, message='Account must exist'):
+        if message:
+            message='Account must exist'
+        self.message=message
+        
+    def __call__(self, form, field):
+        if (field.data) and (not Accounts.account_exists(field.data)):
+            raise ValidationError(self.message)
 
 class AccountForm(Form) :
-    """ The form for creating and updating accounts.
+    """ The form for updating accounts.
     
     All fields of the account can be updated. For now the role is
     hardcoded in the form. #TODO Should be refactored to come from the model. """
     name = StringField('Account', validators = [DataRequired()])
-    parent = StringField('Parent')
+    parent = StringField('Parent', validators = [AccountMustExist()])
     role = SelectField('Type', choices = [('A', 'Assets'), ('L', 'Liabilities'), ('I', 'Income'), ('E', 'Expense')])
     update = SubmitField('Update account')
     
 class NewAccountForm(AccountForm) :
+    """ The form for creating a new account.
+    """
     update = SubmitField('Save and list')
     addmore = SubmitField('Save, add more')
-
+    
