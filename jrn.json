@@ -1,0 +1,22 @@
+{"journal" : 
+    {"function" : "insert",
+     "journalno" : "12",
+     "extkey" : "f234",
+     "postings" : 
+        [{  "account" : "verkopen",
+            "currency" : "EUR",
+            "amount" : "23000",
+            "debitcredit" : "Cr",
+            "valuedate" : "2017-01-12"},
+        {   "account" : "kas",
+            "currency" : "EUR",
+            "amount" : "25000",
+            "debitcredit" : "Db",
+            "valuedate" : "2017-01-12"},
+        {   "account" : "btw (ontvangen)",
+            "currency" : "EUR",
+            "amount" : "2000",
+            "debitcredit" : "Cr",
+            "valuedate" : "2017-01-12"}]
+        }
+}
