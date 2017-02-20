@@ -22,6 +22,7 @@ import glmodels.glaccount as accmodel
 from datetime import date, datetime
 from sqlalchemy.exc import DatabaseError
 import logging
+import json
 
 class testPostCreation(unittest.TestCase) :
     def setUp(self) :
@@ -43,7 +44,8 @@ class testPostCreation(unittest.TestCase) :
     def test_post_one_posting(self) :
         """ A posting can be inserted """
         post1 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id, 
-                               postmonth = 201608, value_date = datetime.now(), amount=250)
+                               postmonth = 201608, value_date = datetime.now(), 
+                               amount=250, debcred='Cr')
         journ3 = posts.Journals(journalstat = posts.Journals.UNPROCESSED)
         journ3.add()
         journ3.journalpostings.append(post1)
@@ -54,18 +56,30 @@ class testPostCreation(unittest.TestCase) :
     def test_no_post_wo_journal(self) :
         """Inserting posting w/o journal fails """
         post2 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id, 
-                               postmonth = 201608, value_date = datetime.now(), amount=250)
+                               postmonth = 201608, value_date = datetime.now(), 
+                               amount=250, debcred='Cr')
         post2.add()
         with self.assertRaises(DatabaseError) :
+            gledger.db.session.flush()
+            
+    def test_post_debcred_invalid(self):
+        """ Posting with invalid debit/credit indicator must be refused """
+        journ4 = posts.Journals(journalstat = posts.Journals.UNPROCESSED)
+        journ4.add()
+        gledger.db.session.flush()
+        with self.assertRaises(posts.InvalidDebitCreditError):
+            post3 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id,  
+                                   journals_id = journ4.id, postmonth = 201609, 
+                                   value_date = datetime.now(), amount=230, debcred='Ct')
             gledger.db.session.flush()
         
 class testFullJournal(unittest.TestCase) :
     def setUp(self) :
-        acc3 = accmodel.Accounts(name = 'verkopen', role = 'I')
+        acc3 = accmodel.Accounts(name = 'verkopen', role = 'E')
         acc3.add()
         acc4 = accmodel.Accounts(name = 'kas', role = 'A')
         acc4.add()
-        acc5 = accmodel.Accounts(name = 'btw (ontvangen)', role = 'I')
+        acc5 = accmodel.Accounts(name = 'btw (ontvangen)', role = 'E')
         acc5.add()
         journ2 = posts.Journals(journalstat = posts.Journals.UNPROCESSED)
         journ2.add()
@@ -73,6 +87,7 @@ class testFullJournal(unittest.TestCase) :
         self.journ2id = journ2.id
     
     def tearDown(self) :
+        self.journ2id = None
         gledger.db.session.rollback()
         
     def test_create_journal(self):
@@ -80,19 +95,16 @@ class testFullJournal(unittest.TestCase) :
         journ2 = posts.Journals.get_by_id(self.journ2id)
         post3 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id,  
                                journals_id = journ2.id, postmonth = 201609, 
-                               value_date = datetime.now(), amount=250)
+                               value_date = datetime.now(), amount=230, debcred='Cr')
         post3.add()
         post4 = posts.Postings(account_id=accmodel.Accounts.get_by_name("kas").id, 
                                journals_id = journ2.id, postmonth = 201609, 
-                               value_date = datetime.now(), amount=230)
+                               value_date = datetime.now(), amount=250, debcred='Db')
         post4.add()
         post5 = posts.Postings(account_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
                                journals_id = journ2.id, postmonth = 201609, 
-                               value_date = datetime.now(), amount=20)
+                               value_date = datetime.now(), amount=20, debcred='Cr')
         post5.add()
-        journ2.journalpostings.append(post3)
-        journ2.journalpostings.append(post4)
-        journ2.journalpostings.append(post5)
         gledger.db.session.flush()
         q = gledger.db.session.query(posts.Postings).join(posts.Journals).\
             filter(posts.Journals.id==journ2.id)
@@ -104,22 +116,98 @@ class testFullJournal(unittest.TestCase) :
         journ2 = posts.Journals.get_by_id(self.journ2id)
         post6 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id,  
                                journals_id = journ2.id, postmonth = 201609, 
-                               value_date = datetime.now(), amount=230)
+                               value_date = datetime.now(), amount=230, debcred='Cr')
         post6.add()
         post7 = posts.Postings(account_id=accmodel.Accounts.get_by_name("kas").id, 
                                journals_id = journ2.id, postmonth = 201609, 
-                               value_date = datetime.now(), amount=230)
+                               value_date = datetime.now(), amount=230, debcred='Db')
         post7.add()
         post8 = posts.Postings(account_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
                                journals_id = journ2.id, postmonth = 201609, 
-                               value_date = datetime.now(), amount=20)
+                               value_date = datetime.now(), amount=20, debcred='Cr')
         post8.add()
-        journ2.journalpostings.append(post6)
-        journ2.journalpostings.append(post7)
-        journ2.journalpostings.append(post8)
         gledger.db.session.flush()          
         with self.assertRaises(posts.JournalBalanceError) :
             journ2.post_journal()
+            
+    def test_post_journal(self):
+        """ Post a balancing journal and check balances """
+        journ2 = posts.Journals.get_by_id(self.journ2id)
+        self.add_postings_to(journ2)
+        gledger.db.session.flush
+        journ2.post_journal()
+        self.assertEqual(accmodel.Accounts.get_by_name("verkopen").current_balance(),
+                         -250, 'Account not correctly updated (verkopen)')
+        self.assertEqual(accmodel.Accounts.get_by_name("kas").current_balance(),
+                         230, 'Account not correctly updated (kas)')
+        self.assertEqual(accmodel.Accounts.get_by_name("btw (ontvangen)").current_balance(),
+                         20, 'Account not correctly updated (btw)')
+        
+    def test_a_posted_journal_changes_status(self):
+        """ Once a journal is posted, its status should be set to "posted" """
+        journ2 = posts.Journals.get_by_id(self.journ2id)
+        self.add_postings_to(journ2)
+        gledger.db.session.flush
+        journ2.post_journal()
+        self.assertEqual(journ2.journalstat, 'P', 'Status journal not changed after posting')
+        
+    def test_decode_json(self):
+        """ Test decoding an example json to add to the database 
+        
+        This requires the external file jrn.json"""
+        with open('jrn.json', 'r') as f:
+            dictjourn1 = json.load(f)
+        self.assertEqual(dictjourn1['journal']['function'], 'insert', 'Function not decoded')
+        postings = dictjourn1['journal']['postings']
+        self.assertEqual(postings[1]['account'], 'kas', 'Posting does not contain correct account')
+        self.assertEqual(postings[1]['amount'], '25000', 'Posting does not contain correct amount')
+        
+    def test_journal_from_input(self):
+        """ Creating a journal from input 
+        
+        This requires the external file jrn.json"""
+        with open('jrn.json', 'r') as f:
+            dictjourn1 = json.load(f)
+        journ2 = posts.Journals.create_from_dict(dictjourn1)
+        q = gledger.db.session.query(posts.Postings).join(posts.Journals).\
+            filter(posts.Journals.id==journ2.id)
+        self.assertEqual(q.count(), 3, "Too little/many postings in journal")
+        
+    def test_json_incomplete(self):
+        """ An incomplete json leads to failure """
+        with self.assertRaises(ValueError):
+            with open('jrnerr1.json', 'r') as f:
+                dictjourn2 = json.load(f)
+                
+    def test_json_no_posting(self):
+        """ A journal with no postings fails """
+        with self.assertRaises(posts.NoPostingInJournal):
+            with open('jrnerr2.json', 'r') as f:
+                dictjourn3 = json.load(f)
+            posts.Journals.create_from_dict(dictjourn3)
+            
+    def test_posting_unknown_account(self):
+        """ If a posting is to an unknown account, it fails """
+        with self.assertRaises(accmodel.NoAccountError):
+            with open('jrnerr3.json', 'r') as f:
+                dictjourn4 = json.load(f)
+            posts.Journals.create_from_dict(dictjourn4)
+        
+        
+    def add_postings_to(self, journ2):
+        post3 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id,  
+                               journals_id = journ2.id, postmonth = 201609, 
+                               value_date = datetime.now(), amount=250, debcred='Cr')
+        post3.add()
+        post4 = posts.Postings(account_id=accmodel.Accounts.get_by_name("kas").id, 
+                               journals_id = journ2.id, postmonth = 201609, 
+                               value_date = datetime.now(), amount=230, debcred='Db')
+        post4.add()
+        post5 = posts.Postings(account_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
+                               journals_id = journ2.id, postmonth = 201609, 
+                               value_date = datetime.now(), amount=20, debcred='Db')
+        post5.add()
+        return journ2
 
 if __name__ == '__main__':
     unittest.main()

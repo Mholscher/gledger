@@ -15,7 +15,8 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Blueprint, jsonify, abort
+from flask import Blueprint, jsonify, abort, request
+import glmodels.glposting as postings
 
 postingapi = Blueprint('api', __name__)
 
@@ -35,6 +36,7 @@ def addjournal():
     The journal and its entries are delivered as
     a JSON file. It is decoded and the journal
     and its postings are added to the database. """
+    journal = request.get_json()
     return jsonify({'status':'done'})
 
 @postingapi.route('/journal/addto/<journalno>', methods=['POST'])

@@ -21,7 +21,7 @@ import glviews.accountviews as accviews
 import glmodels.glaccount as accmodel
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
-from datetime import date
+from datetime import date,datetime
 import logging
 
 class TestDBCreation(unittest.TestCase) :
@@ -227,6 +227,40 @@ class TestDomainProcesses(unittest.TestCase) :
         self.assertEqual(acc22.balance_ultimo(201507, 0), 740, 'BalanceA4blokken not found')
         self.assertEqual(acc19.balance_ultimo(201507, 0), 2466, 'Balance officeutils 201507 not found')        
         self.assertEqual(acc19.balance_ultimo(201508, 0), 3540, 'Balance officeutils 201508 not found')
+        
+    def test_debit_credit_for_account(self):
+        """ Return debit credit indicator for account"""
+        acc33 = accmodel.Accounts(role='A', name='an Asset account')
+        acc33.add()
+        acc34 = accmodel.Accounts(role='L', name='a Liability account')
+        acc34.add()
+        acc35 = accmodel.Accounts(role='I', name='an Income account')
+        acc35.add()
+        acc36 = accmodel.Accounts(role='E', name='an Expense account')
+        acc36.add()
+        self.assertEqual(acc33.debit_credit(), 'Db', acc33.name + ' should be debit')
+        self.assertEqual(acc34.debit_credit(), 'Cr', acc34.name + ' should be credit')
+        self.assertEqual(acc35.debit_credit(), 'Cr', acc35.name + ' should be credit')
+        self.assertEqual(acc36.debit_credit(), 'Db', acc36.name + ' should be debit')
+        
+    def test_is_debit_credit(self):
+        """ Return from functions for debit/credit account """
+        acc37 = accmodel.Accounts(role='A', name='an Asset account')
+        acc37.add()
+        acc38 = accmodel.Accounts(role='L', name='a Liability account')
+        acc38.add()
+        self.assertEqual(acc37.is_debit(), True, acc37.name + 'is not a debit account')
+        self.assertEqual(acc37.is_credit(), False, acc37.name + 'is a credit account')
+        self.assertEqual(acc38.is_debit(), False, acc38.name + 'is a debit account')
+        self.assertEqual(acc38.is_credit(), True, acc38.name + 'is not a credit account')
+        
+    def test_post_to_balance(self):
+        """ Post an amount to the proper balance record."""
+        acc39 = accmodel.Accounts(role='I', name='Verkopen')
+        acc39.add()
+        self.assertEqual(acc39.current_balance(), 0, 'Account does not open with zero balance?')
+        acc39.post_amount('Db', 12.50, datetime.today())
+        self.assertEqual(acc39.current_balance(), -12.50, 'Account balance not correct')
 
 class TestAccountStructures(unittest.TestCase) :
     

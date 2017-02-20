@@ -58,6 +58,7 @@
   <ul>
 <li><a class="reference internal" href="#">GLedger - The application</a><ul>
 <li><a class="reference internal" href="#views">Views</a></li>
+<li><a class="reference internal" href="#posting-api">Posting API</a></li>
 </ul>
 </li>
 </ul>
@@ -99,6 +100,12 @@
 <div class="section" id="views">
 <h2>Views<a class="headerlink" href="#views" title="Permalink to this headline">¶</a></h2>
 <p>The views are the transactions that GLedger is able to perform. See the <a class="reference internal" href="GLAPI.html#gledgerapi"><span class="std std-ref">Module gledger</span></a> API docs to find out what web transactions are supported.</p>
+</div>
+<div class="section" id="posting-api">
+<h2>Posting API<a class="headerlink" href="#posting-api" title="Permalink to this headline">¶</a></h2>
+<p>Programs can submit journals via the posting API. It receives the journals as a JSON message, that contains the full journal.</p>
+<p>Also when a Journal is rejected by the API, you can send a &#8220;repair&#8221;journal that should contain postings to correct the error(s) found.</p>
+<p>Some errors cannot be repaired; the journal containing such an error is not put into the database.</p>
 </div>
 </div>
 

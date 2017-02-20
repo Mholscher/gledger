@@ -57,8 +57,6 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Journals - Postings and journals</a><ul>
-<li><a class="reference internal" href="#postings">Postings</a></li>
-<li><a class="reference internal" href="#journals">Journals</a></li>
 <li><a class="reference internal" href="#example-of-a-journal">Example of a Journal</a></li>
 </ul>
 </li>
@@ -98,19 +96,79 @@
   <div class="section" id="journals-postings-and-journals">
 <h1>Journals - Postings and journals<a class="headerlink" href="#journals-postings-and-journals" title="Permalink to this headline">¶</a></h1>
 <p>Postings can only be added to the GL system by supplying Journals. Journals are lists of postings that in the end balance, the sum of debit amounts must be equal to the sum of credit amounts.</p>
-<p>The journal has some properties of itself, see <a class="reference internal" href="#journals"><span class="std std-ref">Journals</span></a></p>
-<div class="section" id="postings">
-<h2>Postings<a class="headerlink" href="#postings" title="Permalink to this headline">¶</a></h2>
-<p>Each posting applies an amount to the account in the posting, for the posting month mentioned. We refer to that as processing the posting. Each posting in the journal is for the same month.</p>
-</div>
-<div class="section" id="journals">
-<span id="id1"></span><h2>Journals<a class="headerlink" href="#journals" title="Permalink to this headline">¶</a></h2>
-<p>Journals are lists of postings where the total of debit amounts and credit amounts is equal. The individual amounts don&#8217;t need to be equal. For example sales may be counterposted by a combination of decreasing the value of stocks and increasing taxes to be paid.</p>
-<p>Processing of the postings is done by journal. The journal contains a flag whether it is successfully processed. As all postings are processed in journals that balance, it is guaranteed that the ledger balances. If a journal does not balance, or there is another error in the journal, it is not processed. Either a corrected version will be sent by the system that delivered it and the offending journal will remain as &#8220;unposted&#8221;, or the journal will be repaired by the system that delivered it and it will then be processed. A repair message for a journal that was successfully processed, will be ignored and will remain as &#8220;unposted&#8221;.</p>
-</div>
 <div class="section" id="example-of-a-journal">
 <h2>Example of a Journal<a class="headerlink" href="#example-of-a-journal" title="Permalink to this headline">¶</a></h2>
-<p>The example below will contain all possible fields. Fields that are mandatory, will be marked with an asterisk, that is not part of the definition.</p>
+<p>The example below will contain all possible fields. Fields that are mandatory, will be marked with an asterisk, that is not part of the definition:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span><span class="s">&quot;journal&quot;</span><span class="o">*</span> <span class="p">:</span>
+    <span class="p">{</span><span class="s">&quot;function&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;insert&quot;</span><span class="p">,</span>
+     <span class="s">&quot;journalno&quot;</span> <span class="p">:</span> <span class="s">&quot;12&quot;</span>
+     <span class="s">&quot;extkey&quot;</span> <span class="p">:</span> <span class="s">&quot;f234&quot;</span><span class="p">,</span>
+     <span class="s">&quot;postings&quot;</span><span class="o">*</span> <span class="p">:</span>
+        <span class="p">[{</span>  <span class="s">&quot;account&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;verkopen&quot;</span><span class="p">,</span>
+            <span class="s">&quot;currency&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;EUR&quot;</span><span class="p">,</span>
+            <span class="s">&quot;amount&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;23000&quot;</span><span class="p">,</span>
+            <span class="s">&quot;debitcredit&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;Cr&quot;</span><span class="p">,</span>
+            <span class="s">&quot;valuedate&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;2017-01-12&quot;</span><span class="p">},</span>
+        <span class="p">{</span>   <span class="s">&quot;account&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;kas&quot;</span><span class="p">,</span>
+            <span class="s">&quot;currency&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;EUR&quot;</span><span class="p">,</span>
+            <span class="s">&quot;amount&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;25000&quot;</span><span class="p">,</span>
+            <span class="s">&quot;debitcredit&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;Db&quot;</span><span class="p">,</span>
+            <span class="s">&quot;valuedate&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;2017-01-12&quot;</span><span class="p">},</span>
+        <span class="p">{</span>   <span class="s">&quot;account&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;btw (ontvangen)&quot;</span><span class="p">,</span>
+            <span class="s">&quot;currency&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;EUR&quot;</span><span class="p">,</span>
+            <span class="s">&quot;amount&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;2000&quot;</span><span class="p">,</span>
+            <span class="s">&quot;debitcredit&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;Cr&quot;</span><span class="p">,</span>
+            <span class="s">&quot;valuedate&quot;</span><span class="o">*</span> <span class="p">:</span> <span class="s">&quot;2017-01-12&quot;</span><span class="p">}]</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The definitions of the fields are as follows:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>journal</dt>
+<dd>contains the full journal, with all fields pertaining to the journal and the postings are embedded.</dd>
+<dt>function</dt>
+<dd>what to do with the postings. &#8220;insert&#8221; will create a new journal, &#8220;add&#8221; will add the postings to the journal having journalno as its number.</dd>
+<dt>journalno</dt>
+<dd>in case of an &#8220;add&#8221;, the number of the journal to add the postings to. Ignored for insert.</dd>
+<dt>extkey</dt>
+<dd>an optional key to the journal in the system that generated it. If present, will be added to a response.</dd>
+<dt>postings</dt>
+<dd>the list of postings for this journal.</dd>
+<dt>account</dt>
+<dd>The account is posting is to be made to.</dd>
+<dt>currency</dt>
+<dd>The currency code of the posting. It is recommended to use the SWIFT currency codes</dd>
+<dt>amount</dt>
+<dd>The amount in the smallest unit of the currency (e.g. cents)</dd>
+<dt>debitcredit</dt>
+<dd>Debit (&#8216;Db&#8217;) or credit (&#8216;Cr&#8217;) of the posting</dd>
+<dt>valuedate</dt>
+<dd>The date this posting should be applied</dd>
+</dl>
+</div></blockquote>
+<p>The result of the submission if successful will be the following message:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span>   <span class="s">&quot;httpstatus&quot;</span><span class="p">:</span><span class="s">&quot;OK&quot;</span><span class="p">;</span>
+    <span class="s">&quot;message&quot;</span><span class="p">:</span><span class="s">&quot;Journal added&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If not successful, a message will be sent as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span>   <span class="s">&quot;httpstatus&quot;</span><span class="p">:</span><span class="s">&quot;Not correct&quot;</span><span class="p">;</span>
+    <span class="s">&quot;message&quot;</span><span class="p">:</span><span class="s">&quot;Journal was not balancing&quot;</span><span class="p">;</span>
+    <span class="s">&quot;extkey&quot;</span><span class="p">:</span><span class="s">&quot;f234&quot;</span><span class="p">;</span>
+    <span class="s">&quot;remark&quot;</span><span class="p">:</span><span class="s">&quot;The journal was stored and can be updated&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Where the &#8220;f234&#8221; is the external key passed by the application. If the server is not able to store the journal (e.g. because it was incorrectly formatted), the message wil be:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span>   <span class="s">&quot;httpstatus&quot;</span><span class="p">:</span><span class="s">&quot;Bad request&quot;</span><span class="p">;</span>
+    <span class="s">&quot;message&quot;</span><span class="p">:</span><span class="s">&quot;Journal contained no posting&quot;</span><span class="p">;</span>
+    <span class="s">&quot;extkey&quot;</span><span class="p">:</span><span class="s">&quot;f234&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </div>
 </div>
 

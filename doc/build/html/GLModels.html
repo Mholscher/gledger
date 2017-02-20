@@ -118,10 +118,13 @@
 </div>
 <div class="section" id="the-posting">
 <h2>The posting<a class="headerlink" href="#the-posting" title="Permalink to this headline">¶</a></h2>
+<p>Each posting applies an amount to the account in the posting, for the posting month mentioned. We refer to that as processing the posting. Each posting in the journal is for the same month.</p>
 </div>
 <div class="section" id="the-journal">
 <h2>The journal<a class="headerlink" href="#the-journal" title="Permalink to this headline">¶</a></h2>
-<p>Journals can be entered through the API. Journals need to balance, the debit and credit entries need to add up to zero for each journal. Journals, contain postings that will contain the account to post to, the value date and the posting month. The posting month defaults to the current month, but for corrections it is possible to post to another posting month.</p>
+<p>Journals can be entered through the API. Journals, contain postings that will contain the account to post to, the value date and the posting month. The posting month defaults to the current month, but for corrections it is possible to post to another posting month.</p>
+<p>Journals are lists of postings where the total of debit amounts and credit amounts is equal. The individual amounts don&#8217;t need to be equal. For example sales may be counterposted by a combination of decreasing the value of stocks and increasing taxes to be paid.</p>
+<p>Processing of the postings is done by journal. The journal contains a flag whether it is successfully processed. As all postings are processed in journals that balance, it is guaranteed that the ledger balances. If a journal does not balance, or there is another error in the journal, it is not processed. Either a corrected version will be sent by the system that delivered it and the offending journal will remain as &#8220;unposted&#8221;, or the journal will be repaired by the system that delivered it and it will then be processed. A repair message for a journal that was successfully processed, will be ignored and will remain as &#8220;unposted&#8221;.</p>
 </div>
 <div class="section" id="the-posting-month">
 <h2>The posting month<a class="headerlink" href="#the-posting-month" title="Permalink to this headline">¶</a></h2>

@@ -83,21 +83,38 @@
 <span class="kn">from</span> <span class="nn">flask_wtf</span> <span class="kn">import</span> <span class="n">Form</span>
 <span class="kn">from</span> <span class="nn">wtforms</span> <span class="kn">import</span> <span class="n">StringField</span><span class="p">,</span> <span class="n">TextAreaField</span><span class="p">,</span> <span class="n">PasswordField</span><span class="p">,</span> <span class="n">SubmitField</span><span class="p">,</span> <span class="n">SelectField</span>
 <span class="kn">from</span> <span class="nn">wtforms.validators</span> <span class="kn">import</span> <span class="n">DataRequired</span><span class="p">,</span> <span class="n">ValidationError</span><span class="p">,</span> <span class="n">Length</span>
+<span class="kn">from</span> <span class="nn">glmodels.glaccount</span> <span class="kn">import</span> <span class="n">Accounts</span>
+
+<div class="viewcode-block" id="AccountMustExist"><a class="viewcode-back" href="../../GLAPI.html#glviews.forms.AccountMustExist">[docs]</a><span class="k">class</span> <span class="nc">AccountMustExist</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;WTForms validator for an account that must exist.</span>
+<span class="sd">    </span>
+<span class="sd">    The accounts existence is validated against the database.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s">&#39;Account must exist&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">message</span><span class="p">:</span>
+            <span class="n">message</span><span class="o">=</span><span class="s">&#39;Account must exist&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="o">=</span><span class="n">message</span>
+        
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">form</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">Accounts</span><span class="o">.</span><span class="n">account_exists</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">data</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AccountForm"><a class="viewcode-back" href="../../GLAPI.html#glviews.forms.AccountForm">[docs]</a><span class="k">class</span> <span class="nc">AccountForm</span><span class="p">(</span><span class="n">Form</span><span class="p">)</span> <span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot; The form for creating and updating accounts.</span>
+    <span class="sd">&quot;&quot;&quot; The form for updating accounts.</span>
 <span class="sd">    </span>
 <span class="sd">    All fields of the account can be updated. For now the role is</span>
 <span class="sd">    hardcoded in the form. #TODO Should be refactored to come from the model. &quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">StringField</span><span class="p">(</span><span class="s">&#39;Account&#39;</span><span class="p">,</span> <span class="n">validators</span> <span class="o">=</span> <span class="p">[</span><span class="n">DataRequired</span><span class="p">()])</span>
-    <span class="n">parent</span> <span class="o">=</span> <span class="n">StringField</span><span class="p">(</span><span class="s">&#39;Parent&#39;</span><span class="p">)</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">StringField</span><span class="p">(</span><span class="s">&#39;Parent&#39;</span><span class="p">,</span> <span class="n">validators</span> <span class="o">=</span> <span class="p">[</span><span class="n">AccountMustExist</span><span class="p">()])</span>
     <span class="n">role</span> <span class="o">=</span> <span class="n">SelectField</span><span class="p">(</span><span class="s">&#39;Type&#39;</span><span class="p">,</span> <span class="n">choices</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;Assets&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="s">&#39;Liabilities&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="s">&#39;Income&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s">&#39;E&#39;</span><span class="p">,</span> <span class="s">&#39;Expense&#39;</span><span class="p">)])</span>
     <span class="n">update</span> <span class="o">=</span> <span class="n">SubmitField</span><span class="p">(</span><span class="s">&#39;Update account&#39;</span><span class="p">)</span></div>
     
-<span class="k">class</span> <span class="nc">NewAccountForm</span><span class="p">(</span><span class="n">AccountForm</span><span class="p">)</span> <span class="p">:</span>
+<div class="viewcode-block" id="NewAccountForm"><a class="viewcode-back" href="../../GLAPI.html#glviews.forms.NewAccountForm">[docs]</a><span class="k">class</span> <span class="nc">NewAccountForm</span><span class="p">(</span><span class="n">AccountForm</span><span class="p">)</span> <span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; The form for creating a new account.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">update</span> <span class="o">=</span> <span class="n">SubmitField</span><span class="p">(</span><span class="s">&#39;Save and list&#39;</span><span class="p">)</span>
-    <span class="n">addmore</span> <span class="o">=</span> <span class="n">SubmitField</span><span class="p">(</span><span class="s">&#39;Save, add more&#39;</span><span class="p">)</span>
-
+    <span class="n">addmore</span> <span class="o">=</span> <span class="n">SubmitField</span><span class="p">(</span><span class="s">&#39;Save, add more&#39;</span><span class="p">)</span></div>
+    
 </pre></div>
 
           </div>

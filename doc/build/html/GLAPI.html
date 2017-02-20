@@ -141,9 +141,52 @@ are returned. If no month is requested, it defaults to
 use the current month.</p>
 </dd></dl>
 
+<span class="target" id="module-gledger.postingapi"></span><dl class="class">
+<dt id="gledger.postingapi.InvalidJsonError">
+<em class="property">class </em><code class="descclassname">gledger.postingapi.</code><code class="descname">InvalidJsonError</code><a class="reference internal" href="_modules/gledger/postingapi.html#InvalidJsonError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.postingapi.InvalidJsonError" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is thrown when a journal does not comply.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gledger.postingapi.json_error">
+<code class="descclassname">gledger.postingapi.</code><code class="descname">json_error</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gledger/postingapi.html#json_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.postingapi.json_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gledger.postingapi.addjournal">
+<code class="descclassname">gledger.postingapi.</code><code class="descname">addjournal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gledger/postingapi.html#addjournal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.postingapi.addjournal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receive a new journal from an application.</p>
+<p>The journal and its entries are delivered as
+a JSON file. It is decoded and the journal
+and its postings are added to the database.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gledger.postingapi.addtojournal">
+<code class="descclassname">gledger.postingapi.</code><code class="descname">addtojournal</code><span class="sig-paren">(</span><em>journalno</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gledger/postingapi.html#addtojournal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.postingapi.addtojournal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receive updates to an existing journal.</p>
+<p>The journal entries are delivered as
+a JSON file. It is decoded and the postings
+are added to the journal in the database.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-glmodels.glaccount">
 <span id="module-glmodels"></span><h2>Module glmodels<a class="headerlink" href="#module-glmodels.glaccount" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="glmodels.glaccount.NoAccountError">
+<em class="property">class </em><code class="descclassname">glmodels.glaccount.</code><code class="descname">NoAccountError</code><a class="reference internal" href="_modules/glmodels/glaccount.html#NoAccountError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.NoAccountError" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is thrown when an account requested does not exist.</p>
+<p>The exception is thrown to be caught  by methods and  functions
+that are expecting to find an account with the key provided.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="glmodels.glaccount.AccountAlreadyExistsError">
+<em class="property">class </em><code class="descclassname">glmodels.glaccount.</code><code class="descname">AccountAlreadyExistsError</code><a class="reference internal" href="_modules/glmodels/glaccount.html#AccountAlreadyExistsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.AccountAlreadyExistsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is thrown when an account created already exists.</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="glmodels.glaccount.Accounts">
 <em class="property">class </em><code class="descclassname">glmodels.glaccount.</code><code class="descname">Accounts</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Accounts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Accounts" title="Permalink to this definition">¶</a></dt>
@@ -194,8 +237,7 @@ use the current month.</p>
 <dt id="glmodels.glaccount.Accounts.account_exists">
 <em class="property">classmethod </em><code class="descname">account_exists</code><span class="sig-paren">(</span><em>requested_id=None</em>, <em>requested_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Accounts.account_exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Accounts.account_exists" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrun if an account exists, presented with an ID or 
-an account name 
-#TODO Raise an exception if no ID or name is passed.</p>
+an account name</p>
 </dd></dl>
 
 <dl class="method">
@@ -222,6 +264,7 @@ account created to the children.</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li>the account to be added doesn&#8217;t exist</li>
+<li>the parent account does exist; if not, an exception will be thrown</li>
 </ol>
 </div></blockquote>
 </dd></dl>
@@ -230,6 +273,13 @@ account created to the children.</p>
 <dt id="glmodels.glaccount.Accounts.current_balance">
 <code class="descname">current_balance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Accounts.current_balance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Accounts.current_balance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the last known balance of the account</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="glmodels.glaccount.Accounts.debit_credit">
+<code class="descname">debit_credit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Accounts.debit_credit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Accounts.debit_credit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a debit/credit indicator for the account.</p>
+<p>The indicator is returned from the role.</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -243,14 +293,34 @@ account created to the children.</p>
 <em class="property">classmethod </em><code class="descname">get_by_name</code><span class="sig-paren">(</span><em>requested_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Accounts.get_by_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Accounts.get_by_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get an account from the database by name</p>
 <p>The name of an account is pointing to a single account row.</p>
-<p>#TODO protect to return an applicatioen specific ValueError
-not a ResultNotFound.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="glmodels.glaccount.Accounts.is_credit">
+<code class="descname">is_credit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Accounts.is_credit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Accounts.is_credit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is this account a credit account?</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="glmodels.glaccount.Accounts.is_debit">
+<code class="descname">is_debit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Accounts.is_debit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Accounts.is_debit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is this account a debit account?</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="glmodels.glaccount.Accounts.parentaccount">
 <code class="descname">parentaccount</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Accounts.parentaccount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Accounts.parentaccount" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the parent of this account as an account</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="glmodels.glaccount.Accounts.post_amount">
+<code class="descname">post_amount</code><span class="sig-paren">(</span><em>debit_credit</em>, <em>post_amount</em>, <em>value_date</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Accounts.post_amount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Accounts.post_amount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post an amount to this account.</p>
+<p>This is a transaction script. The script runs as follows:
+1. Get the balance row for the postmonth
+2. apply the amount (using a function) to this row
+3. return the new balance</p>
 </dd></dl>
 
 <dl class="method">
@@ -294,6 +364,12 @@ balance; no postings for the current month have been received.</p>
 </dd>
 </dl>
 <dl class="method">
+<dt id="glmodels.glaccount.Balances.update_with">
+<code class="descname">update_with</code><span class="sig-paren">(</span><em>debit_credit</em>, <em>post_amount</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Balances.update_with"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Balances.update_with" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the balance with the amount to be applied.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="glmodels.glaccount.Balances.validate_postmonth">
 <code class="descname">validate_postmonth</code><span class="sig-paren">(</span><em>id</em>, <em>postmonth</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#Balances.validate_postmonth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.Balances.validate_postmonth" title="Permalink to this definition">¶</a></dt>
 <dd><p>the post month can only be the current or an existing, active month</p>
@@ -308,6 +384,106 @@ balance; no postings for the current month have been received.</p>
 <p>This is a function which determines for a date in which
 postmonth it is. It is used for getting the correct balance of an account
 as well as determining in which post month a posting belongs.</p>
+</dd></dl>
+
+<span class="target" id="module-glmodels.glposting"></span><dl class="class">
+<dt id="glmodels.glposting.PostingWOJournal">
+<em class="property">class </em><code class="descclassname">glmodels.glposting.</code><code class="descname">PostingWOJournal</code><a class="reference internal" href="_modules/glmodels/glposting.html#PostingWOJournal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.PostingWOJournal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exception thrown when a posting without journal is being made.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="glmodels.glposting.NoJournalError">
+<em class="property">class </em><code class="descclassname">glmodels.glposting.</code><code class="descname">NoJournalError</code><a class="reference internal" href="_modules/glmodels/glposting.html#NoJournalError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.NoJournalError" title="Permalink to this definition">¶</a></dt>
+<dd><p>There is no journal for the requested id</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="glmodels.glposting.JournalBalanceError">
+<em class="property">class </em><code class="descclassname">glmodels.glposting.</code><code class="descname">JournalBalanceError</code><a class="reference internal" href="_modules/glmodels/glposting.html#JournalBalanceError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.JournalBalanceError" title="Permalink to this definition">¶</a></dt>
+<dd><p>The postings in a journal do not balance</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="glmodels.glposting.Journals">
+<em class="property">class </em><code class="descclassname">glmodels.glposting.</code><code class="descname">Journals</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Journals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Journals" title="Permalink to this definition">¶</a></dt>
+<dd><p>The journal is the way postings are delivered by clients.</p>
+<p>The journal consists of an unknown number of postings. It must be at least
+two, because the total balance (debit +, credit -) must be zero.
+The journal controls the way the postings are grouped, all postings
+or none are posted by the system. To that purpose the Journals
+have a flag journalstat that tells the system its status.</p>
+<dl class="method">
+<dt id="glmodels.glposting.Journals.add">
+<code class="descname">add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Journals.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Journals.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add this journal to the session</p>
+<p>Make sure it is timestamped</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="glmodels.glposting.Journals.create_from_dict">
+<em class="property">classmethod </em><code class="descname">create_from_dict</code><span class="sig-paren">(</span><em>journdict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Journals.create_from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Journals.create_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new journal including posting from
+a dictionary created from json</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="glmodels.glposting.Journals.get_by_id">
+<em class="property">classmethod </em><code class="descname">get_by_id</code><span class="sig-paren">(</span><em>requested_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Journals.get_by_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Journals.get_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the journal row for requested_id</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="glmodels.glposting.Journals.post_journal">
+<code class="descname">post_journal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Journals.post_journal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Journals.post_journal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Post the posting of this journal to the accounts.</p>
+<p>The journal is first checked to balance. If it doesn&#8217;t
+balance, it is marked for being unprocessable. The 
+transaction is committed, but after that an exception
+is raised.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="glmodels.glposting.Journals.validate_status">
+<code class="descname">validate_status</code><span class="sig-paren">(</span><em>id</em>, <em>journalstat</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Journals.validate_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Journals.validate_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the status is valid</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="glmodels.glposting.Postings">
+<em class="property">class </em><code class="descclassname">glmodels.glposting.</code><code class="descname">Postings</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Postings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Postings" title="Permalink to this definition">¶</a></dt>
+<dd><p>The individual postings.</p>
+<dl class="method">
+<dt id="glmodels.glposting.Postings.add">
+<code class="descname">add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Postings.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Postings.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add this posting to the session</p>
+<p>Make sure it is timestamped</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="glmodels.glposting.Postings.apply">
+<code class="descname">apply</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Postings.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Postings.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply this posting to its account.</p>
+<p>Applying means adjusting the balance with the amount of
+the posting</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="glmodels.glposting.Postings.create_from_dict">
+<em class="property">classmethod </em><code class="descname">create_from_dict</code><span class="sig-paren">(</span><em>posting</em>, <em>for_journal</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Postings.create_from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Postings.create_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a posting from a dictionary with the applicable fields.</p>
+<p>TODO This routine leaks info of the json to the model. Wants
+refactoring!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="glmodels.glposting.Postings.validate_debcred">
+<code class="descname">validate_debcred</code><span class="sig-paren">(</span><em>id</em>, <em>debitcredit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Postings.validate_debcred"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Postings.validate_debcred" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if debit/credit indicator has a valid value</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -346,11 +522,24 @@ not caught...</p>
 </dd></dl>
 
 <span class="target" id="module-glviews.forms"></span><dl class="class">
+<dt id="glviews.forms.AccountMustExist">
+<em class="property">class </em><code class="descclassname">glviews.forms.</code><code class="descname">AccountMustExist</code><span class="sig-paren">(</span><em>message='Account must exist'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glviews/forms.html#AccountMustExist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glviews.forms.AccountMustExist" title="Permalink to this definition">¶</a></dt>
+<dd><p>WTForms validator for an account that must exist.</p>
+<p>The accounts existence is validated against the database.</p>
+</dd></dl>
+
+<dl class="class">
 <dt id="glviews.forms.AccountForm">
 <em class="property">class </em><code class="descclassname">glviews.forms.</code><code class="descname">AccountForm</code><span class="sig-paren">(</span><em>formdata=&lt;class 'flask_wtf.form._Auto'&gt;</em>, <em>obj=None</em>, <em>prefix=''</em>, <em>csrf_context=None</em>, <em>secret_key=None</em>, <em>csrf_enabled=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glviews/forms.html#AccountForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glviews.forms.AccountForm" title="Permalink to this definition">¶</a></dt>
-<dd><p>The form for creating and updating accounts.</p>
+<dd><p>The form for updating accounts.</p>
 <p>All fields of the account can be updated. For now the role is
 hardcoded in the form. #TODO Should be refactored to come from the model.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="glviews.forms.NewAccountForm">
+<em class="property">class </em><code class="descclassname">glviews.forms.</code><code class="descname">NewAccountForm</code><span class="sig-paren">(</span><em>formdata=&lt;class 'flask_wtf.form._Auto'&gt;</em>, <em>obj=None</em>, <em>prefix=''</em>, <em>csrf_context=None</em>, <em>secret_key=None</em>, <em>csrf_enabled=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glviews/forms.html#NewAccountForm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glviews.forms.NewAccountForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The form for creating a new account.</p>
 </dd></dl>
 
 </div>

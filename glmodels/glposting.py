@@ -20,12 +20,11 @@ import flask_sqlalchemy
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import date, datetime
-from .glaccount import Accounts
+from .glaccount import Accounts, postmonth_for
 
 class PostingWOJournal(ValueError):
     """Exception thrown when a posting without journal is being made.
     """
-    
     pass
 
 class NoJournalError(ValueError):
@@ -36,7 +35,23 @@ class JournalBalanceError(Exception):
     """ The postings in a journal do not balance """
     pass
 
+class InvalidDebitCreditError(ValueError):
+    """A posting contains an invalid debit/credit indicator """
+    pass
+
+class NoPostingInJournal(Exception):
+    """ A journal was submitted without postings """
+    pass
+
 class Journals(db.Model) :
+    """ The journal is the way postings are delivered by clients.
+    
+    The journal consists of an unknown number of postings. It must be at least
+    two, because the total balance (debit +, credit -) must be zero.
+    The journal controls the way the postings are grouped, all postings
+    or none are posted by the system. To that purpose the Journals
+    have a flag journalstat that tells the system its status. """
+    
     __tablename__ = 'journals'
     id = db.Column(db.Integer, db.Sequence('journal_id_seq'),primary_key=True)
     journalpostings = db.relationship('Postings', backref='journal')
@@ -45,6 +60,7 @@ class Journals(db.Model) :
     
     UNPROCESSED = 'U'
     PROCESSED = 'P'
+    FAILED = 'F'
     
     @classmethod
     def get_by_id(cls, requested_id):
@@ -57,6 +73,25 @@ class Journals(db.Model) :
         except NoResultFound:
             raise NoJournalError('No journal for id ' + str(requested_id))
         
+    @classmethod
+    def create_from_dict(cls, journdict):
+        """Creates a new journal including posting from
+        a dictionary created from json """
+        if 'postings' not in journdict['journal'] or journdict['journal']['postings'] is None:
+            raise NoPostingInJournal('Empty journal')
+        newjournal = cls(journalstat=cls.UNPROCESSED)
+        newjournal.add()
+        for posting in journdict["journal"]["postings"]:
+            Postings.create_from_dict(posting,newjournal)
+        return newjournal
+        
+    @validates('journalstat')
+    def validate_status(self, id, journalstat):
+        """ Check if the status is valid """
+        if not journalstat in [self.UNPROCESSED, self.PROCESSED, self.FAILED]:
+            raise InvalidJournalStatus('Status '+ journalstat + ' is invalid')
+        return journalstat
+    
     def add(self) :
         """ Add this journal to the session 
         
@@ -78,16 +113,20 @@ class Journals(db.Model) :
         for posting in self.journalpostings:
             if not posting.currency == firstpostingccy:
                 continue
-            account_role = Accounts.get_by_id(posting.account_id).role
-            if account_role in ['I', 'A']:
+            if posting.is_debit():
                 journal_balance += posting.amount
             else:
                 journal_balance -= posting.amount
         if not journal_balance == 0:
-            raise JournalBalanceError
+            raise JournalBalanceError('Journal balance = ' + str(journal_balance))
+        for posting in self.journalpostings:
+            posting.apply()
+        self.journalstat = self.PROCESSED
         
 
 class Postings(db.Model) :
+    """ The individual postings. """
+    
     __tablename__ = 'postings'
     id = db.Column(db.Integer, db.Sequence('posting_id_seq'),primary_key=True)
     account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
@@ -95,10 +134,32 @@ class Postings(db.Model) :
     postmonth = db.Column(db.Numeric(precision=6))
     currency = db.Column(db.String(3), nullable=False, default='EUR')
     amount = db.Column(db.Numeric(precision = 14), nullable=False)
+    debcred = db.Column(db.String(2),nullable=False)
+    db.CheckConstraint("debcred in ('Db', 'Cr')", name='debcredval'), 
     value_date = db.Column(db.DateTime, nullable=False)
     updated_at = db.Column(db.DateTime, nullable=False)
         
-    def _id_for_account(from_name) :
+    @classmethod
+    def create_from_dict(cls, posting, for_journal):
+        """Create a posting from a dictionary with the applicable fields. 
+        
+        TODO This routine leaks info of the json to the model. Wants
+        refactoring!"""
+        value_date = datetime(int(posting["valuedate"][0:4]), 
+                              int(posting["valuedate"][5:7]),
+                              int(posting["valuedate"][8:10]))
+        newposting = cls(postmonth=postmonth_for(value_date), 
+                         value_date=value_date,
+                         currency=posting["currency"],
+                         amount=posting["amount"],
+                         debcred=posting["debitcredit"])
+        newposting.account_id = newposting._id_for_account(posting["account"])
+        newposting.journal = for_journal
+        newposting.add()
+        for_journal.journalpostings.append(newposting)
+        return newposting
+        
+    def _id_for_account(self, from_name) :
         """ Get an ID for an account for which we only have the name """
         
         account = Accounts.get_by_name(from_name)
@@ -111,4 +172,26 @@ class Postings(db.Model) :
         
         self.updated_at = datetime.today()
         db.session.add(self)
-
+        
+    @validates('debcred')
+    def validate_debcred(self, id, debitcredit):
+        """ Check if debit/credit indicator has a valid value """
+        if not debitcredit in ['Db', 'Cr']:
+            raise InvalidDebitCreditError('Debit credit indicator ' + debitcredit + 
+                                          'is invalid')
+        return debitcredit
+        
+    def is_debit(self):
+        return (self.debcred == 'Db')
+    
+    def is_credit(self):
+        return (self.debcred == 'Cr')
+    
+    def apply(self):
+        """ Apply this posting to its account.
+        
+        Applying means adjusting the balance with the amount of
+        the posting """
+        account = Accounts.get_by_id(self.account_id)
+        account.post_amount(self.debcred, self.amount, self.value_date)
+        

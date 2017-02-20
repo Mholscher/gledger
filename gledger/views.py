@@ -23,7 +23,7 @@ def createaccount():
     The GET method shows the empty form, when filled out and
     submitted, POST will do the validation and update.
     """
-    newAccountForm = NewAccountForm(formdata=request.form)
+    newAccountForm = NewAccountForm()
     if newAccountForm.validate_on_submit():
         accmodel.Accounts.create_account(name=newAccountForm.name.data,
                           parent_name=newAccountForm.parent.data,
@@ -58,7 +58,7 @@ def accounts(accountName=None):
     except accmodel.NoAccountError as e:
         abort(404, str(e))
     logging.debug('Account gelezen: ' + account.name + '(id '+ str(account.id) + ')')
-    accountForm = AccountForm(formdata = request.form, obj = account)
+    accountForm = AccountForm(obj=account)
     # logging.debug('request name '+ request.form.name)
     if accountForm.validate_on_submit():  #TODO validation of existence for parent
         logging.debug('Validated as correct')

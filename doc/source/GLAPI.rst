@@ -20,9 +20,25 @@ Module gledger
 
 ..  autofunction:: posts
 
+..  module:: gledger.postingapi
+
+..  autoclass:: InvalidJsonError
+
+..  autofunction:: json_error
+
+..  autofunction:: addjournal
+
+..  autofunction:: addtojournal
+
 Module glmodels
 ---------------
 ..  module:: glmodels.glaccount
+
+..  autoclass:: NoAccountError
+    :members:
+
+..  autoclass:: AccountAlreadyExistsError
+    :members:
 
 ..  autoclass:: Accounts
     :members:
@@ -31,6 +47,23 @@ Module glmodels
     :members:
     
 ..  autofunction:: postmonth_for(postdate)
+
+..  module:: glmodels.glposting
+
+..  autoclass:: PostingWOJournal
+    :members:
+
+..  autoclass:: NoJournalError
+    :members:
+
+..  autoclass:: JournalBalanceError
+    :members:
+
+..  autoclass:: Journals
+    :members:
+    
+..  autoclass:: Postings
+    :members:
 
 Module glviews
 ---------------

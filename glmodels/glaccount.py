@@ -49,7 +49,9 @@ class Accounts(db.Model):
         :balances: the balances for the account
     """
     global VALID_ROLES
+    
     VALID_ROLES = ['I', 'E', 'A', 'L']
+    
     """ The list of valid roles.
     
         :I: Income
@@ -88,10 +90,8 @@ class Accounts(db.Model):
     def get_by_name(cls, requested_name):
         """ Get an account from the database by name
         
-        The name of an account is pointing to a single account row.
+        The name of an account is pointing to a single account row."""
         
-        #TODO protect to return an application specific ValueError
-        not a ResultNotFound."""
         try:
             account = db.session.query(Accounts).filter_by(name=requested_name).first()
             if not account:
@@ -201,7 +201,43 @@ class Accounts(db.Model):
         for child in self.children:
             balance_so_far = child.balance_ultimo(postmonth, balance_so_far)
         return balance_so_far
+    
+    def debit_credit(self):
+        """ Return a debit/credit indicator for the account.
         
+        The indicator is returned from the role."""
+        if self.role == 'A' or self.role == 'E':
+            return 'Db'
+        if self.role == 'L' or self.role == 'I':
+            return 'Cr'
+        # Come here, unknown role: crash
+        raise ValueError('Unknown role ' + role + 'in account ' + self.name)
+    
+    def is_debit(self):
+        """ Is this account a debit account? """
+        return (self.debit_credit() == 'Db')
+    
+    def is_credit(self):
+        """ Is this account a credit account? """
+        return (self.debit_credit() == 'Cr')
+        
+    def post_amount(self, debit_credit, post_amount, value_date):
+        """Post an amount to this account. 
+        
+        This is a transaction script. The script runs as follows:
+        1. Get the balance row for the postmonth
+        2. apply the amount (using a function) to this row
+        3. return the new balance 
+        """
+        postmonth = postmonth_for(value_date)
+        balance_requested = self._balance_for().filter_by(postmonth = postmonth).order_by(Balances.postmonth.desc()).first()
+        if balance_requested is None:
+            balance_requested = Balances(account_id=self.id, 
+                                         postmonth=postmonth, amount=0,
+                                         value_date=datetime.today())
+            balance_requested.add()
+        balance_requested.update_with(debit_credit, post_amount)
+        return balance_requested.amount
     
 class Balances(db.Model):
     """Balances model the balances at different moments of time
@@ -253,6 +289,14 @@ class Balances(db.Model):
     def update(self):
         self.updated_at = datetime.today()
         db.session.update(self)
+        
+    def update_with(self, debit_credit, post_amount):
+        """ Update the balance with the amount to be applied. """
+        account = Accounts.get_by_id(self.account_id)
+        if account.debit_credit() == debit_credit:
+            self.amount += post_amount
+        else:
+            self.amount -= post_amount
 
     def __repr__(self):
         return 'Balances(amount = {}, postmonth = {}, account {})'.format(self.amount, self.postmonth,          self.account_id)

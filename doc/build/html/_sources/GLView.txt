@@ -14,3 +14,8 @@ Accountform
 ------------
 
 To update and show the account data.
+
+NewAccountform
+---------------
+
+To create a new account.

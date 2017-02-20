@@ -22,10 +22,14 @@ from flask_wtf.csrf import CsrfProtect
 import logging
 
 app = Flask(__name__)
-app.config.from_pyfile('localgledger.cfg')
-
 db = SQLAlchemy(app)
 # CsrfProtect(app)
+
+from .postingapi import postingapi as api
+app.register_blueprint(api, url_prefix='/api')
+app.config.from_pyfile('localgledger.cfg')
+
+
 logging.basicConfig(filename='gledger.log', level=logging.DEBUG) 
 logging.debug('Debug logging')
 

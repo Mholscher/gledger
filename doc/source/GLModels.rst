@@ -27,12 +27,16 @@ Accounts are structured as a tree. At the top there is the trial balance account
 
 The posting
 -----------
-
+Each posting applies an amount to the account in the posting, for the posting month mentioned. We refer to that as processing the posting. Each posting in the journal is for the same month. 
 
 
 The journal
 -----------
-Journals can be entered through the API. Journals need to balance, the debit and credit entries need to add up to zero for each journal. Journals, contain postings that will contain the account to post to, the value date and the posting month. The posting month defaults to the current month, but for corrections it is possible to post to another posting month.
+Journals can be entered through the API. Journals, contain postings that will contain the account to post to, the value date and the posting month. The posting month defaults to the current month, but for corrections it is possible to post to another posting month.
+
+Journals are lists of postings where the total of debit amounts and credit amounts is equal. The individual amounts don't need to be equal. For example sales may be counterposted by a combination of decreasing the value of stocks and increasing taxes to be paid.
+
+Processing of the postings is done by journal. The journal contains a flag whether it is successfully processed. As all postings are processed in journals that balance, it is guaranteed that the ledger balances. If a journal does not balance, or there is another error in the journal, it is not processed. Either a corrected version will be sent by the system that delivered it and the offending journal will remain as "unposted", or the journal will be repaired by the system that delivered it and it will then be processed. A repair message for a journal that was successfully processed, will be ignored and will remain as "unposted".
 
 The posting month
 -----------------
