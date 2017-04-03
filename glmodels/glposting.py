@@ -16,13 +16,17 @@
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
 from gledger import db
-import flask_sqlalchemy
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import date, datetime
 from .glaccount import Accounts, postmonth_for
 
-class PostingWOJournal(ValueError):
+
+class InvalidJournalError(Exception):
+    """ The base exception for failing journals """
+    pass
+
+class PostingWOJournal(InvalidJournalError):
     """Exception thrown when a posting without journal is being made.
     """
     pass
@@ -31,29 +35,35 @@ class NoJournalError(ValueError):
     """ There is no journal for the requested id """
     pass
 
-class JournalBalanceError(Exception):
+class JournalBalanceError(InvalidJournalError):
     """ The postings in a journal do not balance """
     pass
 
-class InvalidDebitCreditError(ValueError):
+class InvalidDebitCreditError(InvalidJournalError):
     """A posting contains an invalid debit/credit indicator """
     pass
 
-class NoPostingInJournal(Exception):
+class NoPostingInJournal(InvalidJournalError):
     """ A journal was submitted without postings """
     pass
 
-class Journals(db.Model) :
+class Journals(db.Model):
     """ The journal is the way postings are delivered by clients.
     
     The journal consists of an unknown number of postings. It must be at least
     two, because the total balance (debit +, credit -) must be zero.
     The journal controls the way the postings are grouped, all postings
     or none are posted by the system. To that purpose the Journals
-    have a flag journalstat that tells the system its status. """
+    have a flag journalstat that tells the system its status.
+    
+    Journals have the following fields :
+        :id: the system generated sequence number
+        :journalstat: the status of the journal
+        :updated_at: The timestamp of the last update
+    """
     
     __tablename__ = 'journals'
-    id = db.Column(db.Integer, db.Sequence('journal_id_seq'),primary_key=True)
+    id = db.Column(db.Integer, db.Sequence('journal_id_seq'), primary_key=True)
     journalpostings = db.relationship('Postings', backref='journal')
     journalstat = db.Column(db.String(1), nullable=False)
     updated_at = db.Column(db.DateTime, nullable=False)
@@ -66,7 +76,8 @@ class Journals(db.Model) :
     def get_by_id(cls, requested_id):
         """ Return the journal row for requested_id """
         try:
-            journal = db.session.query(Journals).filter_by(id=requested_id).first()
+            journal = db.session.query(Journals).filter_by(id=requested_id).\
+                first()
             if not journal:
                 raise NoJournalError('No journal for id ' + str(requested_id))
             return journal
@@ -77,7 +88,8 @@ class Journals(db.Model) :
     def create_from_dict(cls, journdict):
         """Creates a new journal including posting from
         a dictionary created from json """
-        if 'postings' not in journdict['journal'] or journdict['journal']['postings'] is None:
+        if 'postings' not in journdict['journal']\
+            or journdict['journal']['postings'] is None:
             raise NoPostingInJournal('Empty journal')
         newjournal = cls(journalstat=cls.UNPROCESSED)
         newjournal.add()
@@ -89,7 +101,7 @@ class Journals(db.Model) :
     def validate_status(self, id, journalstat):
         """ Check if the status is valid """
         if not journalstat in [self.UNPROCESSED, self.PROCESSED, self.FAILED]:
-            raise InvalidJournalStatus('Status '+ journalstat + ' is invalid')
+            raise InvalidJournalStatus('Status '+ str(journalstat) + ' is invalid')
         return journalstat
     
     def add(self) :
@@ -125,7 +137,20 @@ class Journals(db.Model) :
         
 
 class Postings(db.Model) :
-    """ The individual postings. """
+    """ The individual postings. 
+    
+    Postings have the following fields :
+        :id: the system generated sequence number
+        :account_id: the account the posting is to be applied to
+        :journals_id: the sequence number of the journal the posting is in
+        :postmonth: The accounting month the posting was posted in
+        :currency: The currency of the posting
+        :amount: the posted amount in the smallest unit
+        :debcred: if the account is to be debited or credited
+        :value_date: the date the posting should take effect
+        :updated_at: The timestamp of the last update
+    
+    """
     
     __tablename__ = 'postings'
     id = db.Column(db.Integer, db.Sequence('posting_id_seq'),primary_key=True)

@@ -143,7 +143,7 @@ use the current month.</p>
 
 <span class="target" id="module-gledger.postingapi"></span><dl class="class">
 <dt id="gledger.postingapi.InvalidJsonError">
-<em class="property">class </em><code class="descclassname">gledger.postingapi.</code><code class="descname">InvalidJsonError</code><a class="reference internal" href="_modules/gledger/postingapi.html#InvalidJsonError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.postingapi.InvalidJsonError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gledger.postingapi.</code><code class="descname">InvalidJsonError</code><span class="sig-paren">(</span><em>message</em>, <em>status_code=None</em>, <em>payload=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gledger/postingapi.html#InvalidJsonError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.postingapi.InvalidJsonError" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is thrown when a journal does not comply.</p>
 </dd></dl>
 
@@ -413,6 +413,22 @@ two, because the total balance (debit +, credit -) must be zero.
 The journal controls the way the postings are grouped, all postings
 or none are posted by the system. To that purpose the Journals
 have a flag journalstat that tells the system its status.</p>
+<dl class="docutils">
+<dt>Journals have the following fields :</dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">id:</th><td class="field-body">the system generated sequence number</td>
+</tr>
+<tr class="field-even field"><th class="field-name">journalstat:</th><td class="field-body">the status of the journal</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">updated_at:</th><td class="field-body">The timestamp of the last update</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
 <dl class="method">
 <dt id="glmodels.glposting.Journals.add">
 <code class="descname">add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Journals.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Journals.add" title="Permalink to this definition">¶</a></dt>
@@ -455,6 +471,34 @@ is raised.</p>
 <dt id="glmodels.glposting.Postings">
 <em class="property">class </em><code class="descclassname">glmodels.glposting.</code><code class="descname">Postings</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Postings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Postings" title="Permalink to this definition">¶</a></dt>
 <dd><p>The individual postings.</p>
+<dl class="docutils">
+<dt>Postings have the following fields :</dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">id:</th><td class="field-body">the system generated sequence number</td>
+</tr>
+<tr class="field-even field"><th class="field-name">account_id:</th><td class="field-body">the account the posting is to be applied to</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">journals_id:</th><td class="field-body">the sequence number of the journal the posting is in</td>
+</tr>
+<tr class="field-even field"><th class="field-name">postmonth:</th><td class="field-body">The accounting month the posting was posted in</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">currency:</th><td class="field-body">The currency of the posting</td>
+</tr>
+<tr class="field-even field"><th class="field-name">amount:</th><td class="field-body">the posted amount in the smallest unit</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">debcred:</th><td class="field-body">if the account is to be debited or credited</td>
+</tr>
+<tr class="field-even field"><th class="field-name">value_date:</th><td class="field-body">the date the posting should take effect</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">updated_at:</th><td class="field-body">The timestamp of the last update</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
 <dl class="method">
 <dt id="glmodels.glposting.Postings.add">
 <code class="descname">add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Postings.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Postings.add" title="Permalink to this definition">¶</a></dt>

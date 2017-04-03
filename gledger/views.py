@@ -30,7 +30,7 @@ def createaccount():
                           role=newAccountForm.role.data).add()
         db.session.commit()
         return redirect(url_for('accountList'))
-    return render_template('account.html', form=newAccountForm,
+    return render_template('account.html',form=newAccountForm,
                            accountview=AccountView(), localTitle='New account')
 
 @app.route('/accounts', methods=['GET'], strict_slashes=False)
@@ -120,11 +120,10 @@ def createJournal():
     """
     return 'Maak en vul een nieuw journaal ' 
 
-@app.route('/journal/<journalkey>', methods=['GET', 'POST'])
+@app.route('/journal/<journalkey>', methods=['GET'])
 def journal(journalkey):
-    """ Show a journal for update or browsing.
+    """ Show a journal for  browsing.
     
     The journalkey is the number of the journal requested
-    On POST the journal is processed if it is unprocessed.
     """
     return 'Boekingen in journaal ' + str(journalkey)

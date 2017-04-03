@@ -20,14 +20,37 @@ import glmodels.glposting as postings
 
 postingapi = Blueprint('api', __name__)
 
-class InvalidJsonError(ValueError):
+class InvalidJsonError(Exception):
     """ This is thrown when a journal does not comply. """
-    pass
+    status_code = 400
+    
+    def __init__(self, message, status_code=None, payload=None):
+        postings.InvalidJournalError.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+        
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
 
 @postingapi.errorhandler(InvalidJsonError)
-def json_error(error):
-    return jsonify({'status' : 'The data passed was invalid'})
-    
+def handle_invalid_json(error):
+    response_dict = error.to_dict()
+    response_dict["status"] = "Not correct"
+    response = jsonify(response_dict)
+    response.status_code = error.status_code
+    return response
+
+
+def create_success_response(app_message=None):
+    """ Here we build the response for successfuly building a journal """
+    success_response = {"status" : "OK"}
+    if not app_message is None :
+        success_response['message'] = app_message
+    return success_response
 
 @postingapi.route('/journal/new', methods=['POST'])
 def addjournal():
@@ -36,8 +59,12 @@ def addjournal():
     The journal and its entries are delivered as
     a JSON file. It is decoded and the journal
     and its postings are added to the database. """
-    journal = request.get_json()
-    return jsonify({'status':'done'})
+    try:
+        journal = request.get_json()
+        postings.Journals.create_from_dict(journal)
+    except postings.InvalidJournalError as e:
+        raise InvalidJsonError(str(e))
+    return jsonify(create_success_response(app_message='Journal added'))
 
 @postingapi.route('/journal/addto/<journalno>', methods=['POST'])
 def addtojournal(journalno):
@@ -46,4 +73,4 @@ def addtojournal(journalno):
     The journal entries are delivered as
     a JSON file. It is decoded and the postings
     are added to the journal in the database. """
-    return jsonify({'status':'done'})
+    return jsonify(create_success_response())

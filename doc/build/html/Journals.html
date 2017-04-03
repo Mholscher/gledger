@@ -149,26 +149,19 @@
 </dl>
 </div></blockquote>
 <p>The result of the submission if successful will be the following message:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span>   <span class="s">&quot;httpstatus&quot;</span><span class="p">:</span><span class="s">&quot;OK&quot;</span><span class="p">;</span>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span>   <span class="s">&quot;status&quot;</span><span class="p">:</span><span class="s">&quot;OK&quot;</span><span class="p">;</span>
     <span class="s">&quot;message&quot;</span><span class="p">:</span><span class="s">&quot;Journal added&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>If not successful, a message will be sent as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span>   <span class="s">&quot;httpstatus&quot;</span><span class="p">:</span><span class="s">&quot;Not correct&quot;</span><span class="p">;</span>
+<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span>   <span class="s">&quot;status&quot;</span><span class="p">:</span><span class="s">&quot;Not correct&quot;</span><span class="p">;</span>
     <span class="s">&quot;message&quot;</span><span class="p">:</span><span class="s">&quot;Journal was not balancing&quot;</span><span class="p">;</span>
     <span class="s">&quot;extkey&quot;</span><span class="p">:</span><span class="s">&quot;f234&quot;</span><span class="p">;</span>
-    <span class="s">&quot;remark&quot;</span><span class="p">:</span><span class="s">&quot;The journal was stored and can be updated&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Where the &#8220;f234&#8221; is the external key passed by the application. If the server is not able to store the journal (e.g. because it was incorrectly formatted), the message wil be:</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="p">{</span>   <span class="s">&quot;httpstatus&quot;</span><span class="p">:</span><span class="s">&quot;Bad request&quot;</span><span class="p">;</span>
-    <span class="s">&quot;message&quot;</span><span class="p">:</span><span class="s">&quot;Journal contained no posting&quot;</span><span class="p">;</span>
-    <span class="s">&quot;extkey&quot;</span><span class="p">:</span><span class="s">&quot;f234&quot;</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
+<p>Where the &#8220;f234&#8221; is the external key passed by the application.</p>
 </div>
 </div>
 

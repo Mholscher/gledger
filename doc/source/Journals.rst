@@ -66,22 +66,16 @@ The definitions of the fields are as follows:
 
 The result of the submission if successful will be the following message::
 
-    {   "httpstatus":"OK";
+    {   "status":"OK";
         "message":"Journal added"
     }
 
 If not successful, a message will be sent as follows::
 
-    {   "httpstatus":"Not correct";
+    {   "status":"Not correct";
         "message":"Journal was not balancing";
         "extkey":"f234";
-        "remark":"The journal was stored and can be updated"
     }
 
-Where the "f234" is the external key passed by the application. If the server is not able to store the journal (e.g. because it was incorrectly formatted), the message wil be::
-
-    {   "httpstatus":"Bad request";
-        "message":"Journal contained no posting";
-        "extkey":"f234";
-    }
+Where the "f234" is the external key passed by the application. 
 
