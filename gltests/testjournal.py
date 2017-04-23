@@ -43,7 +43,7 @@ class testPostCreation(unittest.TestCase) :
         
     def test_post_one_posting(self) :
         """ A posting can be inserted """
-        post1 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id, 
+        post1 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id, 
                                postmonth = 201608, value_date = datetime.now(), 
                                amount=250, debcred='Cr')
         journ3 = posts.Journals(journalstat = posts.Journals.UNPROCESSED)
@@ -55,7 +55,7 @@ class testPostCreation(unittest.TestCase) :
         
     def test_no_post_wo_journal(self) :
         """Inserting posting w/o journal fails """
-        post2 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id, 
+        post2 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id, 
                                postmonth = 201608, value_date = datetime.now(), 
                                amount=250, debcred='Cr')
         post2.add()
@@ -68,7 +68,7 @@ class testPostCreation(unittest.TestCase) :
         journ4.add()
         gledger.db.session.flush()
         with self.assertRaises(posts.InvalidDebitCreditError):
-            post3 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id,  
+            post3 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
                                    journals_id = journ4.id, postmonth = 201609, 
                                    value_date = datetime.now(), amount=230, debcred='Ct')
             gledger.db.session.flush()
@@ -93,15 +93,15 @@ class testFullJournal(unittest.TestCase) :
     def test_create_journal(self):
         """ Create a journal with its postings """
         journ2 = posts.Journals.get_by_id(self.journ2id)
-        post3 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id,  
+        post3 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
                                journals_id = journ2.id, postmonth = 201609, 
                                value_date = datetime.now(), amount=230, debcred='Cr')
         post3.add()
-        post4 = posts.Postings(account_id=accmodel.Accounts.get_by_name("kas").id, 
+        post4 = posts.Postings(accounts_id=accmodel.Accounts.get_by_name("kas").id, 
                                journals_id = journ2.id, postmonth = 201609, 
                                value_date = datetime.now(), amount=250, debcred='Db')
         post4.add()
-        post5 = posts.Postings(account_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
+        post5 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
                                journals_id = journ2.id, postmonth = 201609, 
                                value_date = datetime.now(), amount=20, debcred='Cr')
         post5.add()
@@ -114,15 +114,15 @@ class testFullJournal(unittest.TestCase) :
         """ When a debit and credit amount is not the same,
         the journal must be refused! """
         journ2 = posts.Journals.get_by_id(self.journ2id)
-        post6 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id,  
+        post6 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
                                journals_id = journ2.id, postmonth = 201609, 
                                value_date = datetime.now(), amount=230, debcred='Cr')
         post6.add()
-        post7 = posts.Postings(account_id=accmodel.Accounts.get_by_name("kas").id, 
+        post7 = posts.Postings(accounts_id=accmodel.Accounts.get_by_name("kas").id, 
                                journals_id = journ2.id, postmonth = 201609, 
                                value_date = datetime.now(), amount=230, debcred='Db')
         post7.add()
-        post8 = posts.Postings(account_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
+        post8 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
                                journals_id = journ2.id, postmonth = 201609, 
                                value_date = datetime.now(), amount=20, debcred='Cr')
         post8.add()
@@ -185,25 +185,24 @@ class testFullJournal(unittest.TestCase) :
             with open('jrnerr2.json', 'r') as f:
                 dictjourn3 = json.load(f)
             posts.Journals.create_from_dict(dictjourn3)
-            
-    def test_posting_unknown_account(self):
-        """ If a posting is to an unknown account, it fails """
-        with self.assertRaises(accmodel.NoAccountError):
+                    
+    def test_translate_no_account(self):
+        """ A posting to a non existing account leads to invalid json error"""
+        with self.assertRaises(posts.InvalidJournalError):
             with open('jrnerr3.json', 'r') as f:
                 dictjourn4 = json.load(f)
             posts.Journals.create_from_dict(dictjourn4)
         
-        
     def add_postings_to(self, journ2):
-        post3 = posts.Postings(account_id = accmodel.Accounts.get_by_name("verkopen").id,  
+        post3 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
                                journals_id = journ2.id, postmonth = 201609, 
                                value_date = datetime.now(), amount=250, debcred='Cr')
         post3.add()
-        post4 = posts.Postings(account_id=accmodel.Accounts.get_by_name("kas").id, 
+        post4 = posts.Postings(accounts_id=accmodel.Accounts.get_by_name("kas").id, 
                                journals_id = journ2.id, postmonth = 201609, 
                                value_date = datetime.now(), amount=230, debcred='Db')
         post4.add()
-        post5 = posts.Postings(account_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
+        post5 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
                                journals_id = journ2.id, postmonth = 201609, 
                                value_date = datetime.now(), amount=20, debcred='Db')
         post5.add()

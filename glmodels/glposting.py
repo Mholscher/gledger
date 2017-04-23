@@ -19,7 +19,7 @@ from gledger import db
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import date, datetime
-from .glaccount import Accounts, postmonth_for
+from .glaccount import Accounts, postmonth_for, NoAccountError
 
 
 class InvalidJournalError(Exception):
@@ -58,12 +58,14 @@ class Journals(db.Model):
     
     Journals have the following fields :
         :id: the system generated sequence number
+        :extkey: the key to the callings systems object, this is optional
         :journalstat: the status of the journal
         :updated_at: The timestamp of the last update
     """
     
     __tablename__ = 'journals'
     id = db.Column(db.Integer, db.Sequence('journal_id_seq'), primary_key=True)
+    extkey = db.Column(db.String(150), nullable=True)
     journalpostings = db.relationship('Postings', backref='journal')
     journalstat = db.Column(db.String(1), nullable=False)
     updated_at = db.Column(db.DateTime, nullable=False)
@@ -94,7 +96,10 @@ class Journals(db.Model):
         newjournal = cls(journalstat=cls.UNPROCESSED)
         newjournal.add()
         for posting in journdict["journal"]["postings"]:
-            Postings.create_from_dict(posting,newjournal)
+            try:
+                Postings.create_from_dict(posting,newjournal)
+            except NoAccountError as exc:
+                raise InvalidJournalError(str(exc)) from exc
         return newjournal
         
     @validates('journalstat')
@@ -116,9 +121,7 @@ class Journals(db.Model):
         """ Post the posting of this journal to the accounts.
         
         The journal is first checked to balance. If it doesn't
-        balance, it is marked for being unprocessable. The 
-        transaction is committed, but after that an exception
-        is raised."""
+        balance, it is marked for being unprocessable. """
         journal_balance = 0
         if self.journalpostings:
             firstpostingccy = self.journalpostings[0].currency
@@ -132,7 +135,10 @@ class Journals(db.Model):
         if not journal_balance == 0:
             raise JournalBalanceError('Journal balance = ' + str(journal_balance))
         for posting in self.journalpostings:
-            posting.apply()
+            try:
+                posting.apply()
+            except NoAccountError as exc:
+                raise InvalidJournalError(str(exc)) from exc
         self.journalstat = self.PROCESSED
         
 
@@ -154,7 +160,7 @@ class Postings(db.Model) :
     
     __tablename__ = 'postings'
     id = db.Column(db.Integer, db.Sequence('posting_id_seq'),primary_key=True)
-    account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
+    accounts_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
     journals_id = db.Column(db.Integer, db.ForeignKey('journals.id'), nullable=False)
     postmonth = db.Column(db.Numeric(precision=6))
     currency = db.Column(db.String(3), nullable=False, default='EUR')
@@ -178,7 +184,7 @@ class Postings(db.Model) :
                          currency=posting["currency"],
                          amount=posting["amount"],
                          debcred=posting["debitcredit"])
-        newposting.account_id = newposting._id_for_account(posting["account"])
+        newposting.accounts_id = newposting._id_for_account(posting["account"])
         newposting.journal = for_journal
         newposting.add()
         for_journal.journalpostings.append(newposting)
@@ -217,6 +223,6 @@ class Postings(db.Model) :
         
         Applying means adjusting the balance with the amount of
         the posting """
-        account = Accounts.get_by_id(self.account_id)
+        account = Accounts.get_by_id(self.accounts_id)
         account.post_amount(self.debcred, self.amount, self.value_date)
         

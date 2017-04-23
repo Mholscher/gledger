@@ -64,13 +64,5 @@ def addjournal():
         postings.Journals.create_from_dict(journal)
     except postings.InvalidJournalError as e:
         raise InvalidJsonError(str(e))
-    return jsonify(create_success_response(app_message='Journal added'))
+    return jsonify(create_success_response(app_message='Journal '+ extkey + ' added'))
 
-@postingapi.route('/journal/addto/<journalno>', methods=['POST'])
-def addtojournal(journalno):
-    """ Receive updates to an existing journal.
-    
-    The journal entries are delivered as
-    a JSON file. It is decoded and the postings
-    are added to the journal in the database. """
-    return jsonify(create_success_response())
