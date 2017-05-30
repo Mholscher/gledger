@@ -3,9 +3,6 @@ import glmodels.glaccount as accmodel
 from flask import render_template, flash, request, redirect, url_for, abort
 from glviews.accountviews import AccountView
 from glviews.forms import AccountForm, NewAccountForm
-# todo: remove reference to SQLAlchemy. Create an application
-# "NotFound" exception etc.
-from sqlalchemy.orm.exc import NoResultFound
 import logging
 
 
@@ -108,17 +105,6 @@ def posts(accountName, postmonth=None):
     if postmonth is None:
         postmonth = '04-2015'
     return 'Boekingen voor rekening ' + str(accountName) + ', maand ' + str(postmonth)
-
-@app.route('/journal/new', methods=['GET', 'POST'])
-def createJournal():
-    """ 
-    Create a new journal. 
-    
-    On post it returns the next page or processes the postings
-    that were entered by the user. Get returns a fresh journal,
-    showing a journal with no postings.
-    """
-    return 'Maak en vul een nieuw journaal ' 
 
 @app.route('/journal/<journalkey>', methods=['GET'])
 def journal(journalkey):

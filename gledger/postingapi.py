@@ -38,6 +38,7 @@ class InvalidJsonError(Exception):
 
 @postingapi.errorhandler(InvalidJsonError)
 def handle_invalid_json(error):
+    """ Create a response for an invalid json journal """
     response_dict = error.to_dict()
     response_dict["status"] = "Not correct"
     response = jsonify(response_dict)
@@ -46,7 +47,7 @@ def handle_invalid_json(error):
 
 
 def create_success_response(app_message=None):
-    """ Here we build the response for successfuly building a journal """
+    """ Build the response for successfuly adding/changing a journal """
     success_response = {"status" : "OK"}
     if not app_message is None :
         success_response['message'] = app_message

@@ -424,6 +424,97 @@ class TestViewFunction(unittest.TestCase) :
 #        gledger.db.session.delete(acc26)
 #        gledger.db.session.commit()
 
+class TestAccountList(unittest.TestCase):
+    
+    def setUp(self):
+        add_postmonths([201507])
+        self.acc40 = accmodel.Accounts(name='inkopen', role='E')
+        self.acc40.add()
+        self.acc40.updated_at = datetime(1983, 12, 16, hour=23, minute=40, second=44)
+        self.acc41 = accmodel.Accounts(name='voorraad', role='A')
+        self.acc41.add()
+        self.acc41.updated_at = datetime(1988, 12, 16, hour=23, minute=29, second=44)
+        self.acc42 = accmodel.Accounts(name='bank', role='A')
+        self.acc42.add()
+        self.acc42.updated_at = datetime(2013, 9, 12, hour=23, minute=16, second=44)
+        self.acc43 = accmodel.Accounts(name='crediteuren', role='L')
+        self.acc43.add()
+        self.acc43.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
+        self.acc44 = accmodel.Accounts(name='debiteuren', role='A')
+        self.acc44.add()
+        self.acc44.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
+        self.acc45 = accmodel.Accounts(name='rente', role='A')
+        self.acc45.add()
+        self.acc45.updated_at = datetime(1999, 1, 15, hour=9, minute=41, second=41)
+        self.acc46 = accmodel.Accounts(name='salaris', role='E')
+        self.acc46.add()
+        self.acc46.updated_at = datetime(2015, 11, 9, hour=11, minute=20, second=21)
+        self.bal11 = accmodel.Balances(postmonth=201507, amount=1726, value_date='2015-07-10')
+        self.acc40.balances.append(self.bal11)
+        self.bal12 = accmodel.Balances(postmonth=201507, amount=1830, value_date='2015-07-10')
+        self.acc41.balances.append(self.bal12)
+        self.bal13 = accmodel.Balances(postmonth=201507, amount=10033, value_date='2015-07-10')
+        self.acc42.balances.append(self.bal13)
+        self.bal14 = accmodel.Balances(postmonth=201507, amount=7263, value_date='2015-07-10')
+        self.acc43.balances.append(self.bal14)
+        self.bal15 = accmodel.Balances(postmonth=201507, amount=3398, value_date='2015-07-11')
+        self.acc44.balances.append(self.bal15)
+        self.bal16 = accmodel.Balances(postmonth=201507, amount=2611, value_date='2015-07-09')
+        self.acc45.balances.append(self.bal16)
+        self.bal17 = accmodel.Balances(postmonth=201507, amount=17166, value_date='2015-07-08')
+        self.acc46.balances.append(self.bal17)
+        gledger.db.session.flush()
+        
+    def tearDown(self):
+        gledger.db.session.rollback()
+        
+    def test_return_accountlist(self):
+        """ An accountlist can be returned """
+        al = accmodel.AccountList().as_list()
+        self.assertEqual(len(al), 7, 'Not all items in accountlist')
+        
+    def test_accountlist_keyed_name(self):
+        """An accountlist can be returned with names as keys """
+        ad = accmodel.AccountList().as_dict()
+        self.assertTrue('bank'in ad, 'Key bank not in accountlist') 
+        self.assertTrue('salaris'in ad, 'Key salaris not in accountlist')
+        
+    def test_set_pagelength(self):
+        """ We can set a page length on AccountList """
+        al = accmodel.AccountList(pagelength=3).as_list()
+        self.assertEqual(len(al), 3, 'Cannot limit pagelength in accountlist')
+        
+    def test_page(self):
+        """ We can ask for a page """
+        al = accmodel.AccountList(pagelength=3, page=2)
+        self.assertEqual(al.as_list()[0].name, 'crediteuren', 'Page 2 not correctly shown')
+        
+    def test_incomplete_page(self):
+        """ We can retrieve an incomplete page """
+        al = accmodel.AccountList(pagelength=3, page=3)
+        self.assertEqual(len(al.as_list()), 1, 'Page with rest not correctly shown')        
+        
+    def test_accountlist_order(self):
+        """ The accountlist is in reversed date/time order """
+        al = accmodel.AccountList().as_list()
+        for ind, account in enumerate(al):
+            if ind > 0:
+                self.assertTrue(al[ind].updated_at <= al[ind - 1].updated_at, 'Found out of order: ' + account.name)
+                
+    def test_limit_accountlist(self):
+        """Limit the accountlist with a search string """
+        al = accmodel.AccountList(search_string='iteur').as_list()
+        self.assertEqual(len(al), 2, 'Wrong number of accounts selected')
+        
+    def test_accountlist_selection_empty(self):
+        """ A search string that is not in the db, leads to empty list """
+        al = accmodel.AccountList(search_string='n2fq').as_list()
+        self.assertFalse(al, 'Accountlist not empty')
+        
+    def test_searchstring_minimum(self):
+        """ A search string must be at least 3 characters """
+        with self.assertRaises(ValueError) :       
+            al = accmodel.AccountList(search_string='dg').as_list()
 
 def add_postmonths(monthlist) :
     """Add the postmonths requested in the list to the session """

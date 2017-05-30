@@ -93,7 +93,7 @@ class Journals(db.Model):
         if 'postings' not in journdict['journal']\
             or journdict['journal']['postings'] is None:
             raise NoPostingInJournal('Empty journal')
-        newjournal = cls(journalstat=cls.UNPROCESSED)
+        newjournal = cls(journalstat=cls.UNPROCESSED, extkey=journdict['journal']['extkey'])
         newjournal.add()
         for posting in journdict["journal"]["postings"]:
             try:

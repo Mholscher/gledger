@@ -16,10 +16,10 @@
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
 from gledger import db
-# import flask_sqlalchemy
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import date, datetime
+import logging
 
     
 class NoAccountError(ValueError):
@@ -300,7 +300,43 @@ class Balances(db.Model):
 
     def __repr__(self):
         return 'Balances(amount = {}, postmonth = {}, account {})'.format(self.amount, self.postmonth,          self.account_id)
+
+class AccountList():
+    """ A list of accounts is returned for showing 
     
+    The search string must be at least 3 characters, to  prevent an overly
+    long result list. If no account exists where the name contains the 
+    search string, return an empty list."""
+    def __init__(self, search_string=None, pagelength=10,page=1):
+        """Initialize the list, using search_string as a selection """
+        q = db.session.query(Accounts).order_by(Accounts.updated_at.desc())
+        if search_string:
+            if len(search_string) < 3:
+                raise ValueError('Search string must be at least 3 characters') 
+            q = q.filter(Accounts.name.like('%'+search_string+'%'))
+        skip_records = (page - 1) * pagelength
+        if skip_records < 0:
+            skip_records = 0
+        logging.debug('Skip records: ' + str(skip_records))
+        if skip_records:
+            q = q.offset(skip_records)
+        q = q.limit(pagelength)
+        logging.debug('SQL is ' + str(q))
+        self.account_list = q.all()
+        
+    def as_list(self):
+        """ Return the embedded list """
+        return self.account_list
+    
+    def as_dict(self):
+        """ Return the embedded list as a dictionary.
+        
+        The dictionary has a key of name and the list entry as value """
+        account_dictionary = {} 
+        for account in self.account_list:
+            account_dictionary[account.name] = account
+        return account_dictionary
+        
 class Postmonths(db.Model):
     
     __tablename__ = 'postmnths'

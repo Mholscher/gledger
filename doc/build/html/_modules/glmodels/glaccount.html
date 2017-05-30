@@ -369,7 +369,35 @@
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s">&#39;Balances(amount = {}, postmonth = {}, account {})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">postmonth</span><span class="p">,</span>          <span class="bp">self</span><span class="o">.</span><span class="n">account_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AccountList"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.AccountList">[docs]</a><span class="k">class</span> <span class="nc">AccountList</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; A list of accounts is returned for showing </span>
+<span class="sd">    </span>
+<span class="sd">    The search string must be at least 3 characters, to  prevent an overly</span>
+<span class="sd">    long result list. If no account exists where the name contains the </span>
+<span class="sd">    search string, return an empty list.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search_string</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">pagelength</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize the list, using search_string as a selection &quot;&quot;&quot;</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Accounts</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">search_string</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">search_string</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Search string must be at least 3 characters&#39;</span><span class="p">)</span> 
+            <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Accounts</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s">&#39;%&#39;</span><span class="o">+</span><span class="n">search_string</span><span class="o">+</span><span class="s">&#39;%&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">account_list</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">pagelength</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        
+<div class="viewcode-block" id="AccountList.as_list"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.AccountList.as_list">[docs]</a>    <span class="k">def</span> <span class="nf">as_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the embedded list &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">account_list</span></div>
     
+<div class="viewcode-block" id="AccountList.as_dict"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.AccountList.as_dict">[docs]</a>    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the embedded list as a dictionary.</span>
+<span class="sd">        </span>
+<span class="sd">        The dictionary has a key of name and the list entry as value &quot;&quot;&quot;</span>
+        <span class="n">account_dictionary</span> <span class="o">=</span> <span class="p">{}</span> 
+        <span class="k">for</span> <span class="n">account</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">account_list</span><span class="p">:</span>
+            <span class="n">account_dictionary</span><span class="p">[</span><span class="n">account</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">account</span>
+        <span class="k">return</span> <span class="n">account_dictionary</span></div></div>
+        
 <span class="k">class</span> <span class="nc">Postmonths</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
     
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;postmnths&#39;</span>

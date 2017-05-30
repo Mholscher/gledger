@@ -2,7 +2,7 @@
 #    it under the terms of the GNU Lesser General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#
+#   
 #    gledger is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +23,7 @@ class AccountView() :
         The way the collection is produced is as a dictionary with
         embedded data, for the account itself as strings,
         for the dependents as dictionaries. 
-    
+        
     """
     
     def __init__(self) :

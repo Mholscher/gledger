@@ -24,11 +24,9 @@ Module gledger
 
 ..  autoclass:: InvalidJsonError
 
-..  autofunction:: json_error
+..  autofunction:: handle_invalid_json
 
 ..  autofunction:: addjournal
-
-..  autofunction:: addtojournal
 
 Module glmodels
 ---------------
@@ -44,6 +42,9 @@ Module glmodels
     :members:
 
 ..  autoclass:: Balances
+    :members:
+    
+..  autoclass:: AccountList
     :members:
     
 ..  autofunction:: postmonth_for(postdate)

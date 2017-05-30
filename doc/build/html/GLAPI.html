@@ -148,9 +148,10 @@ use the current month.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="gledger.postingapi.json_error">
-<code class="descclassname">gledger.postingapi.</code><code class="descname">json_error</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gledger/postingapi.html#json_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.postingapi.json_error" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="gledger.postingapi.handle_invalid_json">
+<code class="descclassname">gledger.postingapi.</code><code class="descname">handle_invalid_json</code><span class="sig-paren">(</span><em>error</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gledger/postingapi.html#handle_invalid_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.postingapi.handle_invalid_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a response for an invalid json journal</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="gledger.postingapi.addjournal">
@@ -159,15 +160,6 @@ use the current month.</p>
 <p>The journal and its entries are delivered as
 a JSON file. It is decoded and the journal
 and its postings are added to the database.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="gledger.postingapi.addtojournal">
-<code class="descclassname">gledger.postingapi.</code><code class="descname">addtojournal</code><span class="sig-paren">(</span><em>journalno</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gledger/postingapi.html#addtojournal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.postingapi.addtojournal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Receive updates to an existing journal.</p>
-<p>The journal entries are delivered as
-a JSON file. It is decoded and the postings
-are added to the journal in the database.</p>
 </dd></dl>
 
 </div>
@@ -377,6 +369,28 @@ balance; no postings for the current month have been received.</p>
 
 </dd></dl>
 
+<dl class="class">
+<dt id="glmodels.glaccount.AccountList">
+<em class="property">class </em><code class="descclassname">glmodels.glaccount.</code><code class="descname">AccountList</code><span class="sig-paren">(</span><em>search_string=None</em>, <em>pagelength=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#AccountList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.AccountList" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of accounts is returned for showing</p>
+<p>The search string must be at least 3 characters, to  prevent an overly
+long result list. If no account exists where the name contains the 
+search string, return an empty list.</p>
+<dl class="method">
+<dt id="glmodels.glaccount.AccountList.as_dict">
+<code class="descname">as_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#AccountList.as_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.AccountList.as_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the embedded list as a dictionary.</p>
+<p>The dictionary has a key of name and the list entry as value</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="glmodels.glaccount.AccountList.as_list">
+<code class="descname">as_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#AccountList.as_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.AccountList.as_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the embedded list</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="glmodels.glaccount.postmonth_for">
 <code class="descclassname">glmodels.glaccount.</code><code class="descname">postmonth_for</code><span class="sig-paren">(</span><em>postdate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#postmonth_for"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.postmonth_for" title="Permalink to this definition">¶</a></dt>
@@ -421,9 +435,11 @@ have a flag journalstat that tells the system its status.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">id:</th><td class="field-body">the system generated sequence number</td>
 </tr>
-<tr class="field-even field"><th class="field-name">journalstat:</th><td class="field-body">the status of the journal</td>
+<tr class="field-even field"><th class="field-name">extkey:</th><td class="field-body">the key to the callings systems object, this is optional</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">updated_at:</th><td class="field-body">The timestamp of the last update</td>
+<tr class="field-odd field"><th class="field-name">journalstat:</th><td class="field-body">the status of the journal</td>
+</tr>
+<tr class="field-even field"><th class="field-name">updated_at:</th><td class="field-body">The timestamp of the last update</td>
 </tr>
 </tbody>
 </table>
@@ -454,9 +470,7 @@ a dictionary created from json</p>
 <code class="descname">post_journal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glposting.html#Journals.post_journal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glposting.Journals.post_journal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Post the posting of this journal to the accounts.</p>
 <p>The journal is first checked to balance. If it doesn&#8217;t
-balance, it is marked for being unprocessable. The 
-transaction is committed, but after that an exception
-is raised.</p>
+balance, it is marked for being unprocessable.</p>
 </dd></dl>
 
 <dl class="method">

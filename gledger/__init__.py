@@ -30,7 +30,7 @@ app.register_blueprint(api, url_prefix='/api')
 app.config.from_pyfile('localgledger.cfg')
 
 
-logging.basicConfig(filename='gledger.log', level=logging.DEBUG) 
+logging.basicConfig(filename='gledger.log', level=logging.INFO) 
 logging.debug('Debug logging')
 
 from glmodels.glaccount import Accounts
