@@ -73,6 +73,8 @@ def accounts(accountName=None):
         flash('Account '+ accountName + ' changed')
         logging.debug('Account '+ accountName + ' changed')
         return redirect(url_for('accountList'))
+    if request.method == 'POST':
+        print(accountForm.errors)
     accountview = AccountView.createView(name=accountName).asDictionary()
     return render_template('account.html', accountview=accountview, form = accountForm,
                            localtitle='Account ' + accountview['account']['name'])

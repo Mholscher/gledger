@@ -305,7 +305,7 @@ class AccountList():
     """ A list of accounts is returned for showing 
     
     The search string must be at least 3 characters, to  prevent an overly
-    long result list. If no account exists where the name contains the 
+    long result list. If the search string is none, collect the accounts last added. If no account exists where the name contains the 
     search string, return an empty list."""
     def __init__(self, search_string=None, pagelength=10,page=1):
         """Initialize the list, using search_string as a selection """

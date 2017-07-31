@@ -372,6 +372,8 @@ class TestViewFunction(unittest.TestCase) :
         acc24 = accmodel.Accounts(name='wonkyparent', role='L')
         acc24.add()
         acc24.children.append(acc23)
+        acc26 = accmodel.Accounts(name='wonkygranny', role='L')
+        acc26.add()
         gledger.db.session.commit()
         
     def tearDown(self) :
@@ -387,6 +389,12 @@ class TestViewFunction(unittest.TestCase) :
                 gledger.db.session.delete(acc23)
         except SQLAlchemyError :
             pass
+        try :
+            acc26 = accmodel.Accounts.get_by_name('wonkygranny')
+            if acc26:
+                gledger.db.session.delete(acc26)
+        except SQLAlchemyError :
+            pass
         gledger.db.session.commit() 
         
         
@@ -396,33 +404,28 @@ class TestViewFunction(unittest.TestCase) :
         rv = self.app.get('/accounts/wonky')
         assert b'wonky' in rv.data
         
-#    def test_account_post(self) :
-#        """ Test if account role can be changed """
-#        logging.debug('before posting')
-#        rv = self.app.post('/accounts/wonky', data = dict(Account = "wonky", Type = "A"),
-#            follow_redirects=True)
-#        logging.debug('Posting change of role done')
-#        acc25 = accmodel.Accounts.get_by_name("wonky")
-#        logging.debug('acc25: ' + acc25.name + ', ' + acc25.role)
-#        self.assertEqual(acc25.role, 'A', 'wonky account should be changed to asset')
+    def test_account_post(self) :
+        """ Test if account role can be changed """
+        logging.debug('before posting')
+        rv = self.app.post('/accounts/wonky', data = dict(name = "wonky", role = "A"),
+            follow_redirects=True)
+        logging.debug('Posting change of role done')
+        acc25 = accmodel.Accounts.get_by_name("wonky")
+        logging.debug('acc25: ' + acc25.name + ', ' + acc25.role)
+        self.assertEqual(acc25.role, 'A', 'wonky account should be changed to asset')
     
-#    def test_set_parent(self) :
-#        """ Test if account parentage can be set """
-#        logging.debug('Before setting parent')
-#        acc26 = accmodel.Accounts(name='creditorgranny', role='L')
-#        acc26.add()
-#        gledger.db.session.commit()
-#        logging.debug('Granny added to database; now the transaction')
-#        rv = self.app.post('/accounts/creditorparent', data = dict(Account = "creditorparent", 
-#                                                            Parent = 'creditorgranny', Type = "A"),
-#            follow_redirects=True)
-#        logging.debug('Transaction done, now re-read accounts...')
-#        parent = accmodel.Accounts.get_by_name('creditorparent')
-#        acc26 = accmodel.Accounts.get_by_name('creditorgranny')
-#        self.assertEqual(acc26.id, parent.parent, 'Not able to set parent property') 
-#        gledger.db.session.delete(parent)
-#        gledger.db.session.delete(acc26)
-#        gledger.db.session.commit()
+    def test_set_parent(self) :
+        """ Test if account parentage can be set """
+        logging.debug('Before setting parent')
+        gledger.db.session.commit()
+        logging.debug('Granny added to database; now the transaction')
+        rv = self.app.post('/accounts/wonkyparent', data = dict(name = "wonkyparent", 
+                                                            parent = 'wonkygranny', Type = "A"),
+            follow_redirects=True)
+        logging.debug('Transaction done, now re-read accounts...')
+        parent = accmodel.Accounts.get_by_name('wonkyparent')
+        acc26 = accmodel.Accounts.get_by_name('wonkygranny')
+        self.assertEqual(acc26.id, parent.parent, 'Not able to set parent property') 
 
 class TestAccountList(unittest.TestCase):
     
@@ -515,6 +518,60 @@ class TestAccountList(unittest.TestCase):
         """ A search string must be at least 3 characters """
         with self.assertRaises(ValueError) :       
             al = accmodel.AccountList(search_string='dg').as_list()
+            
+class TestAccountListView(unittest.TestCase):
+    
+    def setUp(self):
+        add_postmonths([201507])
+        self.acc40 = accmodel.Accounts(name='inkopen', role='E')
+        self.acc40.add()
+        self.acc40.updated_at = datetime(1983, 12, 16, hour=23, minute=40, second=44)
+        self.acc41 = accmodel.Accounts(name='voorraad', role='A')
+        self.acc41.add()
+        self.acc41.updated_at = datetime(1988, 12, 16, hour=23, minute=29, second=44)
+        self.acc42 = accmodel.Accounts(name='bank', role='A')
+        self.acc42.add()
+        self.acc42.updated_at = datetime(2013, 9, 12, hour=23, minute=16, second=44)
+        self.acc43 = accmodel.Accounts(name='crediteuren', role='L')
+        self.acc43.add()
+        self.acc43.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
+        self.acc44 = accmodel.Accounts(name='debiteuren', role='A')
+        self.acc44.add()
+        self.acc44.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
+        self.acc45 = accmodel.Accounts(name='rente', role='A')
+        self.acc45.add()
+        self.acc45.updated_at = datetime(1999, 1, 15, hour=9, minute=41, second=41)
+        self.acc46 = accmodel.Accounts(name='salaris', role='E')
+        self.acc46.add()
+        self.acc46.updated_at = datetime(2015, 11, 9, hour=11, minute=20, second=21)
+        self.bal11 = accmodel.Balances(postmonth=201507, amount=1726, value_date='2015-07-10')
+        self.acc40.balances.append(self.bal11)
+        self.bal12 = accmodel.Balances(postmonth=201507, amount=1830, value_date='2015-07-10')
+        self.acc41.balances.append(self.bal12)
+        self.bal13 = accmodel.Balances(postmonth=201507, amount=10033, value_date='2015-07-10')
+        self.acc42.balances.append(self.bal13)
+        self.bal14 = accmodel.Balances(postmonth=201507, amount=7263, value_date='2015-07-10')
+        self.acc43.balances.append(self.bal14)
+        self.bal15 = accmodel.Balances(postmonth=201507, amount=3398, value_date='2015-07-11')
+        self.acc44.balances.append(self.bal15)
+        self.bal16 = accmodel.Balances(postmonth=201507, amount=2611, value_date='2015-07-09')
+        self.acc45.balances.append(self.bal16)
+        self.bal17 = accmodel.Balances(postmonth=201507, amount=17166, value_date='2015-07-08')
+        self.acc46.balances.append(self.bal17)
+        gledger.db.session.flush()
+        self.al = accmodel.AccountList()
+        
+    def tearDown(self):
+        gledger.db.session.rollback()
+        
+    def test_create_account_list_view(self):
+        """ We can create a view from an account list """
+        alv = accviews.AccountListView(self.al)
+        self.assertTrue(alv['inkopen'], 'Cannot find account in view')
+        
+    def test_num_accounts_in_list(self):
+        alv = accviews.AccountListView(self.al)
+        self.assertEqual(len(alv), 7, 'Not all accounts in list view')
 
 def add_postmonths(monthlist) :
     """Add the postmonths requested in the list to the session """

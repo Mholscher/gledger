@@ -86,4 +86,8 @@ class AccountView() :
         asDictionary["localtitle"] = 'Account ' + self.account.name
         return asDictionary
     
-
+class AccountListView(dict):
+    
+    def __init__(self, account_list):
+        for account in account_list.as_list():
+            self[account.name] = {"id":account.id, "name":account.name, "role":account.role, "parent":account.parent}
