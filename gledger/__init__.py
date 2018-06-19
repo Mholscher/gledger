@@ -21,7 +21,7 @@ import configparser
 from flask_wtf.csrf import CsrfProtect
 import logging
 
-app = Flask(__name__)
+app = Flask('gledger')
 db = SQLAlchemy(app)
 # CsrfProtect(app)
 

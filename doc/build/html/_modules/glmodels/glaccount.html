@@ -85,10 +85,10 @@
 <span class="c">#    along with gledger.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
 
 <span class="kn">from</span> <span class="nn">gledger</span> <span class="kn">import</span> <span class="n">db</span>
-<span class="c"># import flask_sqlalchemy</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">validates</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm.exc</span> <span class="kn">import</span> <span class="n">NoResultFound</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 
     
 <div class="viewcode-block" id="NoAccountError"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.NoAccountError">[docs]</a><span class="k">class</span> <span class="nc">NoAccountError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
@@ -245,7 +245,7 @@
         <span class="k">if</span> <span class="n">new_parent</span><span class="p">:</span>
             <span class="n">parent</span> <span class="o">=</span> <span class="n">Accounts</span><span class="o">.</span><span class="n">get_by_name</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">parent</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">new_parent</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">id</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Account &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; (new parent) does not exist&#39;</span><span class="p">)</span>
@@ -374,16 +374,24 @@
     <span class="sd">&quot;&quot;&quot; A list of accounts is returned for showing </span>
 <span class="sd">    </span>
 <span class="sd">    The search string must be at least 3 characters, to  prevent an overly</span>
-<span class="sd">    long result list. If no account exists where the name contains the </span>
+<span class="sd">    long result list. If the search string is none, collect the accounts last added. If no account exists where the name contains the </span>
 <span class="sd">    search string, return an empty list.&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search_string</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">pagelength</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search_string</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">pagelength</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span><span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the list, using search_string as a selection &quot;&quot;&quot;</span>
         <span class="n">q</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Accounts</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">search_string</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">search_string</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Search string must be at least 3 characters&#39;</span><span class="p">)</span> 
             <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Accounts</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s">&#39;%&#39;</span><span class="o">+</span><span class="n">search_string</span><span class="o">+</span><span class="s">&#39;%&#39;</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">account_list</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">pagelength</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">skip_records</span> <span class="o">=</span> <span class="p">(</span><span class="n">page</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">pagelength</span>
+        <span class="k">if</span> <span class="n">skip_records</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">skip_records</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Skip records: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">skip_records</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">skip_records</span><span class="p">:</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">offset</span><span class="p">(</span><span class="n">skip_records</span><span class="p">)</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">pagelength</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;SQL is &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">account_list</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
         
 <div class="viewcode-block" id="AccountList.as_list"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.AccountList.as_list">[docs]</a>    <span class="k">def</span> <span class="nf">as_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Return the embedded list &quot;&quot;&quot;</span>

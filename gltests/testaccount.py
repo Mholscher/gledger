@@ -157,7 +157,7 @@ class TestDomainProcesses(unittest.TestCase) :
         acc8 = gledger.db.session.query(accmodel.Accounts).filter(accmodel.Accounts.name == 'creditors').one()
         self.assertEqual('A', acc8.role, 'Role not updated after flush')
         acc8.update_role_or_parent(new_parent=acc27.name)
-        self.assertEqual(acc27.name, acc8.parent, 'Failed to set parent')
+        self.assertEqual(acc27.id, acc8.parent, 'Failed to set parent')
         
     def test_account_by_id(self) :
         """Getting an account by its sequence """
@@ -327,7 +327,7 @@ class TestAccountviews(unittest.TestCase) :
         acc16.parent = acc15.id
         gledger.db.session.flush()
         accountsView3 = accviews.AccountView.createView(name = acc16.name)
-        self.assertEqual(accountsView3.asDictionary()["parent"]["name"],acc15. name, 'Parent not set properly') 
+        self.assertEqual(accountsView3.asDictionary()["parent"]["name"],acc15. name, 'Parent not set properly in Accountsview') 
     
     def test_accountview_null_parent(self) :
         """ An account with a null parent can be in an accountview """
@@ -362,7 +362,7 @@ class TestAccountviews(unittest.TestCase) :
         self.assertIn(asDictionary['children'][0]['name'], [self.ch1.name, self.ch2.name, self.ch3.name],
                                                                'Name in child list should be one of the children')
         
-class TestViewFunction(unittest.TestCase) :
+class TestAccountViewFunction(unittest.TestCase) :
     
     def setUp(self) :
         self.app = gledger.app.test_client()
@@ -430,43 +430,7 @@ class TestViewFunction(unittest.TestCase) :
 class TestAccountList(unittest.TestCase):
     
     def setUp(self):
-        add_postmonths([201507])
-        self.acc40 = accmodel.Accounts(name='inkopen', role='E')
-        self.acc40.add()
-        self.acc40.updated_at = datetime(1983, 12, 16, hour=23, minute=40, second=44)
-        self.acc41 = accmodel.Accounts(name='voorraad', role='A')
-        self.acc41.add()
-        self.acc41.updated_at = datetime(1988, 12, 16, hour=23, minute=29, second=44)
-        self.acc42 = accmodel.Accounts(name='bank', role='A')
-        self.acc42.add()
-        self.acc42.updated_at = datetime(2013, 9, 12, hour=23, minute=16, second=44)
-        self.acc43 = accmodel.Accounts(name='crediteuren', role='L')
-        self.acc43.add()
-        self.acc43.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
-        self.acc44 = accmodel.Accounts(name='debiteuren', role='A')
-        self.acc44.add()
-        self.acc44.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
-        self.acc45 = accmodel.Accounts(name='rente', role='A')
-        self.acc45.add()
-        self.acc45.updated_at = datetime(1999, 1, 15, hour=9, minute=41, second=41)
-        self.acc46 = accmodel.Accounts(name='salaris', role='E')
-        self.acc46.add()
-        self.acc46.updated_at = datetime(2015, 11, 9, hour=11, minute=20, second=21)
-        self.bal11 = accmodel.Balances(postmonth=201507, amount=1726, value_date='2015-07-10')
-        self.acc40.balances.append(self.bal11)
-        self.bal12 = accmodel.Balances(postmonth=201507, amount=1830, value_date='2015-07-10')
-        self.acc41.balances.append(self.bal12)
-        self.bal13 = accmodel.Balances(postmonth=201507, amount=10033, value_date='2015-07-10')
-        self.acc42.balances.append(self.bal13)
-        self.bal14 = accmodel.Balances(postmonth=201507, amount=7263, value_date='2015-07-10')
-        self.acc43.balances.append(self.bal14)
-        self.bal15 = accmodel.Balances(postmonth=201507, amount=3398, value_date='2015-07-11')
-        self.acc44.balances.append(self.bal15)
-        self.bal16 = accmodel.Balances(postmonth=201507, amount=2611, value_date='2015-07-09')
-        self.acc45.balances.append(self.bal16)
-        self.bal17 = accmodel.Balances(postmonth=201507, amount=17166, value_date='2015-07-08')
-        self.acc46.balances.append(self.bal17)
-        gledger.db.session.flush()
+        create_standard_accountlist_testset(self)
         
     def tearDown(self):
         gledger.db.session.rollback()
@@ -522,43 +486,7 @@ class TestAccountList(unittest.TestCase):
 class TestAccountListView(unittest.TestCase):
     
     def setUp(self):
-        add_postmonths([201507])
-        self.acc40 = accmodel.Accounts(name='inkopen', role='E')
-        self.acc40.add()
-        self.acc40.updated_at = datetime(1983, 12, 16, hour=23, minute=40, second=44)
-        self.acc41 = accmodel.Accounts(name='voorraad', role='A')
-        self.acc41.add()
-        self.acc41.updated_at = datetime(1988, 12, 16, hour=23, minute=29, second=44)
-        self.acc42 = accmodel.Accounts(name='bank', role='A')
-        self.acc42.add()
-        self.acc42.updated_at = datetime(2013, 9, 12, hour=23, minute=16, second=44)
-        self.acc43 = accmodel.Accounts(name='crediteuren', role='L')
-        self.acc43.add()
-        self.acc43.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
-        self.acc44 = accmodel.Accounts(name='debiteuren', role='A')
-        self.acc44.add()
-        self.acc44.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
-        self.acc45 = accmodel.Accounts(name='rente', role='A')
-        self.acc45.add()
-        self.acc45.updated_at = datetime(1999, 1, 15, hour=9, minute=41, second=41)
-        self.acc46 = accmodel.Accounts(name='salaris', role='E')
-        self.acc46.add()
-        self.acc46.updated_at = datetime(2015, 11, 9, hour=11, minute=20, second=21)
-        self.bal11 = accmodel.Balances(postmonth=201507, amount=1726, value_date='2015-07-10')
-        self.acc40.balances.append(self.bal11)
-        self.bal12 = accmodel.Balances(postmonth=201507, amount=1830, value_date='2015-07-10')
-        self.acc41.balances.append(self.bal12)
-        self.bal13 = accmodel.Balances(postmonth=201507, amount=10033, value_date='2015-07-10')
-        self.acc42.balances.append(self.bal13)
-        self.bal14 = accmodel.Balances(postmonth=201507, amount=7263, value_date='2015-07-10')
-        self.acc43.balances.append(self.bal14)
-        self.bal15 = accmodel.Balances(postmonth=201507, amount=3398, value_date='2015-07-11')
-        self.acc44.balances.append(self.bal15)
-        self.bal16 = accmodel.Balances(postmonth=201507, amount=2611, value_date='2015-07-09')
-        self.acc45.balances.append(self.bal16)
-        self.bal17 = accmodel.Balances(postmonth=201507, amount=17166, value_date='2015-07-08')
-        self.acc46.balances.append(self.bal17)
-        gledger.db.session.flush()
+        create_standard_accountlist_testset(self)
         self.al = accmodel.AccountList()
         
     def tearDown(self):
@@ -572,12 +500,77 @@ class TestAccountListView(unittest.TestCase):
     def test_num_accounts_in_list(self):
         alv = accviews.AccountListView(self.al)
         self.assertEqual(len(alv), 7, 'Not all accounts in list view')
+        
+class TestAccountListViewFunction(unittest.TestCase):
+    
+    def setUp(self):
+        create_standard_accountlist_testset(self)
+        self.app = gledger.app.test_client()
+        self.app.testing = True
+        
+    def tearDown(self):
+        gledger.db.session.rollback()
+        
+    def test_does_return_a_list(self):
+        """ requesting a list without parameters returns the full list """
+        logging.debug('Test getting account list view') 
+        rv = self.app.get('/accountlist')
+        assert b'inkopen' in rv.data
+        assert b'bank' in rv.data
+        assert b'salaris' in rv.data
+        
+    def test_return_list_with_search(self):
+        """ requesting a list with parameter returns a smaller list """
+        rv = self.app.get('/accountlist/teur')
+        assert not b'inkopen' in rv.data
+        assert b'crediteuren' in rv.data
 
 def add_postmonths(monthlist) :
     """Add the postmonths requested in the list to the session """
     for postmonth in monthlist :
         pm = accmodel.Postmonths(postmonth=postmonth, monthstat='a')
         pm.add()
+        
+def create_standard_accountlist_testset(case):
+    """ Create a standard list of accounts for different tests """
+    add_postmonths([201507])
+    case.acc40 = accmodel.Accounts(name='inkopen', role='E')
+    case.acc40.add()
+    case.acc40.updated_at = datetime(1983, 12, 16, hour=23, minute=40, second=44)
+    case.acc41 = accmodel.Accounts(name='voorraad', role='A')
+    case.acc41.add()
+    case.acc41.updated_at = datetime(1988, 12, 16, hour=23, minute=29, second=44)
+    case.acc42 = accmodel.Accounts(name='bank', role='A')
+    case.acc42.add()
+    case.acc42.updated_at = datetime(2013, 9, 12, hour=23, minute=16, second=44)
+    case.acc43 = accmodel.Accounts(name='crediteuren', role='L')
+    case.acc43.add()
+    case.acc43.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
+    case.acc44 = accmodel.Accounts(name='debiteuren', role='A')
+    case.acc44.add()
+    case.acc44.updated_at = datetime(2003, 9, 11, hour=2, minute=40, second=41)
+    case.acc45 = accmodel.Accounts(name='rente', role='A')
+    case.acc45.add()
+    case.acc45.updated_at = datetime(1999, 1, 15, hour=9, minute=41, second=41)
+    case.acc46 = accmodel.Accounts(name='salaris', role='E')
+    case.acc46.add()
+    case.acc46.updated_at = datetime(2015, 11, 9, hour=11, minute=20, second=21)
+    case.bal11 = accmodel.Balances(postmonth=201507, amount=1726, value_date='2015-07-10')
+    case.acc40.balances.append(case.bal11)
+    case.bal12 = accmodel.Balances(postmonth=201507, amount=1830, value_date='2015-07-10')
+    case.acc41.balances.append(case.bal12)
+    case.bal13 = accmodel.Balances(postmonth=201507, amount=10033, value_date='2015-07-10')
+    case.acc42.balances.append(case.bal13)
+    case.bal14 = accmodel.Balances(postmonth=201507, amount=7263, value_date='2015-07-10')
+    case.acc43.balances.append(case.bal14)
+    case.bal15 = accmodel.Balances(postmonth=201507, amount=3398, value_date='2015-07-11')
+    case.acc44.balances.append(case.bal15)
+    case.bal16 = accmodel.Balances(postmonth=201507, amount=2611, value_date='2015-07-09')
+    case.acc45.balances.append(case.bal16)
+    case.bal17 = accmodel.Balances(postmonth=201507, amount=17166, value_date='2015-07-08')
+    case.acc46.balances.append(case.bal17)
+    gledger.db.session.flush()
+    
                     
 if __name__ == '__main__':
     unittest.main()

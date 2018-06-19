@@ -10,6 +10,11 @@ Accountsview
 
 The accountsview returns the data from a GL account. Creating an accountsview taps the underlying Accounts instance for the data, calling asDictionary() creates a Dictionary containing the data with fieldnames as the key. The view does not contain any code to keep itself up to date if the underlying data changes. It is advised to re-create the view when the view needs to be produced again. 
 
+AccountListview
+---------------
+
+This view is a dictionary which as its values hold an unspecified number of accounts. Each account is held as a dictionary of the fields of the account. It is used to display any list of accounts; it holds no indication of how the list was compiled.
+
 Accountform
 ------------
 

@@ -1,3 +1,3 @@
-from gledger import *
+from gledger import app
 
 app.run(debug=True)

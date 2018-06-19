@@ -27,7 +27,7 @@ class AccountMustExist(ValueError):
         self.message=message
         
     def __call__(self, form, field):
-        if (field.data) and (not Accounts.account_exists(field.data)):
+        if (field.data) and (not Accounts.account_exists(requested_name=field.data)):
             raise ValidationError(self.message)
 
 class AccountForm(Form) :
@@ -35,7 +35,7 @@ class AccountForm(Form) :
     
     All fields of the account can be updated. For now the role is
     hardcoded in the form. #TODO Should be refactored to come from the model. """
-    name = StringField('Account', validators = [DataRequired()])
+    name = StringField('Account')
     parent = StringField('Parent', validators = [AccountMustExist()])
     role = SelectField('Type', choices = [('A', 'Assets'), ('L', 'Liabilities'), ('I', 'Income'), ('E', 'Expense')])
     update = SubmitField('Update account')

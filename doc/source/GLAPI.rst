@@ -74,6 +74,9 @@ Module glviews
 ..  autoclass:: AccountView
     :members:
 
+..  autoclass:: AccountListView
+    :members:
+
 ..  module:: glviews.forms
 
 ..  autoclass:: AccountMustExist
@@ -84,3 +87,4 @@ Module glviews
     
 ..  autoclass:: NewAccountForm
     :members:
+    

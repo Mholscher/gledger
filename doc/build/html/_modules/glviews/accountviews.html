@@ -155,7 +155,16 @@
         <span class="n">asDictionary</span><span class="p">[</span><span class="s">&quot;localtitle&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Account &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">name</span>
         <span class="k">return</span> <span class="n">asDictionary</span></div></div>
     
-
+<div class="viewcode-block" id="AccountListView"><a class="viewcode-back" href="../../GLAPI.html#glviews.accountviews.AccountListView">[docs]</a><span class="k">class</span> <span class="nc">AccountListView</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Gathers the information to display a list of accounts. </span>
+<span class="sd">    </span>
+<span class="sd">    The accounts are in a dictionary keyed by the account name, the accounts</span>
+<span class="sd">    are also in a dictionary, with a key/value pair for each field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">account_list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">account</span> <span class="ow">in</span> <span class="n">account_list</span><span class="o">.</span><span class="n">as_list</span><span class="p">():</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">account</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;id&quot;</span><span class="p">:</span><span class="n">account</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="s">&quot;name&quot;</span><span class="p">:</span><span class="n">account</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&quot;role&quot;</span><span class="p">:</span><span class="n">account</span><span class="o">.</span><span class="n">role</span><span class="p">,</span> <span class="s">&quot;parent&quot;</span><span class="p">:</span><span class="n">account</span><span class="o">.</span><span class="n">parent</span><span class="p">}</span></div>
 </pre></div>
 
           </div>

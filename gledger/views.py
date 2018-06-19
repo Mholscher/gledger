@@ -1,7 +1,7 @@
 from . import app, db
 import glmodels.glaccount as accmodel
 from flask import render_template, flash, request, redirect, url_for, abort
-from glviews.accountviews import AccountView
+from glviews.accountviews import AccountView, AccountListView
 from glviews.forms import AccountForm, NewAccountForm
 import logging
 
@@ -26,19 +26,29 @@ def createaccount():
                           parent_name=newAccountForm.parent.data,
                           role=newAccountForm.role.data).add()
         db.session.commit()
-        return redirect(url_for('accountList'))
+        flash('Account '+ newAccountForm.name.data + ' added')
+        if newAccountForm.update.data:
+            return redirect(url_for('accountList'))
+        if newAccountForm.addmore.data:
+            return redirect(url_for('createaccount'))
     return render_template('account.html',form=newAccountForm,
                            accountview=AccountView(), localTitle='New account')
 
-@app.route('/accounts', methods=['GET'], strict_slashes=False)
-def accountList():
+@app.route('/accountlist/<searchfor>', methods=['GET'], strict_slashes=False)
+@app.route('/accountlist', methods=['GET'], strict_slashes=False)
+def accountList(searchfor=None):
     """accountList lists accounts from the system.
     
     The accounts shown may be constrained by a search argument.
     The search argument is checked against the account name and
     the account description.
     """
-    return 'Toon een lijst met rekeningen'
+    
+    try:
+        account_list = accmodel.AccountList(search_string=searchfor)
+    except accmodel.ShortSearchStringError as e:
+        abort(400, str(e))
+    return render_template('accountlist.html', accountlist=AccountListView(account_list))
 
 @app.route('/accounts/<accountName>', methods=['GET', 'POST'], strict_slashes=False)
 def accounts(accountName=None):
@@ -64,8 +74,7 @@ def accounts(accountName=None):
         else:
             new_role = None
         if accountForm.parent.data:
-            parent = accmodel.Accounts.get_by_name(accountForm.parent.data)
-            new_parent = parent.id
+            new_parent = accountForm.parent.data
         else:
             new_parent = None
         account.update_role_or_parent(new_role=new_role, new_parent=new_parent)
@@ -73,8 +82,10 @@ def accounts(accountName=None):
         flash('Account '+ accountName + ' changed')
         logging.debug('Account '+ accountName + ' changed')
         return redirect(url_for('accountList'))
-    if request.method == 'POST':
-        print(accountForm.errors)
+    if len(accountForm.errors):
+        for k, v in accountForm.errors.items():
+            for message in v:
+                flash('Field ' + k + ': ' + str(message))
     accountview = AccountView.createView(name=accountName).asDictionary()
     return render_template('account.html', accountview=accountview, form = accountForm,
                            localtitle='Account ' + accountview['account']['name'])
@@ -88,6 +99,7 @@ def balance(accountName, postmonth=None):
     If no month is given, it shows the current account balance.
     Else it shows the balance for the requested month.
     """
+    
     if accountName is None:
         abort(404)
     if postmonth is None:

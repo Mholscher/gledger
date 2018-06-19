@@ -101,7 +101,7 @@
 
 <dl class="function">
 <dt id="gledger.views.accountList">
-<code class="descclassname">gledger.views.</code><code class="descname">accountList</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/gledger/views.html#accountList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.views.accountList" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">gledger.views.</code><code class="descname">accountList</code><span class="sig-paren">(</span><em>searchfor=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/gledger/views.html#accountList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gledger.views.accountList" title="Permalink to this definition">¶</a></dt>
 <dd><p>accountList lists accounts from the system.</p>
 <p>The accounts shown may be constrained by a search argument.
 The search argument is checked against the account name and
@@ -371,10 +371,10 @@ balance; no postings for the current month have been received.</p>
 
 <dl class="class">
 <dt id="glmodels.glaccount.AccountList">
-<em class="property">class </em><code class="descclassname">glmodels.glaccount.</code><code class="descname">AccountList</code><span class="sig-paren">(</span><em>search_string=None</em>, <em>pagelength=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#AccountList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.AccountList" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">glmodels.glaccount.</code><code class="descname">AccountList</code><span class="sig-paren">(</span><em>search_string=None</em>, <em>pagelength=10</em>, <em>page=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glmodels/glaccount.html#AccountList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glmodels.glaccount.AccountList" title="Permalink to this definition">¶</a></dt>
 <dd><p>A list of accounts is returned for showing</p>
 <p>The search string must be at least 3 characters, to  prevent an overly
-long result list. If no account exists where the name contains the 
+long result list. If the search string is none, collect the accounts last added. If no account exists where the name contains the 
 search string, return an empty list.</p>
 <dl class="method">
 <dt id="glmodels.glaccount.AccountList.as_dict">
@@ -577,6 +577,14 @@ not exist, caller will receive the exception. It is
 not caught...</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="glviews.accountviews.AccountListView">
+<em class="property">class </em><code class="descclassname">glviews.accountviews.</code><code class="descname">AccountListView</code><span class="sig-paren">(</span><em>account_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/glviews/accountviews.html#AccountListView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#glviews.accountviews.AccountListView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gathers the information to display a list of accounts.</p>
+<p>The accounts are in a dictionary keyed by the account name, the accounts
+are also in a dictionary, with a key/value pair for each field.</p>
 </dd></dl>
 
 <span class="target" id="module-glviews.forms"></span><dl class="class">

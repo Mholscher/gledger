@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Index{% endblock %}
+{% block content %}
+    <h1>Account list</h1>
+    <table>
+        <tr>
+            <th> Name </th> <th> Role </th>
+        </tr>
+    {% for accname, account in accountlist.items() %}
+        <tr>
+            <td> {{ account.name }} </td> <td>{{account.role}} </td>
+        </tr>
+    {% endfor %}
+    </table>
+{% endblock %} {# content block #}
+
+
+

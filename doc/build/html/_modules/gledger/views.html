@@ -70,7 +70,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">app</span><span class="p">,</span> <span class="n">db</span>
 <span class="kn">import</span> <span class="nn">glmodels.glaccount</span> <span class="kn">as</span> <span class="nn">accmodel</span>
 <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">flash</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">abort</span>
-<span class="kn">from</span> <span class="nn">glviews.accountviews</span> <span class="kn">import</span> <span class="n">AccountView</span>
+<span class="kn">from</span> <span class="nn">glviews.accountviews</span> <span class="kn">import</span> <span class="n">AccountView</span><span class="p">,</span> <span class="n">AccountListView</span>
 <span class="kn">from</span> <span class="nn">glviews.forms</span> <span class="kn">import</span> <span class="n">AccountForm</span><span class="p">,</span> <span class="n">NewAccountForm</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
@@ -95,19 +95,22 @@
                           <span class="n">parent_name</span><span class="o">=</span><span class="n">newAccountForm</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
                           <span class="n">role</span><span class="o">=</span><span class="n">newAccountForm</span><span class="o">.</span><span class="n">role</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
         <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="n">flash</span><span class="p">(</span><span class="s">&#39;Account &#39;</span><span class="o">+</span> <span class="n">accountName</span> <span class="o">+</span> <span class="s">&#39; added&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">&#39;accountList&#39;</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;account.html&#39;</span><span class="p">,</span><span class="n">form</span><span class="o">=</span><span class="n">newAccountForm</span><span class="p">,</span>
                            <span class="n">accountview</span><span class="o">=</span><span class="n">AccountView</span><span class="p">(),</span> <span class="n">localTitle</span><span class="o">=</span><span class="s">&#39;New account&#39;</span><span class="p">)</span></div>
 
-<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/accounts&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">],</span> <span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
-<div class="viewcode-block" id="accountList"><a class="viewcode-back" href="../../GLAPI.html#gledger.views.accountList">[docs]</a><span class="k">def</span> <span class="nf">accountList</span><span class="p">():</span>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/accountlist/&lt;searchfor&gt;&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">],</span> <span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/accountlist&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">],</span> <span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<div class="viewcode-block" id="accountList"><a class="viewcode-back" href="../../GLAPI.html#gledger.views.accountList">[docs]</a><span class="k">def</span> <span class="nf">accountList</span><span class="p">(</span><span class="n">searchfor</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;accountList lists accounts from the system.</span>
 <span class="sd">    </span>
 <span class="sd">    The accounts shown may be constrained by a search argument.</span>
 <span class="sd">    The search argument is checked against the account name and</span>
 <span class="sd">    the account description.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="s">&#39;Toon een lijst met rekeningen&#39;</span></div>
+    <span class="n">account_list</span> <span class="o">=</span> <span class="n">accmodel</span><span class="o">.</span><span class="n">AccountList</span><span class="p">(</span><span class="n">search_string</span><span class="o">=</span><span class="n">searchfor</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;accountlist.html&#39;</span><span class="p">,</span> <span class="n">accountlist</span><span class="o">=</span><span class="n">AccountListView</span><span class="p">(</span><span class="n">account_list</span><span class="p">))</span></div>
 
 <span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/accounts/&lt;accountName&gt;&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="s">&#39;POST&#39;</span><span class="p">],</span> <span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <div class="viewcode-block" id="accounts"><a class="viewcode-back" href="../../GLAPI.html#gledger.views.accounts">[docs]</a><span class="k">def</span> <span class="nf">accounts</span><span class="p">(</span><span class="n">accountName</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -133,8 +136,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">new_role</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="k">if</span> <span class="n">accountForm</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-            <span class="n">parent</span> <span class="o">=</span> <span class="n">accmodel</span><span class="o">.</span><span class="n">Accounts</span><span class="o">.</span><span class="n">get_by_name</span><span class="p">(</span><span class="n">accountForm</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-            <span class="n">new_parent</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">id</span>
+            <span class="n">new_parent</span> <span class="o">=</span> <span class="n">accountForm</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">data</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">new_parent</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="n">account</span><span class="o">.</span><span class="n">update_role_or_parent</span><span class="p">(</span><span class="n">new_role</span><span class="o">=</span><span class="n">new_role</span><span class="p">,</span> <span class="n">new_parent</span><span class="o">=</span><span class="n">new_parent</span><span class="p">)</span>
@@ -142,6 +144,8 @@
         <span class="n">flash</span><span class="p">(</span><span class="s">&#39;Account &#39;</span><span class="o">+</span> <span class="n">accountName</span> <span class="o">+</span> <span class="s">&#39; changed&#39;</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Account &#39;</span><span class="o">+</span> <span class="n">accountName</span> <span class="o">+</span> <span class="s">&#39; changed&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">&#39;accountList&#39;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">accountForm</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
     <span class="n">accountview</span> <span class="o">=</span> <span class="n">AccountView</span><span class="o">.</span><span class="n">createView</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">accountName</span><span class="p">)</span><span class="o">.</span><span class="n">asDictionary</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;account.html&#39;</span><span class="p">,</span> <span class="n">accountview</span><span class="o">=</span><span class="n">accountview</span><span class="p">,</span> <span class="n">form</span> <span class="o">=</span> <span class="n">accountForm</span><span class="p">,</span>
                            <span class="n">localtitle</span><span class="o">=</span><span class="s">&#39;Account &#39;</span> <span class="o">+</span> <span class="n">accountview</span><span class="p">[</span><span class="s">&#39;account&#39;</span><span class="p">][</span><span class="s">&#39;name&#39;</span><span class="p">])</span></div>

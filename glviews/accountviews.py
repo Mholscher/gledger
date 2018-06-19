@@ -48,9 +48,11 @@ class AccountView() :
         else :
             accountView.account = model.Accounts.get_by_name(name)
         if accountView.account :
+            accountView.name = accountView.account.name
             accountView.parent = accountView.account.parentaccount()
             accountView.children = accountView.account.children
         else :
+            accountView.name = ''
             accountView.parent = None
             accountView.children = []
         return accountView
@@ -87,6 +89,11 @@ class AccountView() :
         return asDictionary
     
 class AccountListView(dict):
+    """ Gathers the information to display a list of accounts. 
+    
+    The accounts are in a dictionary keyed by the account name, the accounts
+    are also in a dictionary, with a key/value pair for each field.
+    """
     
     def __init__(self, account_list):
         for account in account_list.as_list():

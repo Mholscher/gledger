@@ -31,6 +31,14 @@ class NoAccountError(ValueError):
     
     pass
 
+class ShortSearchStringError(ValueError):
+    """ A search string that is very short is bound to return
+    many hits. To prevent a long list to appear, we error if
+    the search string is short.
+    """
+    
+    pass
+
 class AccountAlreadyExistsError(ValueError) :
     """ This is thrown when an account created already exists.
     """
@@ -48,7 +56,6 @@ class Accounts(db.Model):
         :children: the list of dependents
         :balances: the balances for the account
     """
-    global VALID_ROLES
     
     VALID_ROLES = ['I', 'E', 'A', 'L']
     
@@ -71,7 +78,7 @@ class Accounts(db.Model):
     
     @validates('role') 
     def validate_role(self, id, role):
-        if role not in VALID_ROLES:
+        if role not in self.VALID_ROLES:
             raise ValueError('Account role invalid')
         return role
             
@@ -176,7 +183,7 @@ class Accounts(db.Model):
         if new_parent:
             parent = Accounts.get_by_name(new_parent)
             if parent:
-                self.parent = new_parent
+                self.parent = parent.id
                 self.updated_at = datetime.today()
             else:
                 raise ValueError('Account ' + repr(new_parent) + ' (new parent) does not exist')
@@ -312,7 +319,7 @@ class AccountList():
         q = db.session.query(Accounts).order_by(Accounts.updated_at.desc())
         if search_string:
             if len(search_string) < 3:
-                raise ValueError('Search string must be at least 3 characters') 
+                raise ShortSearchStringError('Search string must be at least 3 characters') 
             q = q.filter(Accounts.name.like('%'+search_string+'%'))
         skip_records = (page - 1) * pagelength
         if skip_records < 0:

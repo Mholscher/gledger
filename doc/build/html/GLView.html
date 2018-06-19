@@ -58,6 +58,7 @@
   <ul>
 <li><a class="reference internal" href="#">GLViews - the General Ledger views</a><ul>
 <li><a class="reference internal" href="#accountsview">Accountsview</a></li>
+<li><a class="reference internal" href="#accountlistview">AccountListview</a></li>
 <li><a class="reference internal" href="#accountform">Accountform</a></li>
 <li><a class="reference internal" href="#newaccountform">NewAccountform</a></li>
 </ul>
@@ -102,6 +103,10 @@
 <div class="section" id="accountsview">
 <h2>Accountsview<a class="headerlink" href="#accountsview" title="Permalink to this headline">¶</a></h2>
 <p>The accountsview returns the data from a GL account. Creating an accountsview taps the underlying Accounts instance for the data, calling asDictionary() creates a Dictionary containing the data with fieldnames as the key. The view does not contain any code to keep itself up to date if the underlying data changes. It is advised to re-create the view when the view needs to be produced again.</p>
+</div>
+<div class="section" id="accountlistview">
+<h2>AccountListview<a class="headerlink" href="#accountlistview" title="Permalink to this headline">¶</a></h2>
+<p>This view is a dictionary which as its values hold an unspecified number of accounts. Each account is held as a dictionary of the fields of the account. It is used to display any list of accounts; it holds no indication of how the list was compiled.</p>
 </div>
 <div class="section" id="accountform">
 <h2>Accountform<a class="headerlink" href="#accountform" title="Permalink to this headline">¶</a></h2>
