@@ -39,6 +39,15 @@ class ShortSearchStringError(ValueError):
     
     pass
 
+
+class InvalidPostmonthError(ValueError):
+    """ An edited postmonth was passed in that can not be converted
+    into a valid internal postmonth.
+    """ 
+    
+    pass
+
+
 class AccountAlreadyExistsError(ValueError) :
     """ This is thrown when an account created already exists.
     """
@@ -140,14 +149,14 @@ class Accounts(db.Model):
     
     @classmethod
     def account_exists(cls, requested_id=None, requested_name=None):
-        """ Retrun if an account exists, presented with an ID or 
+        """ Return if an account exists, presented with an ID or 
         an account name 
         """
         if requested_id:
             return not (db.session.query(Accounts).filter_by(id=requested_id).all() == [])
         if requested_name:
             return not (db.session.query(Accounts).filter_by(name=requested_name).all() == [])
-        raise ValueError('An account id or name is mandatory')
+        raise NoAccountError('An account id or name is mandatory')
 
     def _balance_for(self):
         """ Set up a query for the balance(s) of this account """
@@ -218,7 +227,7 @@ class Accounts(db.Model):
         if self.role == 'L' or self.role == 'I':
             return 'Cr'
         # Come here, unknown role: crash
-        raise ValueError('Unknown role ' + role + 'in account ' + self.name)
+        raise ValueError('Unknown role ' + role + ' in account ' + self.name)
     
     def is_debit(self):
         """ Is this account a debit account? """
@@ -280,7 +289,7 @@ class Balances(db.Model):
         """ the post month can only be the current or an existing, active month"""
         months_db = db.session.query(Postmonths).filter_by(postmonth=postmonth).all()
         if (months_db != []):
-            if (months_db[0].monthstat == ACTIVE):
+            if (months_db[0].status_can_post()):
                 return postmonth
             else:
                 raise ValueError('Postmonth not active')       
@@ -306,7 +315,7 @@ class Balances(db.Model):
             self.amount -= post_amount
 
     def __repr__(self):
-        return 'Balances(amount = {}, postmonth = {}, account {})'.format(self.amount, self.postmonth,          self.account_id)
+        return 'Balances(amount = {}, postmonth = {}, account {})'.format(self.amount, self.postmonth, self.account_id)
 
 class AccountList():
     """ A list of accounts is returned for showing 
@@ -350,7 +359,6 @@ class Postmonths(db.Model):
     postmonth = db.Column(db.Integer, primary_key=True)
     monthstat = db.Column(db.String(1), nullable=False)
     
-    global ACTIVE, CLOSED
     ACTIVE = 'a'
     CLOSED = 'c'
     
@@ -362,9 +370,32 @@ class Postmonths(db.Model):
     
     @validates('monthstat')
     def validate_monthstat(self, id, monthstat):
-        if (monthstat != ACTIVE) and (monthstat != CLOSED):
+        if (monthstat != self.ACTIVE) and (monthstat != self.CLOSED):
             raise ValueError('Invalid status in postmonth')
         return monthstat
+    
+    @staticmethod
+    def internal(month_string):
+        """ Return an internally formatted postmonth for the passed in
+        edited month string.
+        
+        The edited string has the format mm-yyyy.
+        """
+        
+        # Check the format
+        if (not month_string[0:2].isdigit() or not month_string[3:7].isdigit()
+            or month_string[2:3] != '-' or len(month_string) != 7):
+            raise InvalidPostmonthError('The postmonth could not be converted')
+        month = int(month_string[0:2])
+        year = int(month_string[3:7])
+        return 100 * year + month
+    
+    def status_can_post(self):
+        """ Returns True is the status of this postmonth
+        is active, i.e. posting in it is permitted.
+        """
+        
+        return self.monthstat == self.ACTIVE
         
 def postmonth_for(postdate):
     """ Return the postmonth from a postdate
@@ -374,3 +405,9 @@ def postmonth_for(postdate):
     as well as determining in which post month a posting belongs.
     """
     return (postdate.year * 100 + postdate.month)
+
+def postmonth_today():
+    """ Return the postmonth for today's date
+    """
+    
+    return postmonth_for(date.today())

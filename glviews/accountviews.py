@@ -40,7 +40,7 @@ class AccountView() :
         """
         
         if (id is None) and (name is None) :
-            raise ValueError('An id or name for an account must be given')
+            raise model.NoAccountError('An id or name for an account must be given')
         # prefer id to name for fetching an account:
         accountView = cls()
         if (id is not None) :

@@ -23,28 +23,39 @@ from .glaccount import Accounts, postmonth_for, NoAccountError
 
 
 class InvalidJournalError(Exception):
-    """ The base exception for failing journals """
+    """ The base exception for failing journals 
+    """
+    
     pass
 
 class PostingWOJournal(InvalidJournalError):
     """Exception thrown when a posting without journal is being made.
     """
+    
     pass
 
 class NoJournalError(ValueError):
-    """ There is no journal for the requested id """
+    """ There is no journal for the requested id 
+    """
+    
     pass
 
 class JournalBalanceError(InvalidJournalError):
-    """ The postings in a journal do not balance """
+    """ The postings in a journal do not balance 
+    """
+    
     pass
 
 class InvalidDebitCreditError(InvalidJournalError):
-    """A posting contains an invalid debit/credit indicator """
+    """A posting contains an invalid debit/credit indicator 
+    """
+    
     pass
 
 class NoPostingInJournal(InvalidJournalError):
-    """ A journal was submitted without postings """
+    """ A journal was submitted without postings 
+    """
+    
     pass
 
 class Journals(db.Model):
@@ -76,7 +87,9 @@ class Journals(db.Model):
     
     @classmethod
     def get_by_id(cls, requested_id):
-        """ Return the journal row for requested_id """
+        """ Return the journal row for requested_id 
+        """
+        
         try:
             journal = db.session.query(Journals).filter_by(id=requested_id).\
                 first()
@@ -89,7 +102,9 @@ class Journals(db.Model):
     @classmethod
     def create_from_dict(cls, journdict):
         """Creates a new journal including posting from
-        a dictionary created from json """
+        a dictionary created from json 
+        """
+        
         if 'postings' not in journdict['journal']\
             or journdict['journal']['postings'] is None:
             raise NoPostingInJournal('Empty journal')
@@ -104,7 +119,9 @@ class Journals(db.Model):
         
     @validates('journalstat')
     def validate_status(self, id, journalstat):
-        """ Check if the status is valid """
+        """ Check if the status is valid 
+        """
+        
         if not journalstat in [self.UNPROCESSED, self.PROCESSED, self.FAILED]:
             raise InvalidJournalStatus('Status '+ str(journalstat) + ' is invalid')
         return journalstat
@@ -112,7 +129,8 @@ class Journals(db.Model):
     def add(self) :
         """ Add this journal to the session 
         
-        Make sure it is timestamped"""
+        Make sure it is timestamped
+        """
         
         self.updated_at = datetime.today()
         db.session.add(self)
@@ -121,7 +139,9 @@ class Journals(db.Model):
         """ Post the posting of this journal to the accounts.
         
         The journal is first checked to balance. If it doesn't
-        balance, it is marked for being unprocessable. """
+        balance, it is marked for being unprocessable. 
+        """
+        
         journal_balance = 0
         if self.journalpostings:
             firstpostingccy = self.journalpostings[0].currency
@@ -175,7 +195,9 @@ class Postings(db.Model) :
         """Create a posting from a dictionary with the applicable fields. 
         
         TODO This routine leaks info of the json to the model. Wants
-        refactoring!"""
+        refactoring!
+        """
+        
         value_date = datetime(int(posting["valuedate"][0:4]), 
                               int(posting["valuedate"][5:7]),
                               int(posting["valuedate"][8:10]))
@@ -191,7 +213,8 @@ class Postings(db.Model) :
         return newposting
         
     def _id_for_account(self, from_name) :
-        """ Get an ID for an account for which we only have the name """
+        """ Get an ID for an account for which we only have the name 
+        """
         
         account = Accounts.get_by_name(from_name)
         return account.id
@@ -199,30 +222,37 @@ class Postings(db.Model) :
     def add(self) :
         """ Add this posting to the session 
         
-        Make sure it is timestamped"""
+        Make sure it is timestamped
+        """
         
         self.updated_at = datetime.today()
         db.session.add(self)
         
     @validates('debcred')
     def validate_debcred(self, id, debitcredit):
-        """ Check if debit/credit indicator has a valid value """
+        """ Check if debit/credit indicator has a valid value 
+        """
+        
         if not debitcredit in ['Db', 'Cr']:
             raise InvalidDebitCreditError('Debit credit indicator ' + debitcredit + 
                                           'is invalid')
         return debitcredit
         
     def is_debit(self):
+        
         return (self.debcred == 'Db')
     
     def is_credit(self):
+        
         return (self.debcred == 'Cr')
     
     def apply(self):
         """ Apply this posting to its account.
         
         Applying means adjusting the balance with the amount of
-        the posting """
+        the posting 
+        """
+        
         account = Accounts.get_by_id(self.accounts_id)
         account.post_amount(self.debcred, self.amount, self.value_date)
         

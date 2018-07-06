@@ -11,15 +11,16 @@ def index():
     """This is the index page of the application. It shows
     a list of accounts
     """
-    return 'De index pagina'
+    return redirect(url_for('accountList'))
 
 @app.route('/accounts/new', methods=['GET', 'POST'])
 def createaccount():
-    """ This page creates a new account in the system 
+    """ This page creates a new account in the system
     
     The GET method shows the empty form, when filled out and
     submitted, POST will do the validation and update.
     """
+    
     newAccountForm = NewAccountForm()
     if newAccountForm.validate_on_submit():
         accmodel.Accounts.create_account(name=newAccountForm.name.data,
@@ -48,7 +49,8 @@ def accountList(searchfor=None):
         account_list = accmodel.AccountList(search_string=searchfor)
     except accmodel.ShortSearchStringError as e:
         abort(400, str(e))
-    return render_template('accountlist.html', accountlist=AccountListView(account_list))
+    return render_template('accountlist.html', 
+                           accountlist=AccountListView(account_list))
 
 @app.route('/accounts/<accountName>', methods=['GET', 'POST'], strict_slashes=False)
 def accounts(accountName=None):
@@ -87,8 +89,10 @@ def accounts(accountName=None):
             for message in v:
                 flash('Field ' + k + ': ' + str(message))
     accountview = AccountView.createView(name=accountName).asDictionary()
-    return render_template('account.html', accountview=accountview, form = accountForm,
-                           localtitle='Account ' + accountview['account']['name'])
+    return render_template('account.html', accountview=accountview,
+                           form=accountForm,
+                           localtitle='Account ' +
+                           accountview['account']['name'])
 
 @app.route('/balance/<accountName>/month/<postmonth>', strict_slashes=False)
 @app.route('/balance/<accountName>', strict_slashes=False)
@@ -101,13 +105,19 @@ def balance(accountName, postmonth=None):
     """
     
     if accountName is None:
-        abort(404)
+        abort(404, 'An account name is mandatory')
     if postmonth is None:
-        postmonth = '04-2015'
-    return 'Saldo voor rekening ' + str(accountName) +  ', maand ' + str(postmonth)
+        for_month = accmodel.postmonth_today()
+    else:
+        for_month = accmodel.Postmonths.internal(postmonth)
+    try:
+        account = accmodel.Accounts.get_by_name(accountName)
+    except accmodel.NoAccountError as e:
+        abort(400, str(e))
+    return str(account.balance_ultimo(for_month) / 100) 
 
-@app.route('/posts/<accountName>/month/<postmonth>', strict_slashes= False)
-@app.route('/posts/<accountName>', strict_slashes= False)
+@app.route('/posts/<accountName>/month/<postmonth>', strict_slashes=False)
+@app.route('/posts/<accountName>', strict_slashes=False)
 def posts(accountName, postmonth=None):
     """ 
     Show postings by account.

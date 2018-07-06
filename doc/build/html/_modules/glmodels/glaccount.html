@@ -100,6 +100,14 @@
     
     <span class="k">pass</span></div>
 
+<span class="k">class</span> <span class="nc">ShortSearchStringError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; A search string that is very short is bound to return</span>
+<span class="sd">    many hits. To prevent a long list to appear, we error if</span>
+<span class="sd">    the search string is short.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">pass</span>
+
 <div class="viewcode-block" id="AccountAlreadyExistsError"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.AccountAlreadyExistsError">[docs]</a><span class="k">class</span> <span class="nc">AccountAlreadyExistsError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">)</span> <span class="p">:</span>
     <span class="sd">&quot;&quot;&quot; This is thrown when an account created already exists.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -117,7 +125,6 @@
 <span class="sd">        :children: the list of dependents</span>
 <span class="sd">        :balances: the balances for the account</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">global</span> <span class="n">VALID_ROLES</span>
     
     <span class="n">VALID_ROLES</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="s">&#39;E&#39;</span><span class="p">,</span> <span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;L&#39;</span><span class="p">]</span>
     
@@ -140,7 +147,7 @@
     
     <span class="nd">@validates</span><span class="p">(</span><span class="s">&#39;role&#39;</span><span class="p">)</span> 
     <span class="k">def</span> <span class="nf">validate_role</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">role</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">VALID_ROLES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">role</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">VALID_ROLES</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Account role invalid&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">role</span>
             
@@ -202,14 +209,14 @@
     
     <span class="nd">@classmethod</span>
 <div class="viewcode-block" id="Accounts.account_exists"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Accounts.account_exists">[docs]</a>    <span class="k">def</span> <span class="nf">account_exists</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">requested_id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">requested_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Retrun if an account exists, presented with an ID or </span>
+        <span class="sd">&quot;&quot;&quot; Return if an account exists, presented with an ID or </span>
 <span class="sd">        an account name </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">requested_id</span><span class="p">:</span>
             <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">requested_id</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="o">==</span> <span class="p">[])</span>
         <span class="k">if</span> <span class="n">requested_name</span><span class="p">:</span>
             <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">requested_name</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="o">==</span> <span class="p">[])</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;An account id or name is mandatory&#39;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="n">NoAccountError</span><span class="p">(</span><span class="s">&#39;An account id or name is mandatory&#39;</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_balance_for</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Set up a query for the balance(s) of this account &quot;&quot;&quot;</span>
@@ -342,7 +349,7 @@
         <span class="sd">&quot;&quot;&quot; the post month can only be the current or an existing, active month&quot;&quot;&quot;</span>
         <span class="n">months_db</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Postmonths</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">postmonth</span><span class="o">=</span><span class="n">postmonth</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">months_db</span> <span class="o">!=</span> <span class="p">[]):</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">months_db</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">monthstat</span> <span class="o">==</span> <span class="n">ACTIVE</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">months_db</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status_can_post</span><span class="p">()):</span>
                 <span class="k">return</span> <span class="n">postmonth</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Postmonth not active&#39;</span><span class="p">)</span>       
@@ -381,7 +388,7 @@
         <span class="n">q</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Accounts</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">Accounts</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">search_string</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">search_string</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Search string must be at least 3 characters&#39;</span><span class="p">)</span> 
+                <span class="k">raise</span> <span class="n">ShortSearchStringError</span><span class="p">(</span><span class="s">&#39;Search string must be at least 3 characters&#39;</span><span class="p">)</span> 
             <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Accounts</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="s">&#39;%&#39;</span><span class="o">+</span><span class="n">search_string</span><span class="o">+</span><span class="s">&#39;%&#39;</span><span class="p">))</span>
         <span class="n">skip_records</span> <span class="o">=</span> <span class="p">(</span><span class="n">page</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">pagelength</span>
         <span class="k">if</span> <span class="n">skip_records</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -406,27 +413,45 @@
             <span class="n">account_dictionary</span><span class="p">[</span><span class="n">account</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">account</span>
         <span class="k">return</span> <span class="n">account_dictionary</span></div></div>
         
-<span class="k">class</span> <span class="nc">Postmonths</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<div class="viewcode-block" id="Postmonths"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Postmonths">[docs]</a><span class="k">class</span> <span class="nc">Postmonths</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
     
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;postmnths&#39;</span>
     <span class="n">postmonth</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     <span class="n">monthstat</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
     
-    <span class="k">global</span> <span class="n">ACTIVE</span><span class="p">,</span> <span class="n">CLOSED</span>
     <span class="n">ACTIVE</span> <span class="o">=</span> <span class="s">&#39;a&#39;</span>
     <span class="n">CLOSED</span> <span class="o">=</span> <span class="s">&#39;c&#39;</span>
     
-    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Postmonths.add"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Postmonths.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Add this postmonth to the session &quot;&quot;&quot;</span>
         
         <span class="bp">self</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
-        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
     
     <span class="nd">@validates</span><span class="p">(</span><span class="s">&#39;monthstat&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">validate_monthstat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">monthstat</span><span class="p">):</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">monthstat</span> <span class="o">!=</span> <span class="n">ACTIVE</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">monthstat</span> <span class="o">!=</span> <span class="n">CLOSED</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">monthstat</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">monthstat</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CLOSED</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid status in postmonth&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">monthstat</span>
+    
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Postmonths.internal"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Postmonths.internal">[docs]</a>    <span class="k">def</span> <span class="nf">internal</span><span class="p">(</span><span class="n">month_string</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return an internally formatted postmonth for the passed in</span>
+<span class="sd">        edited month string.</span>
+<span class="sd">        </span>
+<span class="sd">        The edited string has the format mm-yyyy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">month_string</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">month_string</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">7</span><span class="p">])</span>
+        <span class="k">return</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">year</span> <span class="o">+</span> <span class="n">month</span></div>
+    
+<div class="viewcode-block" id="Postmonths.status_can_post"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.Postmonths.status_can_post">[docs]</a>    <span class="k">def</span> <span class="nf">status_can_post</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns True is the status of this postmonth</span>
+<span class="sd">        is active, i.e. posting in it is permitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">monthstat</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ACTIVE</span></div></div>
         
 <div class="viewcode-block" id="postmonth_for"><a class="viewcode-back" href="../../GLAPI.html#glmodels.glaccount.postmonth_for">[docs]</a><span class="k">def</span> <span class="nf">postmonth_for</span><span class="p">(</span><span class="n">postdate</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Return the postmonth from a postdate</span>
@@ -436,6 +461,12 @@
 <span class="sd">    as well as determining in which post month a posting belongs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">postdate</span><span class="o">.</span><span class="n">year</span> <span class="o">*</span> <span class="mi">100</span> <span class="o">+</span> <span class="n">postdate</span><span class="o">.</span><span class="n">month</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">postmonth_today</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Return the postmonth for today&#39;s date</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">return</span> <span class="n">postmonth_for</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">())</span>
 </pre></div>
 
           </div>

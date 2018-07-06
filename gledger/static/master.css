@@ -61,7 +61,7 @@ a.IMG {
     font-weight : bold
     }
     
-table {
-    border : solid
+td, th {
+    outline : 2 px solid
     }
     

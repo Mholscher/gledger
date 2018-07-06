@@ -47,6 +47,9 @@ Module glmodels
 ..  autoclass:: AccountList
     :members:
     
+..  autoclass:: Postmonths
+    :members:
+
 ..  autofunction:: postmonth_for(postdate)
 
 ..  module:: glmodels.glposting
@@ -65,7 +68,7 @@ Module glmodels
     
 ..  autoclass:: Postings
     :members:
-
+    
 Module glviews
 ---------------
 

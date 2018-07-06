@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% block body %}
-{% block title %}Index{% endblock %}
+{% block title %}Account {{accountview.account.name}}{% endblock %}
 {% block content %}
     <h1>Account {{accountview.account.name}}</h1>
     {% if accountview.account.name %}
@@ -13,7 +12,8 @@
         <div class="warning">You have submitted an invalid CSRF token</div>
     {% endif %}
     {% if accountview.account.name %}
-    <div class="inputline">{{ form.name.label(class="lbl") }} {{ accountview.account.name }} </div>
+    <div class="inputline">{{ form.name.label(class="lbl") }} {{ accountview.account.name }} 
+    <br><a href="/balance/{{accountview.account.name}}">See balance</a></div>
     {% else %}
     <div class="inputline">{{ form.name.label(class="lbl") }} {{ form.name }} </div>
     {% endif %}
@@ -23,5 +23,4 @@
     </form>
 {% endblock %} {# content block #}
 
-{% endblock %} {# body block #}
 

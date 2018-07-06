@@ -25,6 +25,7 @@ from datetime import date,datetime
 import logging
 
 class TestDBCreation(unittest.TestCase) :
+
     def setUp(self) :
         pass
     
@@ -101,24 +102,6 @@ class TestDBCreation(unittest.TestCase) :
         self.assertEqual(bal1.account_id, acc6.id, 
                          'Balance not attached to account')
         
-    def test_insert_postmonth(self) :
-        """ We can create a postmonth """
-        pm1 = accmodel.Postmonths(postmonth=201507, monthstat = 'a')
-        pm1.add()
-        gledger.db.session.flush()
-        self.assertEqual(pm1.postmonth, 201507, 'Postmonth set incorrect')
-        
-    def test_invalid_monthstat(self) :
-        """ We cannot create a postmonth with invalid status """
-        with self.assertRaises(ValueError) :
-            pm2 = accmodel.Postmonths(postmonth=201507, monthstat = 'z')
-
-    def test_postmonth_no_state(self) :
-        """ We can create a postmonth """
-        pm3 = accmodel.Postmonths(postmonth=201507)
-        pm3.add()
-        with self.assertRaises(DatabaseError) :
-            gledger.db.session.flush()
                     
 class TestDomainProcesses(unittest.TestCase) :
     
@@ -132,7 +115,7 @@ class TestDomainProcesses(unittest.TestCase) :
             
     def test_refuse_future_postmonth(self) :
         """ A balance cannot be created for a future postmonth """
-        current_postmonth  = accmodel.postmonth_for(date.today())
+        current_postmonth  = accmodel.postmonth_today()
         with self.assertRaises(ValueError) :
             bal2 = accmodel.Balances(postmonth=current_postmonth + 2, 
                                      amount=1215, value_date='2015-07-21')
@@ -287,6 +270,51 @@ class TestAccountStructures(unittest.TestCase) :
         
     def test_get_parent(self) :
         self.assertEqual(self.ch1.parentaccount().name, self.parent.name, 'Parentaccount returned should be the parent')
+        
+class TestPostmonthActions(unittest.TestCase):
+    
+    def tearDown(self):
+        gledger.db.session.rollback()
+        
+    def test_insert_postmonth(self) :
+        """ We can create a postmonth """
+        pm1 = accmodel.Postmonths(postmonth=201507, monthstat = 'a')
+        pm1.add()
+        gledger.db.session.flush()
+        self.assertEqual(pm1.postmonth, 201507, 'Postmonth set incorrect')
+        
+    def test_invalid_monthstat(self) :
+        """ We cannot create a postmonth with invalid status """
+        with self.assertRaises(ValueError) :
+            pm2 = accmodel.Postmonths(postmonth=201507, monthstat = 'z')
+
+    def test_postmonth_no_state(self) :
+        """ We can create a postmonth """
+        pm3 = accmodel.Postmonths(postmonth=201507)
+        pm3.add()
+        with self.assertRaises(DatabaseError) :
+            gledger.db.session.flush()    
+            
+    def test_convert_ext_to_postmonth(self):
+        """ We can convert an postmonth from string to internal """
+        
+        month_for = accmodel.Postmonths.internal('01-2018')
+        self.assertEqual(month_for, 201801, 'Post month not converted correctly')
+        
+    def test_invalid_month_format(self):
+        """ An invalid postmonth format is refused """
+        
+        with self.assertRaises(accmodel.InvalidPostmonthError):
+            month_for = accmodel.Postmonths.internal('022017')
+
+    def test_month_wrong_length(self):
+        """ A postmonth is to short or to long """
+        
+        with self.assertRaises(accmodel.InvalidPostmonthError):
+            month_for = accmodel.Postmonths.internal('02-201')
+        with self.assertRaises(accmodel.InvalidPostmonthError):
+            month_for = accmodel.Postmonths.internal('012-2018')
+
         
 class TestAccountviews(unittest.TestCase) :
     
@@ -524,6 +552,29 @@ class TestAccountListViewFunction(unittest.TestCase):
         rv = self.app.get('/accountlist/teur')
         assert not b'inkopen' in rv.data
         assert b'crediteuren' in rv.data
+        
+        
+class TestAccountBalancesFunction(unittest.TestCase):
+    
+    def setUp(self):
+        create_standard_accountlist_testset(self)
+        self.app = gledger.app.test_client()
+        self.app.testing = True
+        
+    def tearDown(self):
+        gledger.db.session.rollback()
+    
+    def test_unknown_account_balance(self):
+        """ Check an unknown account returns 400  """
+        logging.debug('Testing getting an unknown account throws')
+        rv = self.app.get('/balance/blaffy')
+        assert b'400' in rv.data
+        
+    def test_get_balance(self):
+        """ A balance can be gotten from an account """
+        rv = self.app.get('/balance/rente')
+        assert b'26.11' in rv.data
+        
 
 def add_postmonths(monthlist) :
     """Add the postmonths requested in the list to the session """

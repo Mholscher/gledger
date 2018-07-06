@@ -80,23 +80,27 @@
     <span class="sd">&quot;&quot;&quot;This is the index page of the application. It shows</span>
 <span class="sd">    a list of accounts</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="s">&#39;De index pagina&#39;</span></div>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">&#39;accountList&#39;</span><span class="p">))</span></div>
 
 <span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/accounts/new&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="s">&#39;POST&#39;</span><span class="p">])</span>
 <div class="viewcode-block" id="createaccount"><a class="viewcode-back" href="../../GLAPI.html#gledger.views.createaccount">[docs]</a><span class="k">def</span> <span class="nf">createaccount</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot; This page creates a new account in the system </span>
+    <span class="sd">&quot;&quot;&quot; This page creates a new account in the system</span>
 <span class="sd">    </span>
 <span class="sd">    The GET method shows the empty form, when filled out and</span>
 <span class="sd">    submitted, POST will do the validation and update.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="n">newAccountForm</span> <span class="o">=</span> <span class="n">NewAccountForm</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">newAccountForm</span><span class="o">.</span><span class="n">validate_on_submit</span><span class="p">():</span>
         <span class="n">accmodel</span><span class="o">.</span><span class="n">Accounts</span><span class="o">.</span><span class="n">create_account</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">newAccountForm</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
                           <span class="n">parent_name</span><span class="o">=</span><span class="n">newAccountForm</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
                           <span class="n">role</span><span class="o">=</span><span class="n">newAccountForm</span><span class="o">.</span><span class="n">role</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
         <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
-        <span class="n">flash</span><span class="p">(</span><span class="s">&#39;Account &#39;</span><span class="o">+</span> <span class="n">accountName</span> <span class="o">+</span> <span class="s">&#39; added&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">&#39;accountList&#39;</span><span class="p">))</span>
+        <span class="n">flash</span><span class="p">(</span><span class="s">&#39;Account &#39;</span><span class="o">+</span> <span class="n">newAccountForm</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">data</span> <span class="o">+</span> <span class="s">&#39; added&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">newAccountForm</span><span class="o">.</span><span class="n">update</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">&#39;accountList&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">newAccountForm</span><span class="o">.</span><span class="n">addmore</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">&#39;createaccount&#39;</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;account.html&#39;</span><span class="p">,</span><span class="n">form</span><span class="o">=</span><span class="n">newAccountForm</span><span class="p">,</span>
                            <span class="n">accountview</span><span class="o">=</span><span class="n">AccountView</span><span class="p">(),</span> <span class="n">localTitle</span><span class="o">=</span><span class="s">&#39;New account&#39;</span><span class="p">)</span></div>
 
@@ -109,8 +113,13 @@
 <span class="sd">    The search argument is checked against the account name and</span>
 <span class="sd">    the account description.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">account_list</span> <span class="o">=</span> <span class="n">accmodel</span><span class="o">.</span><span class="n">AccountList</span><span class="p">(</span><span class="n">search_string</span><span class="o">=</span><span class="n">searchfor</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;accountlist.html&#39;</span><span class="p">,</span> <span class="n">accountlist</span><span class="o">=</span><span class="n">AccountListView</span><span class="p">(</span><span class="n">account_list</span><span class="p">))</span></div>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">account_list</span> <span class="o">=</span> <span class="n">accmodel</span><span class="o">.</span><span class="n">AccountList</span><span class="p">(</span><span class="n">search_string</span><span class="o">=</span><span class="n">searchfor</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">accmodel</span><span class="o">.</span><span class="n">ShortSearchStringError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;accountlist.html&#39;</span><span class="p">,</span> 
+                           <span class="n">accountlist</span><span class="o">=</span><span class="n">AccountListView</span><span class="p">(</span><span class="n">account_list</span><span class="p">))</span></div>
 
 <span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/accounts/&lt;accountName&gt;&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="s">&#39;POST&#39;</span><span class="p">],</span> <span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <div class="viewcode-block" id="accounts"><a class="viewcode-back" href="../../GLAPI.html#gledger.views.accounts">[docs]</a><span class="k">def</span> <span class="nf">accounts</span><span class="p">(</span><span class="n">accountName</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
@@ -144,11 +153,15 @@
         <span class="n">flash</span><span class="p">(</span><span class="s">&#39;Account &#39;</span><span class="o">+</span> <span class="n">accountName</span> <span class="o">+</span> <span class="s">&#39; changed&#39;</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Account &#39;</span><span class="o">+</span> <span class="n">accountName</span> <span class="o">+</span> <span class="s">&#39; changed&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s">&#39;accountList&#39;</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s">&#39;POST&#39;</span><span class="p">:</span>
-        <span class="k">print</span><span class="p">(</span><span class="n">accountForm</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">accountForm</span><span class="o">.</span><span class="n">errors</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">accountForm</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                <span class="n">flash</span><span class="p">(</span><span class="s">&#39;Field &#39;</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="s">&#39;: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">message</span><span class="p">))</span>
     <span class="n">accountview</span> <span class="o">=</span> <span class="n">AccountView</span><span class="o">.</span><span class="n">createView</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">accountName</span><span class="p">)</span><span class="o">.</span><span class="n">asDictionary</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;account.html&#39;</span><span class="p">,</span> <span class="n">accountview</span><span class="o">=</span><span class="n">accountview</span><span class="p">,</span> <span class="n">form</span> <span class="o">=</span> <span class="n">accountForm</span><span class="p">,</span>
-                           <span class="n">localtitle</span><span class="o">=</span><span class="s">&#39;Account &#39;</span> <span class="o">+</span> <span class="n">accountview</span><span class="p">[</span><span class="s">&#39;account&#39;</span><span class="p">][</span><span class="s">&#39;name&#39;</span><span class="p">])</span></div>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&#39;account.html&#39;</span><span class="p">,</span> <span class="n">accountview</span><span class="o">=</span><span class="n">accountview</span><span class="p">,</span>
+                           <span class="n">form</span><span class="o">=</span><span class="n">accountForm</span><span class="p">,</span>
+                           <span class="n">localtitle</span><span class="o">=</span><span class="s">&#39;Account &#39;</span> <span class="o">+</span>
+                           <span class="n">accountview</span><span class="p">[</span><span class="s">&#39;account&#39;</span><span class="p">][</span><span class="s">&#39;name&#39;</span><span class="p">])</span></div>
 
 <span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/balance/&lt;accountName&gt;/month/&lt;postmonth&gt;&#39;</span><span class="p">,</span> <span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/balance/&lt;accountName&gt;&#39;</span><span class="p">,</span> <span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
@@ -159,14 +172,15 @@
 <span class="sd">    If no month is given, it shows the current account balance.</span>
 <span class="sd">    Else it shows the balance for the requested month.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="k">if</span> <span class="n">accountName</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="s">&#39;An account name is mandatory&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">postmonth</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">postmonth</span> <span class="o">=</span> <span class="s">&#39;04-2015&#39;</span>
-    <span class="k">return</span> <span class="s">&#39;Saldo voor rekening &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">accountName</span><span class="p">)</span> <span class="o">+</span>  <span class="s">&#39;, maand &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">postmonth</span><span class="p">)</span></div>
+        <span class="n">for_month</span> <span class="o">=</span> <span class="n">accmodel</span><span class="o">.</span><span class="n">postmonth_today</span><span class="p">()</span>
+    <span class="k">return</span> <span class="s">&#39;Saldo voor rekening &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">accountName</span><span class="p">)</span> <span class="o">+</span>  <span class="s">&#39;, maand &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">for_month</span><span class="p">)</span></div>
 
-<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/posts/&lt;accountName&gt;/month/&lt;postmonth&gt;&#39;</span><span class="p">,</span> <span class="n">strict_slashes</span><span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
-<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/posts/&lt;accountName&gt;&#39;</span><span class="p">,</span> <span class="n">strict_slashes</span><span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/posts/&lt;accountName&gt;/month/&lt;postmonth&gt;&#39;</span><span class="p">,</span> <span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="nd">@app.route</span><span class="p">(</span><span class="s">&#39;/posts/&lt;accountName&gt;&#39;</span><span class="p">,</span> <span class="n">strict_slashes</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <div class="viewcode-block" id="posts"><a class="viewcode-back" href="../../GLAPI.html#gledger.views.posts">[docs]</a><span class="k">def</span> <span class="nf">posts</span><span class="p">(</span><span class="n">accountName</span><span class="p">,</span> <span class="n">postmonth</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; </span>
 <span class="sd">    Show postings by account.</span>

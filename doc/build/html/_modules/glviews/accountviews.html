@@ -109,7 +109,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;An id or name for an account must be given&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">model</span><span class="o">.</span><span class="n">NoAccountError</span><span class="p">(</span><span class="s">&#39;An id or name for an account must be given&#39;</span><span class="p">)</span>
         <span class="c"># prefer id to name for fetching an account:</span>
         <span class="n">accountView</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
         <span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="p">:</span>
@@ -117,9 +117,11 @@
         <span class="k">else</span> <span class="p">:</span>
             <span class="n">accountView</span><span class="o">.</span><span class="n">account</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">Accounts</span><span class="o">.</span><span class="n">get_by_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">accountView</span><span class="o">.</span><span class="n">account</span> <span class="p">:</span>
+            <span class="n">accountView</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">accountView</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">name</span>
             <span class="n">accountView</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">accountView</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">parentaccount</span><span class="p">()</span>
             <span class="n">accountView</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="n">accountView</span><span class="o">.</span><span class="n">account</span><span class="o">.</span><span class="n">children</span>
         <span class="k">else</span> <span class="p">:</span>
+            <span class="n">accountView</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
             <span class="n">accountView</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="bp">None</span>
             <span class="n">accountView</span><span class="o">.</span><span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">return</span> <span class="n">accountView</span></div>
