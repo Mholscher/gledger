@@ -88,6 +88,55 @@ class AccountView() :
         asDictionary["localtitle"] = 'Account ' + self.account.name
         return asDictionary
     
+class BalanceView():
+    """ This class collects the data for displaying balance info for
+    an account.
+    
+    The view is a data collection which concerns everything
+    viewed on the accounts maintenance screen. 
+    """
+    
+    def __init__(self):
+        
+        self.id = None
+        self.account_name = None
+        self.postmonth = None
+        self.balance = None
+        
+    @classmethod
+    def create_view(cls, id=None, postmonth=None, name=None):
+        """ Create a view for the balance of an account
+        
+        We prefer the id, which is the primary key. Name is acceptable,
+        as it must be unique.
+        
+        The postmonth determines which balance we need, None means latest.        
+        """
+        
+        if id:
+            account = model.Accounts.get_by_id(id)
+        elif name:
+            model.Accounts.get_by_name(name)
+        else:
+            raise model.NoAccountError('An id or name for an account must be given')
+        view = cls()
+        view.id = account.id
+        view.account_name = account.name
+        if postmonth:
+            view.balance = account.balance_ultimo(postmonth)
+        else:
+            view.balance = account.current_balance()
+        return view
+    
+    def as_dictionary(self):
+        """ Return this view as a dictionary 
+        """
+        
+        as_dictionary = {'id': self.id, 'name': self.account_name}
+        as_dictionary['balance'] = str(self.balance/100)
+        return as_dictionary
+        
+    
 class AccountListView(dict):
     """ Gathers the information to display a list of accounts. 
     

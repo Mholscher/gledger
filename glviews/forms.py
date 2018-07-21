@@ -46,3 +46,13 @@ class NewAccountForm(AccountForm) :
     update = SubmitField('Save and list')
     addmore = SubmitField('Save, add more')
     
+class AccountBalanceForm(Form):
+    """ This is the form that shows the balance.
+    
+    It has a form because you can enter the accounting period for which
+    you want to see the balance. Default: current.
+    """
+    
+    accounting_period = SelectField('Period')
+    change_period = SubmitField('Show selected period')
+    

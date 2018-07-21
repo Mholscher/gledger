@@ -552,8 +552,37 @@ class TestAccountListViewFunction(unittest.TestCase):
         rv = self.app.get('/accountlist/teur')
         assert not b'inkopen' in rv.data
         assert b'crediteuren' in rv.data
+
+
+class TestBalanceViews(unittest.TestCase):
+    
+    def setUp(self):
+        create_standard_accountlist_testset(self)
+        
+    def tearDown(self):
+        gledger.db.session.rollback()
+        
+    def test_create_balanceview(self):
+        """ We can create a view for an account balance """
+        
+        balance_view = accviews.BalanceView.create_view(id=self.acc45.id)
+        self.assertEqual(balance_view.balance, 2611, 'Amount not in view')
+        
+    def test_invalid_account(self):
+        """ An unknown account raises the appropriate error """
+        
+        with self.assertRaises(accmodel.NoAccountError):
+            balance_view = accviews.BalanceView.create_view(name='blaffy')
+            
+    def test_balance_view_dict(self):
+        """ Test a balance view can return a dictionary """
+        balance_view = accviews.BalanceView.create_view(id=self.acc45.id)
+        bal_as_dict = balance_view.as_dictionary()
+        self.assertIn('balance', bal_as_dict, 'Balance not in dictionary for balance view')
+        self.assertEqual(bal_as_dict['balance'], '26.11', 'Balance incorrect in dictionary for balance view')
         
         
+
 class TestAccountBalancesFunction(unittest.TestCase):
     
     def setUp(self):
@@ -584,7 +613,7 @@ def add_postmonths(monthlist) :
         
 def create_standard_accountlist_testset(case):
     """ Create a standard list of accounts for different tests """
-    add_postmonths([201507])
+    add_postmonths([201507, 201506])
     case.acc40 = accmodel.Accounts(name='inkopen', role='E')
     case.acc40.add()
     case.acc40.updated_at = datetime(1983, 12, 16, hour=23, minute=40, second=44)
@@ -620,8 +649,10 @@ def create_standard_accountlist_testset(case):
     case.acc45.balances.append(case.bal16)
     case.bal17 = accmodel.Balances(postmonth=201507, amount=17166, value_date='2015-07-08')
     case.acc46.balances.append(case.bal17)
+    case.bal18 = accmodel.Balances(postmonth=201506, amount=7468, 
+                                   value_date='2015-06-09')
+    case.acc42.balances.append(case.bal18)
     gledger.db.session.flush()
-    
                     
 if __name__ == '__main__':
     unittest.main()
