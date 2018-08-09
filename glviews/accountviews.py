@@ -116,7 +116,7 @@ class BalanceView():
         if id:
             account = model.Accounts.get_by_id(id)
         elif name:
-            model.Accounts.get_by_name(name)
+            account = model.Accounts.get_by_name(name)
         else:
             raise model.NoAccountError('An id or name for an account must be given')
         view = cls()
@@ -124,8 +124,10 @@ class BalanceView():
         view.account_name = account.name
         if postmonth:
             view.balance = account.balance_ultimo(postmonth)
+            view.postmonth = postmonth
         else:
             view.balance = account.current_balance()
+            view.postmonth = model.postmonth_today()
         return view
     
     def as_dictionary(self):
@@ -134,6 +136,7 @@ class BalanceView():
         
         as_dictionary = {'id': self.id, 'name': self.account_name}
         as_dictionary['balance'] = str(self.balance/100)
+        as_dictionary['postmonth'] = model.Postmonths.external(self.postmonth)
         return as_dictionary
         
     

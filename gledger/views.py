@@ -1,7 +1,7 @@
 from . import app, db
 import glmodels.glaccount as accmodel
 from flask import render_template, flash, request, redirect, url_for, abort
-from glviews.accountviews import AccountView, AccountListView
+from glviews.accountviews import AccountView, AccountListView, BalanceView
 from glviews.forms import AccountForm, NewAccountForm
 import logging
 
@@ -111,10 +111,11 @@ def balance(accountName, postmonth=None):
     else:
         for_month = accmodel.Postmonths.internal(postmonth)
     try:
-        account = accmodel.Accounts.get_by_name(accountName)
+        balance_view = BalanceView.create_view(name=accountName, 
+                                               postmonth=for_month)
     except accmodel.NoAccountError as e:
         abort(400, str(e))
-    return str(account.balance_ultimo(for_month) / 100) 
+    return render_template('balance.html', balanceview=balance_view.as_dictionary()) 
 
 @app.route('/posts/<accountName>/month/<postmonth>', strict_slashes=False)
 @app.route('/posts/<accountName>', strict_slashes=False)
@@ -127,8 +128,10 @@ def posts(accountName, postmonth=None):
     use the current month.
     """
     if postmonth is None:
-        postmonth = '04-2015'
-    return 'Boekingen voor rekening ' + str(accountName) + ', maand ' + str(postmonth)
+        for_month = accmodel.postmonth_today()
+    else:
+        for_month = accmodel.Postmonths.internal(postmonth)
+    return 'Boekingen voor rekening ' + str(accountName) + ', maand ' + str(for_month)
 
 @app.route('/journal/<journalkey>', methods=['GET'])
 def journal(journalkey):

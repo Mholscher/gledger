@@ -256,7 +256,7 @@ class Accounts(db.Model):
         return balance_requested.amount
     
 class Balances(db.Model):
-    """Balances model the balances at different moments of time
+    """Balances model the balances at different moments in time
     
     A balance is created for each accounting period of a month.
     After the end of the month it retains the ultimo balance
@@ -390,12 +390,25 @@ class Postmonths(db.Model):
         year = int(month_string[3:7])
         return 100 * year + month
     
+    @staticmethod
+    def external(postmonth):
+        """ Return a string for a 6 digit postmonth integer
+        """
+        
+        return "{0:02}-{1}".format(postmonth % 100, int(postmonth / 100))
+    
     def status_can_post(self):
         """ Returns True is the status of this postmonth
         is active, i.e. posting in it is permitted.
         """
         
         return self.monthstat == self.ACTIVE
+    
+    def str():
+        """ Returns the postmonth key as a formatted string
+        """
+        
+        return "{0:02}-{1}".format(self.postmonth % 100, int(self.postmonth / 100))
         
 def postmonth_for(postdate):
     """ Return the postmonth from a postdate

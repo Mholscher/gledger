@@ -604,6 +604,11 @@ class TestAccountBalancesFunction(unittest.TestCase):
         rv = self.app.get('/balance/rente')
         assert b'26.11' in rv.data
         
+    def test_balance_for_period(self):
+        """ We can get a balance for an account period """
+        rv = self.app.get('/balance/rente/month/08-2018')
+        self.assertIn(b'08-2018', rv.data, 'Incorrect string for post month')
+        
 
 def add_postmonths(monthlist) :
     """Add the postmonths requested in the list to the session """
