@@ -15,6 +15,11 @@ AccountListview
 
 This view is a dictionary which as its values hold an unspecified number of accounts. Each account is held as a dictionary of the fields of the account. It is used to display any list of accounts; it holds no indication of how the list was compiled.
 
+Balanceview
+-----------
+
+The Balance view returns the balance data for an account. It can return the data for any posting month requested, it always tells the balance at ultimo, unless you are looking at the current month. It is than returning the current balance.
+
 Accountform
 ------------
 

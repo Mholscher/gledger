@@ -18,12 +18,13 @@ class AccountView() :
     
     The view is a data collection which concerns everything
     viewed on the accounts maintenance screen. 
+    
 ..  note:: 
         
         The way the collection is produced is as a dictionary with
         embedded data, for the account itself as strings,
         for the dependents as dictionaries. 
-        
+    
     """
     
     def __init__(self) :
@@ -64,7 +65,7 @@ class AccountView() :
         return {'id': self.account.id, 'name': self.account.name, 'role' : self.account.role }
     
     def _parent_name_and_id(self) :
-        # The check should not be necessary. The contract is: call ONLY if parent exists
+        # The check should not be necessary. The contract: call ONLY if parent exists
         if (not hasattr(self, 'parent')) or (self.parent is None) :
             return None
         return {'id' : self.parent.id, 'name' : self.parent.name}
@@ -82,6 +83,7 @@ class AccountView() :
         This is primarily thought of as a halfway house
         to create the views, be it json or html. 
         """
+        
         asDictionary = {"account" : self._account_dictionary(), "children" : self._dictionary_from_childlist() }
         if self.parent is not None :
             asDictionary["parent"] = self._parent_name_and_id()

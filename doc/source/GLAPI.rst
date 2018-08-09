@@ -79,6 +79,9 @@ Module glviews
 
 ..  autoclass:: AccountListView
     :members:
+    
+..  autoclass:: BalanceView
+    :members:
 
 ..  module:: glviews.forms
 
