@@ -24,7 +24,7 @@ def createaccount():
     newAccountForm = NewAccountForm()
     if newAccountForm.validate_on_submit():
         accmodel.Accounts.create_account(name=newAccountForm.name.data,
-                          parent_name=newAccountForm.parent.data,
+                          parent_name=newAccountForm.parent_name.data,
                           role=newAccountForm.role.data).add()
         db.session.commit()
         flash('Account '+ newAccountForm.name.data + ' added')
@@ -58,6 +58,7 @@ def accounts(accountName=None):
     
     If an account name is given, it shows the information for that account
     """    
+    
     if accountName is None or accountName == '':
         logging.debug('Aborting: account name is missing')
         abort(500)
@@ -68,6 +69,9 @@ def accounts(accountName=None):
         abort(404, str(e))
     logging.debug('Account gelezen: ' + account.name + '(id '+ str(account.id) + ')')
     accountForm = AccountForm(obj=account)
+    if account.parent_id:
+        parent = accmodel.Accounts.get_by_id(account.parent_id)
+        accountForm.parent_name.data = parent.name
     # logging.debug('request name '+ request.form.name)
     if accountForm.validate_on_submit():  #TODO validation of existence for parent
         logging.debug('Validated as correct')
@@ -75,8 +79,8 @@ def accounts(accountName=None):
             new_role = accountForm.role.data
         else:
             new_role = None
-        if accountForm.parent.data:
-            new_parent = accountForm.parent.data
+        if accountForm.parent_name.data:
+            new_parent = accountForm.parent_name.data
         else:
             new_parent = None
         account.update_role_or_parent(new_role=new_role, new_parent=new_parent)

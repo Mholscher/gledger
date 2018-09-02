@@ -11,8 +11,9 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask_wtf import Form
-from wtforms import StringField, TextAreaField, PasswordField, SubmitField, SelectField
+from flask_wtf import FlaskForm
+from wtforms import StringField, TextAreaField, PasswordField, SubmitField, SelectField,\
+    HiddenField
 from wtforms.validators import DataRequired, ValidationError, Length
 from glmodels.glaccount import Accounts
 
@@ -22,21 +23,21 @@ class AccountMustExist(ValueError):
     The accounts existence is validated against the database.
     """
     def __init__(self, message='Account must exist'):
-        if message:
-            message='Account must exist'
         self.message=message
         
     def __call__(self, form, field):
+        
         if (field.data) and (not Accounts.account_exists(requested_name=field.data)):
             raise ValidationError(self.message)
 
-class AccountForm(Form) :
+class AccountForm(FlaskForm) :
     """ The form for updating accounts.
     
     All fields of the account can be updated. For now the role is
     hardcoded in the form. #TODO Should be refactored to come from the model. """
     name = StringField('Account')
-    parent = StringField('Parent', validators = [AccountMustExist()])
+    csrf_token = HiddenField('csrf_token')
+    parent_name = StringField('Parent', validators = [AccountMustExist()])
     role = SelectField('Type', choices = [('A', 'Assets'), ('L', 'Liabilities'), ('I', 'Income'), ('E', 'Expense')])
     update = SubmitField('Update account')
     
@@ -46,7 +47,7 @@ class NewAccountForm(AccountForm) :
     update = SubmitField('Save and list')
     addmore = SubmitField('Save, add more')
     
-class AccountBalanceForm(Form):
+class AccountBalanceForm(FlaskForm):
     """ This is the form that shows the balance.
     
     It has a form because you can enter the accounting period for which

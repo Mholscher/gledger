@@ -61,7 +61,7 @@ class Accounts(db.Model):
         :id: a sequence number
         :name: the accounts account "number" as the user wants to see it
         :role: asset, liability, income, expense
-        :parent: its place in the hierarchy, like an adjacency list
+        :parent_id: its place in the hierarchy, like an adjacency list
         :children: the list of dependents
         :balances: the balances for the account
     """
@@ -78,12 +78,13 @@ class Accounts(db.Model):
     
     __tablename__ = 'accounts'
     id = db.Column(db.Integer, db.Sequence('account_id_seq'),primary_key=True)
-    name = db.Column(db.String(15), nullable=False, index = True, unique = True)
+    name = db.Column(db.String(15), nullable=False, unique=True)
     role = db.Column(db.String(1))
-    parent = db.Column(db.Integer, db.ForeignKey('accounts.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
     children = db.relationship('Accounts')
     balances = db.relationship('Balances', backref = 'accounts')
     updated_at = db.Column(db.DateTime) 
+    #db.Index('byparent', 'parent_id', 'id')
     
     @validates('role') 
     def validate_role(self, id, role):
@@ -167,7 +168,7 @@ class Accounts(db.Model):
         if hasattr(self, 'parent_account'):
             return self.parent_account
         else:
-            parent_accounts = db.session.query(Accounts).filter_by(id=self.parent).all()
+            parent_accounts = db.session.query(Accounts).filter_by(id=self.parent_id).all()
             if len(parent_accounts) > 0:
                 self.parentaccount = parent_accounts[0]
                 return parent_accounts[0]
@@ -192,7 +193,7 @@ class Accounts(db.Model):
         if new_parent:
             parent = Accounts.get_by_name(new_parent)
             if parent:
-                self.parent = parent.id
+                self.parent_id = parent.id
                 self.updated_at = datetime.today()
             else:
                 raise ValueError('Account ' + repr(new_parent) + ' (new parent) does not exist')

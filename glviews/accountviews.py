@@ -50,7 +50,11 @@ class AccountView() :
             accountView.account = model.Accounts.get_by_name(name)
         if accountView.account :
             accountView.name = accountView.account.name
-            accountView.parent = accountView.account.parentaccount()
+            if accountView.account.parent_id:
+                accountView.parent = \
+                    model.Accounts.get_by_id(accountView.account.parent_id)
+            else:
+                accountView.parent = None
             accountView.children = accountView.account.children
         else :
             accountView.name = ''
@@ -85,8 +89,7 @@ class AccountView() :
         """
         
         asDictionary = {"account" : self._account_dictionary(), "children" : self._dictionary_from_childlist() }
-        if self.parent is not None :
-            asDictionary["parent"] = self._parent_name_and_id()
+        asDictionary["parent"] = self._parent_name_and_id()
         asDictionary["localtitle"] = 'Account ' + self.account.name
         return asDictionary
     
@@ -151,4 +154,4 @@ class AccountListView(dict):
     
     def __init__(self, account_list):
         for account in account_list.as_list():
-            self[account.name] = {"id":account.id, "name":account.name, "role":account.role, "parent":account.parent}
+            self[account.name] = {"id":account.id, "name":account.name, "role":account.role, "parent":account.parent_id}

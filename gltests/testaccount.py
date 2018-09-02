@@ -51,6 +51,7 @@ class TestDBCreation(unittest.TestCase) :
     def test_accounts_related(self) :
         """ We can insert related accounts (parent child)
         """
+        
         acc4 =  accmodel.Accounts(name = 'parent', role = 'I')
         acc4.add()
         acc5 =  accmodel.Accounts(name = 'child', role = 'I')
@@ -58,7 +59,7 @@ class TestDBCreation(unittest.TestCase) :
         acc4.children.append(acc5)
         self.assertIn(acc5, acc4.children)
         gledger.db.session.flush()
-        self.assertEqual(acc5.parent, acc4.id)
+        self.assertEqual(acc5.parent_id, acc4.id)
         
     def test_insert_with_parent(self) :
         """We insert an account with a parent """
@@ -140,7 +141,7 @@ class TestDomainProcesses(unittest.TestCase) :
         acc8 = gledger.db.session.query(accmodel.Accounts).filter(accmodel.Accounts.name == 'creditors').one()
         self.assertEqual('A', acc8.role, 'Role not updated after flush')
         acc8.update_role_or_parent(new_parent=acc27.name)
-        self.assertEqual(acc27.id, acc8.parent, 'Failed to set parent')
+        self.assertEqual(acc27.id, acc8.parent_id, 'Failed to set parent')
         
     def test_account_by_id(self) :
         """Getting an account by its sequence """
@@ -338,6 +339,7 @@ class TestAccountviews(unittest.TestCase) :
     
     def test_accountview_as_dict(self) :
         """ You can return an accountview as a nested dictionary """
+        
         acc14 = accmodel.Accounts(name = 'voorziening251', role = 'A')
         acc14.add()
         gledger.db.session.flush()
@@ -352,7 +354,7 @@ class TestAccountviews(unittest.TestCase) :
         acc16 =  accmodel.Accounts(name = 'this', role = 'I')
         acc16.add()
         gledger.db.session.flush()
-        acc16.parent = acc15.id
+        acc16.parent_id = acc15.id
         gledger.db.session.flush()
         accountsView3 = accviews.AccountView.createView(name = acc16.name)
         self.assertEqual(accountsView3.asDictionary()["parent"]["name"],acc15. name, 'Parent not set properly in Accountsview') 
@@ -364,12 +366,12 @@ class TestAccountviews(unittest.TestCase) :
         acc18 =  accmodel.Accounts(name = 'this', role = 'I')
         acc18.add()
         gledger.db.session.flush()
-        acc18.parent = acc17.id
+        acc18.parent_id = acc17.id
         gledger.db.session.flush()
         accountsView4 = accviews.AccountView.createView(name = acc17.name)
         self.assertEqual(accountsView4.parent, None, 'An accountview of an account with no parent should have None as parent')
         asDictionary = accountsView4.asDictionary()
-        self.assertTrue("parent" not in asDictionary)
+        self.assertTrue("parent_id" not in asDictionary)
         
     def test_accountview_children(self) :
         """ The children of an account appear correctly in the view """
@@ -427,10 +429,11 @@ class TestAccountViewFunction(unittest.TestCase) :
         
         
     def test_account_view(self) :
-        """ Test if the account page returns the account name """
+        """ Test if the account page returns the account and parent name """
         logging.debug('Test getting account view') 
         rv = self.app.get('/accounts/wonky')
         assert b'wonky' in rv.data
+        assert b'wonkyparent' in rv.data        
         
     def test_account_post(self) :
         """ Test if account role can be changed """
@@ -444,16 +447,17 @@ class TestAccountViewFunction(unittest.TestCase) :
     
     def test_set_parent(self) :
         """ Test if account parentage can be set """
+        
         logging.debug('Before setting parent')
         gledger.db.session.commit()
         logging.debug('Granny added to database; now the transaction')
         rv = self.app.post('/accounts/wonkyparent', data = dict(name = "wonkyparent", 
-                                                            parent = 'wonkygranny', Type = "A"),
+                                                            parent_name = 'wonkygranny', Type = "A"),
             follow_redirects=True)
         logging.debug('Transaction done, now re-read accounts...')
         parent = accmodel.Accounts.get_by_name('wonkyparent')
         acc26 = accmodel.Accounts.get_by_name('wonkygranny')
-        self.assertEqual(acc26.id, parent.parent, 'Not able to set parent property') 
+        self.assertEqual(acc26.id, parent.parent_id, 'Not able to set parent property') 
 
 class TestAccountList(unittest.TestCase):
     
@@ -482,7 +486,7 @@ class TestAccountList(unittest.TestCase):
     def test_page(self):
         """ We can ask for a page """
         al = accmodel.AccountList(pagelength=3, page=2)
-        self.assertEqual(al.as_list()[0].name, 'crediteuren', 'Page 2 not correctly shown')
+        self.assertEqual(al.as_list()[0].name, 'debiteuren', 'Page 2 not correctly shown')
         
     def test_incomplete_page(self):
         """ We can retrieve an incomplete page """

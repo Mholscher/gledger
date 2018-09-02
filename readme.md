@@ -2,7 +2,7 @@
 
 ## Installing GLedger ##
 
-Install GLedger from Github. There is no way to instal it using pip.
+Install GLedger from Github. There is no way to install it using pip.
 
 ## How GLedger is developed ##
 
@@ -20,6 +20,6 @@ The tests are designed to be run on an empty database. Most tests don't mind 'st
 
 ### Create a database ####
 
-Go into a Python REPL and import glmodels. Then import db from gledger. You can then do do a db.dropall() and a db.create_all() to recreate the tables.
+Go into a Python REPL and import glmodels. Then import db from gledger. You can then do do a db.drop_all() and a db.create_all() to recreate the tables.
 
 The only thing not recreated **in Firebird** is the sequences. These count on and on, recreate these by hand if necessary.
