@@ -25,7 +25,7 @@ from datetime import date,datetime
 import logging
 
 class TestDBCreation(unittest.TestCase) :
-
+    
     def setUp(self) :
         pass
     
@@ -162,11 +162,12 @@ class TestDomainProcesses(unittest.TestCase) :
         self.assertEqual(accn.name, acci.name, 'name unequal after read') 
         
     def test_current_balance(self) :
+        
         acc11 =  accmodel.Accounts(role='L', name='bankloans')
         acc11.add()
-        bal3 = accmodel.Balances(postmonth=accmodel.postmonth_for(date.today()), amount=12.17, value_date='2015-07-21')
+        bal3 = accmodel.Balances(postmonth=accmodel.postmonth_for(date.today()), amount=1217, value_date='2015-07-21')
         acc11.balances.append(bal3)
-        self.assertEqual(acc11.current_balance(), 12.17, 'Balance not correctly read back')
+        self.assertEqual(acc11.current_balance(), 1217, 'Balance not correctly read back')
         
     def test_history_balance(self) :
         acc12 =  accmodel.Accounts(role='E', name='officestuff')
@@ -553,7 +554,7 @@ class TestAccountListViewFunction(unittest.TestCase):
         
     def test_return_list_with_search(self):
         """ requesting a list with parameter returns a smaller list """
-        rv = self.app.get('/accountlist/teur')
+        rv = self.app.get('/accountlist?search_for=teur')
         assert not b'inkopen' in rv.data
         assert b'crediteuren' in rv.data
 

@@ -2,7 +2,7 @@ from . import app, db
 import glmodels.glaccount as accmodel
 from flask import render_template, flash, request, redirect, url_for, abort
 from glviews.accountviews import AccountView, AccountListView, BalanceView
-from glviews.forms import AccountForm, NewAccountForm
+from glviews.forms import AccountForm, NewAccountForm, SearchForm
 import logging
 
 
@@ -21,6 +21,7 @@ def createaccount():
     submitted, POST will do the validation and update.
     """
     
+    search_form = SearchForm()
     newAccountForm = NewAccountForm()
     if newAccountForm.validate_on_submit():
         accmodel.Accounts.create_account(name=newAccountForm.name.data,
@@ -33,11 +34,11 @@ def createaccount():
         if newAccountForm.addmore.data:
             return redirect(url_for('createaccount'))
     return render_template('account.html',form=newAccountForm,
+                           search_form = search_form,
                            accountview=AccountView(), localTitle='New account')
 
-@app.route('/accountlist/<searchfor>', methods=['GET'], strict_slashes=False)
 @app.route('/accountlist', methods=['GET'], strict_slashes=False)
-def accountList(searchfor=None):
+def accountList():
     """accountList lists accounts from the system.
     
     The accounts shown may be constrained by a search argument.
@@ -45,11 +46,16 @@ def accountList(searchfor=None):
     the account description.
     """
     
+    search_for = request.args.get('search_for')
+    search_form = SearchForm()
+    
     try:
-        account_list = accmodel.AccountList(search_string=searchfor)
+        account_list = accmodel.AccountList(search_string=search_for)
     except accmodel.ShortSearchStringError as e:
         abort(400, str(e))
-    return render_template('accountlist.html', 
+    if search_for:
+        search_form.search_for.data = search_for
+    return render_template('accountlist.html', search_form=search_form,
                            accountlist=AccountListView(account_list))
 
 @app.route('/accounts/<accountName>', methods=['GET', 'POST'], strict_slashes=False)
@@ -62,6 +68,7 @@ def accounts(accountName=None):
     if accountName is None or accountName == '':
         logging.debug('Aborting: account name is missing')
         abort(500)
+    search_form = SearchForm()
     logging.debug('Get account from database')
     try:
         account = accmodel.Accounts.get_by_name(accountName)
@@ -94,7 +101,7 @@ def accounts(accountName=None):
                 flash('Field ' + k + ': ' + str(message))
     accountview = AccountView.createView(name=accountName).asDictionary()
     return render_template('account.html', accountview=accountview,
-                           form=accountForm,
+                           form=accountForm,search_form=search_form,
                            localtitle='Account ' +
                            accountview['account']['name'])
 
@@ -110,6 +117,7 @@ def balance(accountName, postmonth=None):
     
     if accountName is None:
         abort(404, 'An account name is mandatory')
+    search_form = SearchForm()
     if postmonth is None:
         for_month = accmodel.postmonth_today()
     else:
@@ -117,9 +125,10 @@ def balance(accountName, postmonth=None):
     try:
         balance_view = BalanceView.create_view(name=accountName, 
                                                postmonth=for_month)
-    except accmodel.NoAccountError as e:
+    except (accmodel.NoAccountError, accmodel.InvalidPostmonthError) as e:
         abort(400, str(e))
-    return render_template('balance.html', balanceview=balance_view.as_dictionary()) 
+    return render_template('balance.html', balanceview=balance_view.as_dictionary(),
+                           search_form=search_form) 
 
 @app.route('/posts/<accountName>/month/<postmonth>', strict_slashes=False)
 @app.route('/posts/<accountName>', strict_slashes=False)
@@ -131,7 +140,7 @@ def posts(accountName, postmonth=None):
     are returned. If no month is requested, it defaults to
     use the current month.
     """
-    if postmonth is None:
+    if not postmonth:
         for_month = accmodel.postmonth_today()
     else:
         for_month = accmodel.Postmonths.internal(postmonth)

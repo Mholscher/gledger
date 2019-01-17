@@ -82,7 +82,7 @@ class Accounts(db.Model):
     role = db.Column(db.String(1))
     parent_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
     children = db.relationship('Accounts')
-    balances = db.relationship('Balances', backref = 'accounts')
+    balances = db.relationship('Balances', backref='accounts')
     updated_at = db.Column(db.DateTime) 
     #db.Index('byparent', 'parent_id', 'id')
     
@@ -287,7 +287,9 @@ class Balances(db.Model):
     
     @validates('postmonth')
     def validate_postmonth(self, id, postmonth):
-        """ the post month can only be the current or an existing, active month"""
+        """ the post month can only be the current or an existing, active month
+        """
+        
         months_db = db.session.query(Postmonths).filter_by(postmonth=postmonth).all()
         if (months_db != []):
             if (months_db[0].status_can_post()):
@@ -323,7 +325,9 @@ class AccountList():
     
     The search string must be at least 3 characters, to  prevent an overly
     long result list. If the search string is none, collect the accounts last added. If no account exists where the name contains the 
-    search string, return an empty list."""
+    search string, return an empty list.
+    """
+    
     def __init__(self, search_string=None, pagelength=10,page=1):
         """Initialize the list, using search_string as a selection """
         q = db.session.query(Accounts).order_by(Accounts.updated_at.desc())
@@ -342,13 +346,15 @@ class AccountList():
         self.account_list = q.all()
         
     def as_list(self):
-        """ Return the embedded list """
+        """ Return the embedded list 
+        """
+        
         return self.account_list
     
     def as_dict(self):
         """ Return the embedded list as a dictionary.
         
-        The dictionary has a key of name and the list entry as value """
+        The dictionary has a key of account name and the list entry as value """
         account_dictionary = {} 
         for account in self.account_list:
             account_dictionary[account.name] = account
@@ -364,7 +370,8 @@ class Postmonths(db.Model):
     CLOSED = 'c'
     
     def add(self):
-        """ Add this postmonth to the session """
+        """ Add this postmonth to the session 
+        """
         
         self.updated_at = datetime.today()
         db.session.add(self)

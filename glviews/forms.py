@@ -57,3 +57,11 @@ class AccountBalanceForm(FlaskForm):
     accounting_period = SelectField('Period')
     change_period = SubmitField('Show selected period')
     
+class SearchForm(FlaskForm):
+    """ The searchform allows entry of the search terms for an account
+    
+    The form is quite simple.
+    """
+    
+    search_for = StringField('Search')
+    start_search = SubmitField('Find...')
