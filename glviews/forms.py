@@ -22,8 +22,12 @@ class AccountMustExist(ValueError):
     
     The accounts existence is validated against the database.
     """
-    def __init__(self, message='Account must exist'):
-        self.message=message
+    
+    message='Account must exist'
+    
+    def __init__(self, message=None):
+        if message:
+            self.message=message
         
     def __call__(self, form, field):
         
@@ -35,7 +39,7 @@ class AccountForm(FlaskForm) :
     
     All fields of the account can be updated. For now the role is
     hardcoded in the form. #TODO Should be refactored to come from the model. """
-    name = StringField('Account')
+    name = StringField('Account', validators=[DataRequired()])
     csrf_token = HiddenField('csrf_token')
     parent_name = StringField('Parent', validators = [AccountMustExist()])
     role = SelectField('Type', choices = [('A', 'Assets'), ('L', 'Liabilities'), ('I', 'Income'), ('E', 'Expense')])

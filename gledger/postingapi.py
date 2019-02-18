@@ -15,7 +15,7 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Blueprint, jsonify, abort, request
+from flask import Blueprint, jsonify, request
 import glmodels.glposting as postings
 
 postingapi = Blueprint('api', __name__)
@@ -25,20 +25,23 @@ class InvalidJsonError(Exception):
     status_code = 400
     
     def __init__(self, message, status_code=None, payload=None):
-        postings.InvalidJournalError.__init__(self)
+        
+        super().__init__(self, message)
         self.message = message
         if status_code is not None:
             self.status_code = status_code
         self.payload = payload
         
     def to_dict(self):
-        rv = dict(self.payload or ())
-        rv['message'] = self.message
-        return rv
+        
+        return_value = dict(self.payload or ())
+        return_value['message'] = self.message
+        return return_value
 
 @postingapi.errorhandler(InvalidJsonError)
 def handle_invalid_json(error):
     """ Create a response for an invalid json journal """
+    
     response_dict = error.to_dict()
     response_dict["status"] = "Not correct"
     response = jsonify(response_dict)
@@ -49,7 +52,7 @@ def handle_invalid_json(error):
 def create_success_response(app_message=None):
     """ Build the response for successfuly adding/changing a journal """
     success_response = {"status" : "OK"}
-    if not app_message is None :
+    if not app_message is None:
         success_response['message'] = app_message
     return success_response
 
@@ -60,10 +63,10 @@ def addjournal():
     The journal and its entries are delivered as
     a JSON file. It is decoded and the journal
     and its postings are added to the database. """
+    
     try:
         journal = request.get_json()
         postings.Journals.create_from_dict(journal)
-    except postings.InvalidJournalError as e:
-        raise InvalidJsonError(str(e))
+    except postings.InvalidJournalError as ije:
+        raise InvalidJsonError(str(ije))
     return jsonify(create_success_response(app_message='Journal '+ extkey + ' added'))
-

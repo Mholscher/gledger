@@ -15,11 +15,17 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
+""" The module contains the postings. After postings are made these
+should never be changed, corrections will be undertaken by creating
+new correcting postings. This is because postings are part of a journal,
+a composite of postings that belong together and always need to balance.
+"""
+
 from gledger import db
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from datetime import date, datetime
-from .glaccount import Accounts, postmonth_for, NoAccountError
+from .glaccount import Accounts, postmonth_for, NoAccountError, Postmonths
 
 
 class InvalidJournalError(Exception):
@@ -108,7 +114,8 @@ class Journals(db.Model):
         if 'postings' not in journdict['journal']\
             or journdict['journal']['postings'] is None:
             raise NoPostingInJournal('Empty journal')
-        newjournal = cls(journalstat=cls.UNPROCESSED, extkey=journdict['journal']['extkey'])
+        newjournal = cls(journalstat=cls.UNPROCESSED,\
+                         extkey=journdict['journal']['extkey'])
         newjournal.add()
         for posting in journdict["journal"]["postings"]:
             try:
@@ -116,6 +123,28 @@ class Journals(db.Model):
             except NoAccountError as exc:
                 raise InvalidJournalError(str(exc)) from exc
         return newjournal
+    
+    @classmethod
+    def postings_for_id(cls, journal_id):
+        """ Assemble the postings in journal with id journal_id 
+        """
+        
+        posts = db.session.query(Postings).filter_by(journals_id=journal_id).\
+                    all()
+        if posts == []:
+            raise NoJournalError('Journal ' + str(journal_id) + ' does not exist')
+        return posts
+            
+    @classmethod
+    def postings_for_key(self, journal_key):
+        """ Assemble the posting in the journal by the external key 
+        """
+        
+        journal = db.session.query(Journals).\
+            filter_by(extkey=journal_key).first()
+        if not journal:
+            raise NoJournalError('No journal for key ' + str(journal_key))
+        return journal.journalpostings
         
     @validates('journalstat')
     def validate_status(self, id, journalstat):
@@ -123,7 +152,8 @@ class Journals(db.Model):
         """
         
         if not journalstat in [self.UNPROCESSED, self.PROCESSED, self.FAILED]:
-            raise InvalidJournalStatus('Status '+ str(journalstat) + ' is invalid')
+            raise InvalidJournalStatus('Status '+ str(journalstat) + \
+                                        ' is invalid')
         return journalstat
     
     def add(self) :
@@ -211,6 +241,21 @@ class Postings(db.Model) :
         newposting.add()
         for_journal.journalpostings.append(newposting)
         return newposting
+    
+    @classmethod
+    def postings_for_account(cls, account, post_limit=50, month=None):
+        """ This method gets a list of postings for the account passed.
+        
+        It has a post_limit for the number of postings. -1 is unlimited (warning:
+        That may return very many postings! 
+        """
+        
+        posts = db.session.query(Postings).filter_by(accounts_id=account.id)
+        if month:
+            posts = posts.filter_by(postmonth=Postmonths.internal(month))
+        if not post_limit == -1:
+            posts = posts.limit(post_limit)
+        return posts.all()
         
     def _id_for_account(self, from_name) :
         """ Get an ID for an account for which we only have the name 

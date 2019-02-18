@@ -10,7 +10,7 @@ Module gledger
     
 ..  autofunction:: accounts
 
-..  autofunction:: accountList
+..  autofunction:: accountlist
 
 ..  autofunction:: createaccount
 
@@ -26,71 +26,32 @@ Module gledger
 
 ..  autofunction:: handle_invalid_json
 
+..  autofunction:: create_success_response
+
 ..  autofunction:: addjournal
 
-Module glmodels
----------------
-..  module:: glmodels.glaccount
+Module glmodels glaccount
+--------------------------
 
-..  autoclass:: NoAccountError
-    :members:
-
-..  autoclass:: AccountAlreadyExistsError
-    :members:
-
-..  autoclass:: Accounts
-    :members:
-
-..  autoclass:: Balances
+..  automodule:: glmodels.glaccount
     :members:
     
-..  autoclass:: AccountList
+Module glmodels glposting
+-------------------------
+
+..  automodule:: glmodels.glposting
     :members:
     
-..  autoclass:: Postmonths
+Module glviews accountviews
+---------------------------
+
+..  automodule:: glviews.accountviews
     :members:
 
-..  autofunction:: postmonth_for(postdate)
 
-..  module:: glmodels.glposting
+Module glviews postingviews
+---------------------------
 
-..  autoclass:: PostingWOJournal
-    :members:
-
-..  autoclass:: NoJournalError
-    :members:
-
-..  autoclass:: JournalBalanceError
-    :members:
-
-..  autoclass:: Journals
-    :members:
-    
-..  autoclass:: Postings
-    :members:
-    
-Module glviews
----------------
-
-..  module:: glviews.accountviews
-
-..  autoclass:: AccountView
-    :members:
-
-..  autoclass:: AccountListView
-    :members:
-    
-..  autoclass:: BalanceView
-    :members:
-
-..  module:: glviews.forms
-
-..  autoclass:: AccountMustExist
-    :members:
-
-..  autoclass:: AccountForm
-    :members:
-    
-..  autoclass:: NewAccountForm
+..  automodule:: glviews.postingviews
     :members:
     

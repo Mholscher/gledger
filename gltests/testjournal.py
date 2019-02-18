@@ -17,6 +17,7 @@
 
 import unittest
 import gledger
+import glviews.postingviews as postviews
 import glmodels.glposting as posts
 import glmodels.glaccount as accmodel
 from datetime import date, datetime
@@ -171,8 +172,8 @@ class testFullJournal(unittest.TestCase) :
         journ2 = posts.Journals.create_from_dict(dictjourn1)
         q = gledger.db.session.query(posts.Postings).join(posts.Journals).\
             filter(posts.Journals.id==journ2.id)
-        self.assertEqual(q.count(), 3, "Too little/many postings in journal")
-        
+        self.assertEqual(q.count(), 3, "Too little/many postings in journal")  
+
     def test_json_incomplete(self):
         """ An incomplete json leads to failure """
         with self.assertRaises(ValueError):
@@ -194,19 +195,231 @@ class testFullJournal(unittest.TestCase) :
             posts.Journals.create_from_dict(dictjourn4)
         
     def add_postings_to(self, journ2):
-        post3 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
-                               journals_id = journ2.id, postmonth = 201609, 
-                               value_date = datetime.now(), amount=250, debcred='Cr')
-        post3.add()
-        post4 = posts.Postings(accounts_id=accmodel.Accounts.get_by_name("kas").id, 
-                               journals_id = journ2.id, postmonth = 201609, 
-                               value_date = datetime.now(), amount=230, debcred='Db')
-        post4.add()
-        post5 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
-                               journals_id = journ2.id, postmonth = 201609, 
-                               value_date = datetime.now(), amount=20, debcred='Db')
-        post5.add()
-        return journ2
+        return posting_to_journal(journ2)
+    
+class TestListPostings(unittest.TestCase):
+    
+    def setUp(self):
+        
+        create_accounts(self)
+        journ5 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='NR501')
+        journ5.add()
+        journ6 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='NR503')
+        journ6.add()
+        gledger.db.session.flush()
+        self.journ5id = journ5.id
+        self.journ5extkey = journ5.extkey
+        self.journ6id = journ6.id
+        self.journ6extkey = journ6.extkey
+        posting_to_journal(journ5)
+        post9 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
+                                journals_id = journ6.id, postmonth = 201609, 
+                                value_date = datetime.now(), amount=20, debcred='Cr')
+        post9.add()
+        post10 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("kas").id,  
+                                journals_id = journ6.id, postmonth = 201609, 
+                                value_date = datetime.now(), amount=20, debcred='Db')
+        post10.add()
+        
+        
+    def tearDown(self):
+        
+        self.journ5id = None
+        gledger.db.session.rollback()
+        
+    def test_read_journal(self):
+        """ We can read the postings just added """
+        journal_postings = posts.Journals.postings_for_id(self.journ5id)
+        self.assertEqual(len(journal_postings), 3, 'Incorrect no. of postings in journal')
+        
+    def test_read_non_existing(self):
+        """ Reading a non-existing journal returns an error """
+        with self.assertRaises(posts.NoJournalError):
+            journal_postings = posts.Journals.postings_for_id(1)
+        
+    def test_read_by_extkey(self):
+        """ We can read the postings by external key """
+        journal_postings = posts.Journals.postings_for_key(self.journ5extkey)
+        self.assertEqual(len(journal_postings), 3, 'Incorrect no. of postings by extkey')
+        
+    def test_non_existing_extkey(self):
+        """ We get an error trying to read postings for false extkey """
+        with self.assertRaises(posts.NoJournalError):
+            journal_postings = posts.Journals.postings_for_key('V301')
+        
+    def test_read_by_account(self):
+        """ Read postings by account """
+        verkopen = accmodel.Accounts.get_by_name("verkopen")
+        account_postings = posts.Postings.postings_for_account(verkopen)
+        self.assertEqual(len(account_postings), 2, 'Incorrect no. of posts for account')
+        
+    def test_read_by_account_month(self):
+        """ Read postings by account and postmonth """
+        post9 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
+                                journals_id = self.journ5id, postmonth = 201608, 
+                                value_date = datetime.now(), amount=20, debcred='Cr')
+        post9.add()
+        gledger.db.session.flush()
+        acc10 = accmodel.Accounts.get_by_name("verkopen")
+        account_postings = posts.Postings.postings_for_account(acc10, month='09-2016')
+        self.assertEqual(len(account_postings), 2, 'Incorrect no. of posts for account')
+        
+    def test_no_postings_for_account(self):
+        """ If an account has no postings, an empty list is returned """
+        acc9 = accmodel.Accounts(name = 'inkoop', role = 'A')
+        acc9.add()
+        gledger.db.session.flush()
+        account_postings = posts.Postings.postings_for_account(acc9)
+        self.assertEqual(len(account_postings), 0, 'Postings for new account?!')
+
+
+class TestPostingView(unittest.TestCase):
+    
+    def setUp(self):
+        
+        create_accounts(self)
+        journ7 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='NR723')
+        journ7.add()
+        posting_to_journal(journ7)
+        gledger.db.session.flush()
+        self.journ7id = journ7.id
+        self.journ7extkey = journ7.extkey
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_createview(self):
+        """ Create a view for one posting """
+
+        post11 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
+                                journals_id = self.journ7id, postmonth = 201609, 
+                                value_date = datetime.now(), amount=120, debcred='Cr')
+        post11.add()
+        gledger.db.session.flush()
+        post11view = postviews.PostingView(post11)
+        self.assertEqual(post11view.posting.amount, 120, 'Amount in view incorrect')
+
+    def test_posting_no_id_fails(self):
+        """ Making a view for a posting with no id fails """
+
+        post12 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
+                                journals_id = self.journ7id, postmonth = 201609, 
+                                value_date = datetime.now(), amount=12, debcred='Cr')
+        post12.add()
+        with self.assertRaises(ValueError):
+            post12view = postviews.PostingView(post12)
+
+    def test_view_needs_posting(self):
+        """ A postingview needs to be supplied with a posting """
+
+        with self.assertRaises(ValueError):
+            post13view = postviews.PostingView()
+
+    def test_postingview_as_dict(self):
+        """ A postingview can be returned as a dictionary """
+
+        post13 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
+                                journals_id = self.journ7id, postmonth = 201609, 
+                                value_date = datetime.now(), amount=6500, debcred='Cr')
+        post13.add()
+        gledger.db.session.flush()
+        post13view = postviews.PostingView(post13)
+        post13viewdict = post13view.as_dict()
+        self.assertIn("id", post13viewdict, 'No id in posting dictionary')
+        self.assertEqual(post13viewdict['amount'], '6500', 'Amount incorrect')
+        
+    def test_posting_account(self):
+        """ A postingview contains the account name """
+
+        post14 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("kas").id,  
+                                journals_id = self.journ7id, postmonth = 201608, 
+                                value_date = datetime.now(), amount=5500, debcred='Db')
+        post14.add()
+        gledger.db.session.flush()
+        post14view = postviews.PostingView(post14)
+        post14viewdict = post14view.as_dict()
+        self.assertEqual(post14viewdict['account'], 'kas', 'Wrong account in postview')
+
+    def test_extkey_in_view(self):
+        """ The posting should show the journalkey as the external key """
+
+        one_journal7_posting = gledger.db.session.query(posts.Journals).\
+            filter_by(id=self.journ7id).first().journalpostings[0]
+        post15view = postviews.PostingView(one_journal7_posting)
+        post15viewdict = post15view.as_dict()
+        self.assertEqual(post15viewdict['extkey'], self.journ7extkey, 'Wrong extkey')
+
+
+class TestJournalView(unittest.TestCase):
+    
+    def setUp(self):
+        create_accounts(self)
+        journ8 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='Rs837')
+        journ8.add()
+        posting_to_journal(journ8)
+        gledger.db.session.flush()
+        self.journ8id = journ8.id
+        self.journ8extkey = journ8.extkey
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_create_journal_view(self):
+        """ We can set up a view which holds the journal """
+
+        journal_view1 = postviews.JournalView(posts.Journals.get_by_id(self.journ8id))
+        self.assertEqual(journal_view1.journal.id, self.journ8id, 'No view created')
+
+    def test_journal_view_has_postings(self):
+        """ The journal view has a list of postings """
+
+        journal_view2 = postviews.JournalView(posts.Journals.get_by_id(self.journ8id))
+        self.assertEqual(len(journal_view2.postingviews), 3, 'Incorrect number of postings')
+
+    def test_journalview_as_dict(self):
+        """ A journalview can return itself as a dictionary """
+
+        journal_view3 = postviews.JournalView(posts.Journals.get_by_id(self.journ8id))
+        self.assertIn('extkey', journal_view3.as_dict(), 'No extkey in journalview')
+        self.assertEqual(journal_view3.as_dict()['extkey'], self.journ8extkey, 'Incorrect extkey')
+
+    def test_journalview_has_postingviews(self):
+        """ A journalview contains postingviews for the postings """
+
+        journal_view4 = postviews.JournalView(posts.Journals.get_by_id(self.journ8id))
+        self.assertEqual(len(journal_view4.as_dict()['postings']), 3, 'Incorrect number of postingviews')
+
+def create_accounts(instance):
+
+    instance.acc6 = accmodel.Accounts(name = 'verkopen', role = 'E')
+    instance.acc6.add()
+    instance.acc7 = accmodel.Accounts(name = 'kas', role = 'A')
+    instance.acc7.add()
+    instance.acc8 = accmodel.Accounts(name = 'btw (ontvangen)', role = 'E')
+    instance.acc8.add()
+
+
+def posting_to_journal(journ2):
+    post3 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("verkopen").id,  
+                            journals_id = journ2.id, postmonth = 201609, 
+                            value_date = datetime.now(), amount=250, debcred='Cr')
+    post3.add()
+    post4 = posts.Postings(accounts_id=accmodel.Accounts.get_by_name("kas").id, 
+                            journals_id = journ2.id, postmonth = 201609, 
+                            value_date = datetime.now(), amount=230, debcred='Db')
+    post4.add()
+    post5 = posts.Postings(accounts_id = accmodel.Accounts.get_by_name("btw (ontvangen)").id, 
+                            journals_id = journ2.id, postmonth = 201609, 
+                            value_date = datetime.now(), amount=20, debcred='Db')
+    post5.add()
+    return journ2
+
 
 if __name__ == '__main__':
     unittest.main()

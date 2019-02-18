@@ -20,7 +20,13 @@
     {% else %}
     <div class="inputline">{{ form.name.label(class="lbl") }} {{ form.name }} </div>
     {% endif %}
-    <div class="inputline">{{ form.parent_name.label(class="lbl") }}  {{ form.parent_name }}</div>
+    <div class="inputline">{{ form.parent_name.label(class="lbl") }}  {{ form.parent_name }}
+    {% for error in form.parent_name.errors %}
+        <div class='flash'>
+            {{error}}
+        </div>
+    {% endfor %}
+    </div>
     <div class="inputline">{{ form.role.label(class="lbl") }}  {{ form.role }}</div>
     {{form.update}} {{form.addmore}}
     </form>

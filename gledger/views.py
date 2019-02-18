@@ -1,9 +1,9 @@
-from . import app, db
-import glmodels.glaccount as accmodel
+import logging
 from flask import render_template, flash, request, redirect, url_for, abort
+import glmodels.glaccount as accmodel
 from glviews.accountviews import AccountView, AccountListView, BalanceView
 from glviews.forms import AccountForm, NewAccountForm, SearchForm
-import logging
+from . import app, db
 
 
 @app.route('/')
@@ -11,7 +11,7 @@ def index():
     """This is the index page of the application. It shows
     a list of accounts
     """
-    return redirect(url_for('accountList'))
+    return redirect(url_for('accountlist'))
 
 @app.route('/accounts/new', methods=['GET', 'POST'])
 def createaccount():
@@ -22,24 +22,24 @@ def createaccount():
     """
     
     search_form = SearchForm()
-    newAccountForm = NewAccountForm()
-    if newAccountForm.validate_on_submit():
-        accmodel.Accounts.create_account(name=newAccountForm.name.data,
-                          parent_name=newAccountForm.parent_name.data,
-                          role=newAccountForm.role.data).add()
+    new_account_form = NewAccountForm()
+    if new_account_form.validate_on_submit():
+        accmodel.Accounts.create_account(name=new_account_form.name.data,
+                                         parent_name=new_account_form.parent_name.data,
+                                         role=new_account_form.role.data).add()
         db.session.commit()
-        flash('Account '+ newAccountForm.name.data + ' added')
-        if newAccountForm.update.data:
-            return redirect(url_for('accountList'))
-        if newAccountForm.addmore.data:
+        flash('Account '+ new_account_form.name.data + ' added')
+        if new_account_form.update.data:
+            return redirect(url_for('accountlist'))
+        if new_account_form.addmore.data:
             return redirect(url_for('createaccount'))
-    return render_template('account.html',form=newAccountForm,
-                           search_form = search_form,
+    return render_template('account.html', form=new_account_form,
+                           search_form=search_form,
                            accountview=AccountView(), localTitle='New account')
 
 @app.route('/accountlist', methods=['GET'], strict_slashes=False)
-def accountList():
-    """accountList lists accounts from the system.
+def accountlist():
+    """accountlist lists accounts from the system.
     
     The accounts shown may be constrained by a search argument.
     The search argument is checked against the account name and
@@ -51,63 +51,65 @@ def accountList():
     
     try:
         account_list = accmodel.AccountList(search_string=search_for)
-    except accmodel.ShortSearchStringError as e:
-        abort(400, str(e))
+    except accmodel.ShortSearchStringError as sse:
+        flash(str(sse))
+        search_form.search_for.data = search_for
+        return render_template('accountlist.html', search_form=search_form,
+                               accountlist=dict())
     if search_for:
         search_form.search_for.data = search_for
     return render_template('accountlist.html', search_form=search_form,
                            accountlist=AccountListView(account_list))
 
-@app.route('/accounts/<accountName>', methods=['GET', 'POST'], strict_slashes=False)
-def accounts(accountName=None):
+@app.route('/accounts/<account_name>', methods=['GET', 'POST'], strict_slashes=False)
+def accounts(account_name=None):
     """ This is the accounts page of the application
     
     If an account name is given, it shows the information for that account
     """    
     
-    if accountName is None or accountName == '':
+    if account_name is None or account_name == '':
         logging.debug('Aborting: account name is missing')
         abort(500)
     search_form = SearchForm()
     logging.debug('Get account from database')
     try:
-        account = accmodel.Accounts.get_by_name(accountName)
-    except accmodel.NoAccountError as e:
-        abort(404, str(e))
+        account = accmodel.Accounts.get_by_name(account_name)
+    except accmodel.NoAccountError as nae:
+        abort(404, str(nae))
     logging.debug('Account gelezen: ' + account.name + '(id '+ str(account.id) + ')')
-    accountForm = AccountForm(obj=account)
+    account_form = AccountForm(obj=account)
     if account.parent_id:
         parent = accmodel.Accounts.get_by_id(account.parent_id)
-        accountForm.parent_name.data = parent.name
+        account_form.parent_name.data = parent.name
     # logging.debug('request name '+ request.form.name)
-    if accountForm.validate_on_submit():  #TODO validation of existence for parent
+    if account_form.validate_on_submit():  #TODO validation of existence for parent
         logging.debug('Validated as correct')
-        if accountForm.role.data:
-            new_role = accountForm.role.data
+        if account_form.role.data:
+            new_role = account_form.role.data
         else:
             new_role = None
-        if accountForm.parent_name.data:
-            new_parent = accountForm.parent_name.data
+        if account_form.parent_name.data:
+            new_parent = account_form.parent_name.data
         else:
             new_parent = None
         account.update_role_or_parent(new_role=new_role, new_parent=new_parent)
         db.session.commit()
-        flash('Account '+ accountName + ' changed')
-        logging.debug('Account '+ accountName + ' changed')
-        return redirect(url_for('accountList'))
-    if len(accountForm.errors):
-        for k, v in accountForm.errors.items():
-            for message in v:
-                flash('Field ' + k + ': ' + str(message))
-    accountview = AccountView.createView(name=accountName).asDictionary()
+        flash('Account {0} changed'.format(account_name))
+        logging.debug('Account {0}  changed'.format(account_name))
+        return redirect(url_for('accountlist'))
+    for error_key, error_value in account_form.errors.items():
+        for message in error_value:
+            flash('Field ' + error_key + ': ' + str(message))
+    accountview = AccountView.createView(name=account_name).asDictionary()
     return render_template('account.html', accountview=accountview,
-                           form=accountForm,search_form=search_form,
+                           form=account_form, search_form=search_form,
                            localtitle='Account ' +
                            accountview['account']['name'])
 
-@app.route('/balance/<accountName>/month/<postmonth>', strict_slashes=False)
-@app.route('/balance/<accountName>', strict_slashes=False)
-def balance(accountName, postmonth=None):
+@app.route('/balance/<account_name>/month/<postmonth>', strict_slashes=False)
+@app.route('/balance/<account_name>', strict_slashes=False)
+def balance(account_name, postmonth=None):
     """ This route shows the balance of an account
     
     The accountname is the account to show the balance for.
@@ -115,7 +117,7 @@ def balance(accountName, postmonth=None):
     Else it shows the balance for the requested month.
     """
     
-    if accountName is None:
+    if account_name is None:
         abort(404, 'An account name is mandatory')
     search_form = SearchForm()
     if postmonth is None:
@@ -123,16 +125,16 @@ def balance(accountName, postmonth=None):
     else:
         for_month = accmodel.Postmonths.internal(postmonth)
     try:
-        balance_view = BalanceView.create_view(name=accountName, 
+        balance_view = BalanceView.create_view(name=account_name, 
                                                postmonth=for_month)
-    except (accmodel.NoAccountError, accmodel.InvalidPostmonthError) as e:
-        abort(400, str(e))
+    except (accmodel.NoAccountError, accmodel.InvalidPostmonthError) as content_error:
+        abort(400, str(content_error))
     return render_template('balance.html', balanceview=balance_view.as_dictionary(),
                            search_form=search_form) 
 
-@app.route('/posts/<accountName>/month/<postmonth>', strict_slashes=False)
-@app.route('/posts/<accountName>', strict_slashes=False)
-def posts(accountName, postmonth=None):
+@app.route('/posts/<account_name>/month/<postmonth>', strict_slashes=False)
+@app.route('/posts/<account_name>', strict_slashes=False)
+def posts(account_name, postmonth=None):
     """ 
     Show postings by account.
     
@@ -144,7 +146,7 @@ def posts(accountName, postmonth=None):
         for_month = accmodel.postmonth_today()
     else:
         for_month = accmodel.Postmonths.internal(postmonth)
-    return 'Boekingen voor rekening ' + str(accountName) + ', maand ' + str(for_month)
+    return 'Boekingen voor rekening ' + str(account_name) + ', maand ' + str(for_month)
 
 @app.route('/journal/<journalkey>', methods=['GET'])
 def journal(journalkey):

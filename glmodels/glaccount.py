@@ -15,6 +15,15 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
+""" In this module we find the account related items of
+the models. The account itself is no more than a holder of some data
+(is this an asset; what is the user readable name?), the balance
+holds the balance ultimo of a posting month.
+
+The postmonths are items that contain functions to process the
+posting periods.
+"""
+
 from gledger import db
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
@@ -228,7 +237,7 @@ class Accounts(db.Model):
         if self.role == 'L' or self.role == 'I':
             return 'Cr'
         # Come here, unknown role: crash
-        raise ValueError('Unknown role ' + role + ' in account ' + self.name)
+        raise ValueError(f'Unknown role {role} in account {name}')
     
     def is_debit(self):
         """ Is this account a debit account? """

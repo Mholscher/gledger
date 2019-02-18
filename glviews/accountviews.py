@@ -11,6 +11,13 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
+""" This module contains the view items associated with accounts.
+
+Of course there is the account itself and the balances, but also
+a list view to support a list screen of accounts, based on a list 
+of model instances.
+"""
+
 import glmodels.glaccount as model 
 
 class AccountView() :
@@ -155,3 +162,4 @@ class AccountListView(dict):
     def __init__(self, account_list):
         for account in account_list.as_list():
             self[account.name] = {"id":account.id, "name":account.name, "role":account.role, "parent":account.parent_id}
+            
