@@ -1,7 +1,13 @@
+""" This module contains the routes that can be visited using the browser.
+Each route has a clear purpose, geared to different uses.
+"""
+
 import logging
 from flask import render_template, flash, request, redirect, url_for, abort
 import glmodels.glaccount as accmodel
+import glmodels.glposting as journalmodel
 from glviews.accountviews import AccountView, AccountListView, BalanceView
+from glviews.postingviews import JournalView, PostingView
 from glviews.forms import AccountForm, NewAccountForm, SearchForm
 from . import app, db
 
@@ -142,16 +148,31 @@ def posts(account_name, postmonth=None):
     are returned. If no month is requested, it defaults to
     use the current month.
     """
+
+    search_form = SearchForm()
     if not postmonth:
         for_month = accmodel.postmonth_today()
     else:
         for_month = accmodel.Postmonths.internal(postmonth)
-    return 'Boekingen voor rekening ' + str(account_name) + ', maand ' + str(for_month)
+    return render_template('accountpostings.html', search_form=search_form)
 
 @app.route('/journal/<journalkey>', methods=['GET'])
 def journal(journalkey):
     """ Show a journal for  browsing.
     
-    The journalkey is the number of the journal requested
+    The journalkey is the external key of the journal requested
     """
-    return 'Boekingen in journaal ' + str(journalkey)
+
+    search_form = SearchForm()
+    if journalkey:
+        try:
+            journal = journalmodel.Journals.get_by_key(journalkey)
+            journal_view = JournalView(journal).as_dict()
+        except journalmodel.NoJournalError as nje:
+            flash(str(nje))
+            journal_view=None
+    else:
+        flash('A journal key is required')
+        journal_view = None
+    return render_template('journalpostings.html', search_form=search_form,
+                           journal_view=journal_view)

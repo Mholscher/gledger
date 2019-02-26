@@ -74,7 +74,7 @@ class testPostCreation(unittest.TestCase) :
                                    value_date = datetime.now(), amount=230, debcred='Ct')
             gledger.db.session.flush()
         
-class testFullJournal(unittest.TestCase) :
+class TestFullJournal(unittest.TestCase) :
     def setUp(self) :
         acc3 = accmodel.Accounts(name = 'verkopen', role = 'E')
         acc3.add()
@@ -82,7 +82,7 @@ class testFullJournal(unittest.TestCase) :
         acc4.add()
         acc5 = accmodel.Accounts(name = 'btw (ontvangen)', role = 'E')
         acc5.add()
-        journ2 = posts.Journals(journalstat = posts.Journals.UNPROCESSED)
+        journ2 = posts.Journals(journalstat = posts.Journals.UNPROCESSED, extkey='PP99')
         journ2.add()
         gledger.db.session.flush()
         self.journ2id = journ2.id
@@ -90,6 +90,13 @@ class testFullJournal(unittest.TestCase) :
     def tearDown(self) :
         self.journ2id = None
         gledger.db.session.rollback()
+
+    def test_get_journal_by_extkey(self):
+        """ Get a journal from its extkey """
+
+        journ9 = posts.Journals.get_by_id(self.journ2id)
+        journ9 = posts.Journals.get_by_key(journ9.extkey)
+        self.assertEqual(journ9.id, self.journ2id, 'Not the same id from read by key') 
         
     def test_create_journal(self):
         """ Create a journal with its postings """
@@ -394,6 +401,45 @@ class TestJournalView(unittest.TestCase):
 
         journal_view4 = postviews.JournalView(posts.Journals.get_by_id(self.journ8id))
         self.assertEqual(len(journal_view4.as_dict()['postings']), 3, 'Incorrect number of postingviews')
+        
+class TestViewJournal(unittest.TestCase):
+
+    def setUp(self):
+
+        create_accounts(self)
+        self.journ10 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='RK7098')
+        self.journ10.add()
+        posting_to_journal(self.journ10)
+        gledger.db.session.flush()
+        self.app = gledger.app.test_client()
+        self.app.testing = True
+
+    def tearDown(self):
+        
+        gledger.db.session.rollback()
+
+    def test_lookup_journal(self):
+        """ a journal can be retrieved by external key """
+
+        rv = self.app.get('/journal/RK7098')
+        self.assertIn(b'RK7098', rv.data, 'Key not in response')
+
+    def test_invalid_key(self):
+        """ Request a journal with an invalid key """
+
+        rv = self.app.get('/journal/TT345')
+        self.assertIn(b'No journal', rv.data, 'Non-existing key in response')
+        self.assertNotIn(b'status', rv.data, 'Journal data returned, must be left out')
+
+    def test_posting_data_in_journal(self):
+        """ The data of the postings must be on the journal page """
+
+        rv = self.app.get('/journal/RK7098')
+        self.assertIn(b'verkopen', rv.data, '"verkopen" not in response')
+        self.assertIn(b'kas', rv.data, '"kas" not in response')
+        self.assertIn(b'btw (ontvangen)', rv.data, '"btw" not in response')
+
 
 def create_accounts(instance):
 

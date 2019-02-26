@@ -79,9 +79,9 @@ class JournalView():
             postings = posts.Journals.postings_for_id(journal_id)
         else:
             postings = posts.Journals.postings_for_key(extkey)
-        postingviews = dict()
+        postingviews = []
         for posting in postings:
-            postingviews[posting.id] = PostingView(posting)
+            postingviews.append(PostingView(posting).as_dict())
         return postingviews
 
     def as_dict(self):

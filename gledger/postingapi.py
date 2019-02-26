@@ -15,6 +15,11 @@
 #    You should have received a copy of the GNU Lesser General Public License
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
+""" The module contains the interface for journal producers. The batches
+with postings are delivered to the /journal/new route. As this is the only
+route, it is clear you can not update a journal after delivery.
+"""
+
 from flask import Blueprint, jsonify, request
 import glmodels.glposting as postings
 

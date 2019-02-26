@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %} Postings for journal {{journal_view.extkey}} {% endblock %}
+{% block searches %}
+    {% include "searches.html" %}
+{% endblock %} {#  searches #}
+  {% block content %}
+  {% if journal_view %}
+  Journal : {{journal_view.extkey}}, status {{journal_view.status}}
+  {% endif %}
+      <table>
+        <tr>
+            <th> Account </th> <th> Debit/credit </th> <th> Amount </th> 
+        </tr>
+  {% if journal_view %}
+  {% for posting in journal_view.postings %}
+  <tr>
+  <td> {{posting.account}} </td> <td> {{posting.debcred}} </td> <td> {{posting.amount}} </td>
+  </tr>
+  {% endfor %}
+  {% endif %}
+   </table>
+  {% endblock %} {# content #}

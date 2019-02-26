@@ -3,32 +3,17 @@ API documentation
 
 .. _gledgerapi:
 
-Module gledger
---------------
+Module gledger views
+--------------------
 
-..  module:: gledger.views
+..  automodule:: gledger.views
+    :members:
     
-..  autofunction:: accounts
+Module gledger postingapi
+--------------------------
 
-..  autofunction:: accountlist
-
-..  autofunction:: createaccount
-
-..  autofunction:: index
-
-..  autofunction:: balance
-
-..  autofunction:: posts
-
-..  module:: gledger.postingapi
-
-..  autoclass:: InvalidJsonError
-
-..  autofunction:: handle_invalid_json
-
-..  autofunction:: create_success_response
-
-..  autofunction:: addjournal
+..  automodule:: gledger.postingapi
+    :members:
 
 Module glmodels glaccount
 --------------------------

@@ -134,7 +134,20 @@ class Journals(db.Model):
         if posts == []:
             raise NoJournalError('Journal ' + str(journal_id) + ' does not exist')
         return posts
-            
+    
+    @classmethod
+    def get_by_key(self, extkey=None):
+        """ Get the journal data without postings by the supplied extkey
+        """
+
+        if extkey is None:
+            raise NoJournalError('An external key is required')
+        journal = db.session.query(Journals).\
+            filter_by(extkey=extkey).first()
+        if not journal:
+            raise NoJournalError('No journal with key ' + extkey)
+        return journal
+
     @classmethod
     def postings_for_key(self, journal_key):
         """ Assemble the posting in the journal by the external key 
