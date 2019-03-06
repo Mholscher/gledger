@@ -7,7 +7,7 @@ from flask import render_template, flash, request, redirect, url_for, abort
 import glmodels.glaccount as accmodel
 import glmodels.glposting as journalmodel
 from glviews.accountviews import AccountView, AccountListView, BalanceView
-from glviews.postingviews import JournalView, PostingView
+from glviews.postingviews import JournalView, PostingView, PostingByAccountView
 from glviews.forms import AccountForm, NewAccountForm, SearchForm
 from . import app, db
 
@@ -150,10 +150,8 @@ def posts(account_name, postmonth=None):
     """
 
     search_form = SearchForm()
-    if not postmonth:
-        for_month = accmodel.postmonth_today()
-    else:
-        for_month = accmodel.Postmonths.internal(postmonth)
+    account = accmodel.Accounts.get_by_name(account_name)
+    by_account_view = journalmodel.PostingByAccountView(account)
     return render_template('accountpostings.html', search_form=search_form)
 
 @app.route('/journal/<journalkey>', methods=['GET'])

@@ -97,3 +97,31 @@ class JournalView():
         journal_dict['postings'] =\
             self.createpostingviews_for_journal(journal_id=self.journal.id)
         return journal_dict
+
+
+class PostingByAccountView():
+    """ The view holds the data of a list of postings by account.
+    
+    It does not really rely on the fact that there are just postings for
+    one account in the list. The list is parameter.
+    """
+
+    def __init__(self, account=None):
+
+        if account is None:
+            raise accounts.NoAccountError('An account is required')
+        self.account = account
+        self.postings = posts.Postings.postings_for_account(account)
+
+    def as_dict(self):
+        """ Return this views data as a dictionary - easy
+        access for showing field values on the browser.
+        """
+
+        acc = self.account
+        posting_dict = {'id' : acc.id, 'name' : acc.name, 'role' : acc.role}
+        posting_list = []
+        for posting in self.postings:
+            posting_list.append(PostingView(posting).as_dict())
+        posting_dict['postings'] = posting_list
+        return posting_dict

@@ -440,7 +440,113 @@ class TestViewJournal(unittest.TestCase):
         self.assertIn(b'kas', rv.data, '"kas" not in response')
         self.assertIn(b'btw (ontvangen)', rv.data, '"btw" not in response')
 
+class TestAccountPostingViewing(unittest.TestCase):
 
+    def setUp(self):
+
+        create_accounts(self)
+        self.journ11 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='VC1312')
+        self.journ11.add()
+        gledger.db.session.flush()
+        posting_amount = 0
+        for i in range(50):
+            posting_amount += 1213
+            if i > 16:
+                postmonth = 201608
+            else:
+                postmonth = 201609
+            create_posting_to_kas(self, posting_amount, postmonth, self.journ11.id)
+        gledger.db.session.flush()
+        self.kas_account = accmodel.Accounts.get_by_name('kas')
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_can_retrieve_postings(self):
+        """ Retrieve the default number of postings -> 25 """
+
+        post_list1 = posts.Postings.postings_for_account(self.kas_account)
+        self.assertEqual(len(post_list1), 25, 'Verkeerd aantal boekingen')
+
+    def test_can_set_pagelength(self):
+        """ We can set the pagelength to something diofferent than 25 """
+
+        post_list2 = posts.Postings.postings_for_account(self.kas_account, pagelength=12)
+        self.assertEqual(len(post_list2), 12, 'Verkeerd aantal boekingen')
+
+    def test_page_start_can_differ(self):
+        """ We can start at any page """
+
+        post_list3 = posts.Postings.postings_for_account(self.kas_account, page=2, pagelength=4)
+        self.assertEqual(post_list3[0].amount, 6065, 'Verkeerd bedrag 1e boeking blad 2')
+
+    def test_limit_postings_by_month(self):
+        """ We can limit the postings returned to a month """
+
+        post_list4 = posts.Postings.postings_for_account(self.kas_account, month='09-2016')
+        self.assertEqual(len(post_list4), 17, 'Aantal boekingen verkeerd')
+
+class TestPostingsByAccountView(unittest.TestCase):
+
+    def setUp(self):
+
+        create_accounts(self)
+        self.journ12 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='DR990')
+        self.journ12.add()
+        gledger.db.session.flush()
+        posting_amount = 0
+        for i in range(50):
+            posting_amount += 988
+            if i > 16:
+                postmonth = 201608
+            else:
+                postmonth = 201609
+            create_posting_to_kas(self, posting_amount, postmonth, self.journ12.id)
+        gledger.db.session.flush()
+        self.kas_account = accmodel.Accounts.get_by_name('kas')
+        
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_can_create_view(self):
+        """ We can create a posting by account view """
+
+        posting_view1 = postviews.PostingByAccountView(self.kas_account)
+        self.assertEqual(posting_view1.account, self.kas_account, 'No account in view')
+
+    def test_postings_in_view(self):
+        """ Postings are added to a view """
+
+        posting_view2 = postviews.PostingByAccountView(self.kas_account)
+        self.assertEqual(len(posting_view2.postings), 25, 'Wrong number of postings')        
+
+    def test_as_dict_has_account_info(self):
+        """ The created dictionary from the view holds account info """
+
+        posting_view3 = postviews.PostingByAccountView(self.kas_account)
+        self.assertIn('name', posting_view3.as_dict(), 'No account name')
+
+    def test_view_has_posting_info(self):
+        """ The view dict contains the knfo for postings """
+
+        posting_view4 = postviews.PostingByAccountView(self.kas_account)
+        self.assertIn('amount', posting_view4.as_dict()['postings'][0], 'No posting info')
+        self.assertIn('debcred', posting_view4.as_dict()['postings'][0], 'No debit/credit')
+        self.assertIn('postmonth', posting_view4.as_dict()['postings'][0], 'No posting month')
+
+def create_posting_to_kas(instance, posting_amount, postmonth, journal_id):
+    """ Post an amount to kas for test purposes """
+
+    postn = posts.Postings(accounts_id=accmodel.Accounts.get_by_name("kas").id, 
+                            journals_id = journal_id, postmonth = postmonth, 
+                            value_date = datetime.now(), amount=posting_amount, 
+                            debcred='Db')
+    postn.add()    
+    
 def create_accounts(instance):
 
     instance.acc6 = accmodel.Accounts(name = 'verkopen', role = 'E')

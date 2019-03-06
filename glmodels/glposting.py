@@ -256,18 +256,22 @@ class Postings(db.Model) :
         return newposting
     
     @classmethod
-    def postings_for_account(cls, account, post_limit=50, month=None):
+    def postings_for_account(cls, account, pagelength=25, page=1, month=None):
         """ This method gets a list of postings for the account passed.
         
-        It has a post_limit for the number of postings. -1 is unlimited (warning:
+        It has a pagelength for the number of postings. -1 is unlimited (warning:
         That may return very many postings! 
         """
         
         posts = db.session.query(Postings).filter_by(accounts_id=account.id)
         if month:
             posts = posts.filter_by(postmonth=Postmonths.internal(month))
-        if not post_limit == -1:
-            posts = posts.limit(post_limit)
+        if not pagelength == -1:
+            posts = posts.limit(pagelength)
+        if page is None:
+            page = 1
+        if not page == 1:
+            posts = posts.offset((page - 1) * pagelength)
         return posts.all()
         
     def _id_for_account(self, from_name) :
@@ -313,4 +317,3 @@ class Postings(db.Model) :
         
         account = Accounts.get_by_id(self.accounts_id)
         account.post_amount(self.debcred, self.amount, self.value_date)
-        
