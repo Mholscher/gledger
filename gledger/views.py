@@ -146,13 +146,15 @@ def posts(account_name, postmonth=None):
     
     The postings for the account and the month given
     are returned. If no month is requested, it defaults to
-    use the current month.
+    use the current month, but also shows postings of previous
+    months.
     """
 
     search_form = SearchForm()
     account = accmodel.Accounts.get_by_name(account_name)
-    by_account_view = journalmodel.PostingByAccountView(account)
-    return render_template('accountpostings.html', search_form=search_form)
+    by_account_view = PostingByAccountView(account, month=postmonth).as_dict()
+    return render_template('accountpostings.html', search_form=search_form,
+                           posting_list=by_account_view)
 
 @app.route('/journal/<journalkey>', methods=['GET'])
 def journal(journalkey):

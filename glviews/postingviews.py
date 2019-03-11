@@ -48,7 +48,7 @@ class PostingView():
 
         posting_dict = {'id' : self.posting.id, 'postmonth' :
                             accounts.Postmonths.external(self.posting.postmonth),
-                        'amount' : str(self.posting.amount),
+                        'amount' : "{0:.2f}".format(self.posting.amount / 100),
                         'currency' : self.posting.currency,
                         'debcred' : self.posting.debcred}
         posting_dict['account'] = self._accountname_for_posting()
@@ -106,12 +106,12 @@ class PostingByAccountView():
     one account in the list. The list is parameter.
     """
 
-    def __init__(self, account=None):
+    def __init__(self, account=None, month=None):
 
         if account is None:
             raise accounts.NoAccountError('An account is required')
         self.account = account
-        self.postings = posts.Postings.postings_for_account(account)
+        self.postings = posts.Postings.postings_for_account(account, month=month)
 
     def as_dict(self):
         """ Return this views data as a dictionary - easy

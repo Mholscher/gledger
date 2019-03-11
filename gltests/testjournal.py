@@ -16,14 +16,14 @@
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
+from datetime import date, datetime
+import logging
+import json
+from sqlalchemy.exc import DatabaseError
 import gledger
 import glviews.postingviews as postviews
 import glmodels.glposting as posts
 import glmodels.glaccount as accmodel
-from datetime import date, datetime
-from sqlalchemy.exc import DatabaseError
-import logging
-import json
 
 class testPostCreation(unittest.TestCase) :
     def setUp(self) :
@@ -337,7 +337,7 @@ class TestPostingView(unittest.TestCase):
         post13view = postviews.PostingView(post13)
         post13viewdict = post13view.as_dict()
         self.assertIn("id", post13viewdict, 'No id in posting dictionary')
-        self.assertEqual(post13viewdict['amount'], '6500', 'Amount incorrect')
+        self.assertEqual(post13viewdict['amount'], '65.00', 'Amount incorrect')
         
     def test_posting_account(self):
         """ A postingview contains the account name """
@@ -537,6 +537,54 @@ class TestPostingsByAccountView(unittest.TestCase):
         self.assertIn('amount', posting_view4.as_dict()['postings'][0], 'No posting info')
         self.assertIn('debcred', posting_view4.as_dict()['postings'][0], 'No debit/credit')
         self.assertIn('postmonth', posting_view4.as_dict()['postings'][0], 'No posting month')
+
+
+class TestViewPostingsAccount(unittest.TestCase):
+
+    def setUp(self):
+
+        create_accounts(self)
+        self.journ12 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='XV9903')
+        self.journ12.add()
+        gledger.db.session.flush()
+        posting_amount = 0
+        for i in range(50):
+            posting_amount += 1088
+            if i > 16:
+                postmonth = 201708
+            else:
+                postmonth = 201709
+            create_posting_to_kas(self, posting_amount, postmonth, self.journ12.id)
+        gledger.db.session.flush()
+        self.kas_account = accmodel.Accounts.get_by_name('kas')
+
+        self.app = gledger.app.test_client()
+        self.app.testing = True
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_kas_in_screen(self):
+        """ The name of the account must be on screen """
+        rv = self.app.get("/posts/kas", follow_redirects=True)
+        self.assertIn(b'kas', rv.data, 'Account name not found...')
+        self.assertIn('A'.encode('utf-8'), rv.data, 'Role not found')
+
+    def test_amount_in_list(self):
+        """ The amounts are in the list """
+
+        rv = self.app.get("/posts/kas", follow_redirects=True)
+        self.assertIn(b'21.76', rv.data, 'No amount in list')
+        self.assertIn(b'Db', rv.data, 'No debit/credit in list')
+
+    def test_post_list_per_month(self):
+        """ We can select the postings by month """
+
+        rv = self.app.get("/posts/kas/month/09-2017", follow_redirects=True)
+        self.assertIn(b'21.76', rv.data, 'Amount for 09-2017 not in list')
+        self.assertNotIn(b'195.84', rv.data, 'Amount for 08-2017 in list')
 
 def create_posting_to_kas(instance, posting_amount, postmonth, journal_id):
     """ Post an amount to kas for test purposes """

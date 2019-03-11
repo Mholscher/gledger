@@ -147,7 +147,7 @@ class BalanceView():
         """
         
         as_dictionary = {'id': self.id, 'name': self.account_name}
-        as_dictionary['balance'] = str(self.balance/100)
+        as_dictionary['balance'] = "{0:.2f}".format(self.balance/100)
         as_dictionary['postmonth'] = model.Postmonths.external(self.postmonth)
         return as_dictionary
         

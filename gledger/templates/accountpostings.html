@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}<title> Postings for account {{posting_list.name}} </title> {% endblock %}
+{% block searches %}
+    {% include "searches.html" %}
+{% endblock %} {#  searches #}
+{% block content %}
+    Account {{posting_list.name}} Role {{posting_list.role}}
+    <table>
+        <tr>
+            <th> Amount </th> <th> Debit/credit </th> <th> Journal key </th>
+        </tr>
+        {% for posting in posting_list.postings %}
+        <tr> <td> {{ posting.amount }} </td> <td> {{ posting.debcred }} </td> <td> {{ posting.extkey }} </td> </tr>
+        {% endfor %} {# posting #}
+    </table>
+{% endblock %} {# content  #}
