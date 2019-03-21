@@ -44,7 +44,7 @@ The definitions of the fields are as follows:
         in case of an "add", the number of the journal to add the postings to. Ignored for insert.
         
     extkey
-        an optional key to the journal in the system that generated it. If present, will be added to a response.
+        an optional key to the journal in the system that generated it. If present, will be added to a response. Though it is optional, it is strongly advised to add an extkey to a journal. It enables finding a journals source and is also a search key within the system.
         
     postings
         the list of postings for this journal.

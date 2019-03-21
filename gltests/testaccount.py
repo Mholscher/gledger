@@ -471,7 +471,7 @@ class TestAccountList(unittest.TestCase):
     def test_return_accountlist(self):
         """ An accountlist can be returned """
         al = accmodel.AccountList().as_list()
-        self.assertEqual(len(al), 7, 'Not all items in accountlist')
+        self.assertEqual(len(al), 10, 'Not all items in accountlist')
         
     def test_accountlist_keyed_name(self):
         """An accountlist can be returned with names as keys """
@@ -487,12 +487,12 @@ class TestAccountList(unittest.TestCase):
     def test_page(self):
         """ We can ask for a page """
         al = accmodel.AccountList(pagelength=3, page=2)
-        self.assertEqual(al.as_list()[0].name, 'debiteuren', 'Page 2 not correctly shown')
+        self.assertEqual(al.as_list()[0].name, 'salaris', 'Page 2 not correctly shown')
         
     def test_incomplete_page(self):
         """ We can retrieve an incomplete page """
-        al = accmodel.AccountList(pagelength=3, page=3)
-        self.assertEqual(len(al.as_list()), 1, 'Page with rest not correctly shown')        
+        al = accmodel.AccountList(pagelength=3, page=4)
+        self.assertEqual(len(al.as_list()), 2, 'Page with rest not correctly shown')        
         
     def test_accountlist_order(self):
         """ The accountlist is in reversed date/time order """
@@ -528,11 +528,15 @@ class TestAccountListView(unittest.TestCase):
     def test_create_account_list_view(self):
         """ We can create a view from an account list """
         alv = accviews.AccountListView(self.al)
-        self.assertTrue(alv['inkopen'], 'Cannot find account in view')
+        account_bank = []
+        for account in alv:
+            if account['name'] == 'bank':
+                account_bank.append(account)
+        self.assertEqual(len(account_bank), 1, 'No/more than 1 account bank in view')
         
     def test_num_accounts_in_list(self):
         alv = accviews.AccountListView(self.al)
-        self.assertEqual(len(alv), 7, 'Not all accounts in list view')
+        self.assertEqual(len(alv), 10, 'Not all accounts in list view')
         
 class TestAccountListViewFunction(unittest.TestCase):
     
@@ -548,15 +552,23 @@ class TestAccountListViewFunction(unittest.TestCase):
         """ requesting a list without parameters returns the full list """
         logging.debug('Test getting account list view') 
         rv = self.app.get('/accountlist')
-        assert b'inkopen' in rv.data
+#        assert b'inkopen' in rv.data
         assert b'bank' in rv.data
         assert b'salaris' in rv.data
         
     def test_return_list_with_search(self):
         """ requesting a list with parameter returns a smaller list """
+
         rv = self.app.get('/accountlist?search_for=teur')
         assert not b'inkopen' in rv.data
         assert b'crediteuren' in rv.data
+
+    def test_return_page_2(self):
+        """ We can return the 2nd page of the list """
+
+        rv = self.app.get('/accountlist?page=2')
+        self.assertIn(b'voorraad', rv.data, 'Verwacht voorraad, niet gevonden')
+        self.assertIn(b'software', rv.data, 'Verwacht software NIET, wel aanwezig')
 
 
 class TestBalanceViews(unittest.TestCase):
@@ -645,6 +657,18 @@ def create_standard_accountlist_testset(case):
     case.acc46 = accmodel.Accounts(name='salaris', role='E')
     case.acc46.add()
     case.acc46.updated_at = datetime(2015, 11, 9, hour=11, minute=20, second=21)
+    case.acc47 = accmodel.Accounts(name='betaalde btw', role='E')
+    case.acc47.add()
+    case.acc47.updated_at = datetime(2015, 12, 7, hour=11, minute=40, second=21)
+    case.acc48 = accmodel.Accounts(name='kantoorspul', role='E')
+    case.acc48.add()
+    case.acc48.updated_at = datetime(2017, 3, 9, hour=9, minute=20, second=45)
+    case.acc49 = accmodel.Accounts(name='software', role='A')
+    case.acc49.add()
+    case.acc49.updated_at = datetime(2015, 12, 5, hour=15, minute=55, second=21)
+    case.acc50 = accmodel.Accounts(name='afdracht', role='E')
+    case.acc50.add()
+    case.acc50.updated_at = datetime(2015, 10, 1, hour=13, minute=20, second=55)
     case.bal11 = accmodel.Balances(postmonth=201507, amount=1726, value_date='2015-07-10')
     case.acc40.balances.append(case.bal11)
     case.bal12 = accmodel.Balances(postmonth=201507, amount=1830, value_date='2015-07-10')

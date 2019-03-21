@@ -223,8 +223,7 @@ class Accounts(db.Model):
         balance_last_known = self._balance_for().order_by(Balances.postmonth.desc()).all()
         if balance_last_known == []:
             return 0
-        else:
-            return balance_last_known[0].amount
+        return balance_last_known[0].amount
 
     def balance_ultimo(self, postmonth, balance_so_far=0):
         """ Return the balance of the account at the end of the postmonth """
@@ -254,25 +253,27 @@ class Accounts(db.Model):
         """ Is this account a debit account? """
 
         return (self.debit_credit() == 'Db')
-    
+
     def is_credit(self):
         """ Is this account a credit account? """
 
         return (self.debit_credit() == 'Cr')
 
     def post_amount(self, debit_credit, post_amount, value_date):
-        """Post an amount to this account. 
+        """Post an amount to this account.
 
         This is a transaction script. The script runs as follows:
         1. Get the balance row for the postmonth
         2. apply the amount (using a function) to this row
-        3. return the new balance 
+        3. return the new balance
         """
 
         postmonth = postmonth_for(value_date)
-        balance_requested = self._balance_for().filter_by(postmonth = postmonth).order_by(Balances.postmonth.desc()).first()
+        balance_requested = self._balance_for().\
+            filter_by(postmonth=postmonth).\
+            order_by(Balances.postmonth.desc()).first()
         if balance_requested is None:
-            balance_requested = Balances(account_id=self.id, 
+            balance_requested = Balances(account_id=self.id,
                                          postmonth=postmonth, amount=0,
                                          value_date=datetime.today())
             balance_requested.add()
@@ -284,7 +285,7 @@ class Balances(db.Model):
 
     A balance is created for each accounting period of a month.
     After the end of the month it retains the ultimo balance
-    for further reference. During the accounting month it contains the 
+    for further reference. During the accounting month it contains the
     current balance.
 
     A balance is made upon receiving the first posting of the accounting
@@ -296,31 +297,30 @@ class Balances(db.Model):
         :account_id: the sequence number of the account this is the balance of
         :postmonth: the postmonth in the format yyyymm
         :currency: the currency code (preferably : use ISO)
-        :amount: the amount 
+        :amount: the amount
     """
 
     __tablename__ = 'balances'
     id = db.Column(db.Integer, db.Sequence('balance_id_seq'), primary_key=True)
     account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
-    postmonth = db.Column(db.Numeric(precision = 6))
+    postmonth = db.Column(db.Numeric(precision=6))
     value_date = db.Column(db.DateTime, nullable=False)
-    amount = db.Column(db.Numeric(precision = 14))
-    updated_at = db.Column(db.DateTime) 
+    amount = db.Column(db.Numeric(precision=14))
+    updated_at = db.Column(db.DateTime)
     db.Index('bymonth', 'account_id', 'postmonth')
 
     @validates('postmonth')
     def validate_postmonth(self, id, postmonth):
-        """ the post month can only be the current or an existing, active 
+        """ the post month can only be the current or an existing, active
         month
         """
 
         months_db = db.session.query(Postmonths).filter_by(postmonth=postmonth).all()
         if (months_db != []):
-            if (months_db[0].status_can_post()):
+            if months_db[0].status_can_post():
                 return postmonth
-            else:
-                raise ValueError('Postmonth not active')       
-        current_postmonth  = postmonth_for(date.today())
+            raise ValueError('Postmonth not active')
+        current_postmonth = postmonth_for(date.today())
         if postmonth != current_postmonth:
             raise ValueError('Post month must exist or be current month')
         return postmonth
@@ -343,23 +343,25 @@ class Balances(db.Model):
             self.amount -= post_amount
 
     def __repr__(self):
-        return 'Balances(amount = {}, postmonth = {}, account {})'.format(self.amount, self.postmonth, self.account_id)
+        return 'Balances(amount = {}, postmonth = {}, account {})'.\
+            format(self.amount, self.postmonth, self.account_id)
 
 class AccountList():
-    """ A list of accounts is returned for showing 
+    """ A list of accounts is returned for showing
 
     The search string must be at least 3 characters, to  prevent an overly
-    long result list. If the search string is none, collect the accounts last added. If no account exists where the name contains the 
+    long result list. If the search string is none, collect the accounts
+    last added. If no account exists where the name contains the
     search string, return an empty list.
     """
 
-    def __init__(self, search_string=None, pagelength=10,page=1):
+    def __init__(self, search_string=None, pagelength=10, page=1):
         """Initialize the list, using search_string as a selection """
 
         q = db.session.query(Accounts).order_by(Accounts.updated_at.desc())
         if search_string:
             if len(search_string) < 3:
-                raise ShortSearchStringError('Search string must be at least 3 characters') 
+                raise ShortSearchStringError('Search string must be at least 3 characters')
             q = q.filter(Accounts.name.like('%'+search_string+'%'))
         skip_records = (page - 1) * pagelength
         if skip_records < 0:
@@ -382,7 +384,7 @@ class AccountList():
         The dictionary has a key of account name and the list entry as value
         """
 
-        account_dictionary = {} 
+        account_dictionary = {}
         for account in self.account_list:
             account_dictionary[account.name] = account
         return account_dictionary
@@ -397,7 +399,7 @@ class Postmonths(db.Model):
     CLOSED = 'c'
 
     def add(self):
-        """ Add this postmonth to the session 
+        """ Add this postmonth to the session
         """
 
         self.updated_at = datetime.today()
@@ -419,7 +421,7 @@ class Postmonths(db.Model):
 
         # Check the format
         if (not month_string[0:2].isdigit() or not month_string[3:7].isdigit()
-            or month_string[2:3] != '-' or len(month_string) != 7):
+                or month_string[2:3] != '-' or len(month_string) != 7):
             raise InvalidPostmonthError('The postmonth could not be converted')
         month = int(month_string[0:2])
         year = int(month_string[3:7])
@@ -452,7 +454,7 @@ def postmonth_for(postdate):
     as well as determining in which post month a posting belongs.
     """
 
-    return (postdate.year * 100 + postdate.month)
+    return postdate.year * 100 + postdate.month
 
 def postmonth_today():
     """ Return the postmonth for today's date"""

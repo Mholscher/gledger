@@ -18,7 +18,8 @@ a list view to support a list screen of accounts, based on a list
 of model instances.
 """
 
-import glmodels.glaccount as model 
+import glmodels.glaccount as model
+import datetime
 
 class AccountView() :
     """ This class collects the data for displaying an existing account
@@ -152,7 +153,7 @@ class BalanceView():
         return as_dictionary
         
     
-class AccountListView(dict):
+class AccountListView(list):
     """ Gathers the information to display a list of accounts. 
     
     The accounts are in a dictionary keyed by the account name, the accounts
@@ -161,5 +162,5 @@ class AccountListView(dict):
     
     def __init__(self, account_list):
         for account in account_list.as_list():
-            self[account.name] = {"id":account.id, "name":account.name, "role":account.role, "parent":account.parent_id}
+            self.append({"id":account.id, "name":account.name, "role":account.role, "updated_at":account.updated_at.strftime("%d-%m-%Y %H:%M:%S"), "parent":account.parent_id})
             

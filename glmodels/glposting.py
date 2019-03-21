@@ -264,6 +264,7 @@ class Postings(db.Model) :
         """
         
         posts = db.session.query(Postings).filter_by(accounts_id=account.id)
+        posts = posts.order_by(Postings.updated_at.desc())
         if month:
             posts = posts.filter_by(postmonth=Postmonths.internal(month))
         if not pagelength == -1:

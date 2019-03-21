@@ -49,11 +49,13 @@ def accountlist():
     
     The accounts shown may be constrained by a search argument.
     The search argument is checked against the account name and
-    the account description.
+    the account description. Accounts are shown by change date,
+    youngest first.
     """
     
     search_for = request.args.get('search_for')
     search_form = SearchForm()
+    page_nr = request.args.get('page')
     
     try:
         account_list = accmodel.AccountList(search_string=search_for)

@@ -7,11 +7,11 @@
     <h1>Account list</h1>
     <table>
         <tr>
-            <th> Name </th> <th> Role </th> 
+            <th> Name </th> <th> Role </th> <th> Last updated </th> 
         </tr>
-    {% for accname, account in accountlist.items() %}
+    {% for account in accountlist %}
         <tr>
-            <td> {{ account.name }} </td> <td>{{account.role}} </td> 
+            <td> {{account.name}} </td> <td>{{account.role}} </td> <td> {{account.updated_at}} </td>
         </tr>
     {% endfor %}
     </table>
