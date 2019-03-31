@@ -1,0 +1,8 @@
+{# The navi macro shows the navigation on the web page #}
+    {% set first = '\u23EE' -%}
+    {% set prev =  '\u23F4'  -%}
+{% macro navi(url, current_page=1, num_pages=1) -%}
+    {# how to get to the first page, previous page etc. -#}
+    <a href={{ url }}?page=1 > {{first}} </a><a href={{ url }}?page=1 > {{prev}} </a>
+    
+{%- endmacro %}

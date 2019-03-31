@@ -7,10 +7,10 @@
 </head>
 <body>
 <div class=page>
-  {% block searches %}{% endblock %}
+  {% block searches %}{% endblock searches %}
   {% for message in get_flashed_messages() %}
     <div class=flash>{{ message }}</div>
   {% endfor %}
-  {% block content %}{% endblock %}
+  {% block content %}{% endblock content %}
 </div>
 </body>

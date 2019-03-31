@@ -567,8 +567,8 @@ class TestAccountListViewFunction(unittest.TestCase):
         """ We can return the 2nd page of the list """
 
         rv = self.app.get('/accountlist?page=2')
-        self.assertIn(b'voorraad', rv.data, 'Verwacht voorraad, niet gevonden')
-        self.assertIn(b'software', rv.data, 'Verwacht software NIET, wel aanwezig')
+        self.assertIn(b'inkopen', rv.data, 'Verwacht inkopen, niet gevonden')
+        self.assertNotIn(b'software', rv.data, 'Verwacht software NIET, wel aanwezig')
 
 
 class TestBalanceViews(unittest.TestCase):

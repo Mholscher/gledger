@@ -1,21 +1,23 @@
 {% extends "base.html" %}
+{% from "navi.html" import navi %}
 
 {% block searches %}
     {% include "searches.html" %}
-{% endblock %} {#  searches #}
+{% endblock searches %}
 {% block content %}
     <h1>Account list</h1>
+    {{ navi(url_for('accountlist')) }}
     <table>
         <tr>
             <th> Name </th> <th> Role </th> <th> Last updated </th> 
         </tr>
     {% for account in accountlist %}
         <tr>
-            <td> {{account.name}} </td> <td>{{account.role}} </td> <td> {{account.updated_at}} </td>
+            <td> <a href={{url_for('accounts', account_name=account.name)}}>{{account.name}}</a> </td> <td> {{account.role}} </td> <td> {{account.updated_at}} </td>
         </tr>
     {% endfor %}
     </table>
-{% endblock %} {# content  #} 
+{% endblock content %}
 
 
 

@@ -3,7 +3,7 @@
 body {
     background-color : #ffffc6;
     color : #000000;
-    font-family : arial,helvetica,sans-serif;
+    font-family : sans-serif;
   }
 
 
@@ -61,6 +61,7 @@ a.IMG {
     }
     
 td, th {
-    outline : 2 px solid
+    outline : 2px solid ;
+    width : 12em
     }
     

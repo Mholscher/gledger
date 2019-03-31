@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Account {{balanceview.name}}{% endblock %}
+{% block title %}<title>Balance for {{balanceview.name}}</title>{% endblock %}
 {% block searches %}
     {% include "searches.html" %}
-{% endblock %} {#  searches #}
+{% endblock searches %}
 {% block content %}
 <h1>Balance for {{balanceview.name}}</h1>
 <br>
 Accounting period {{balanceview.postmonth}}, account balance   {{balanceview.balance}}
 <br><br>
 Postings:  from now     <a href="/posts/{{balanceview.name}}/month/{{balanceview.postmonth}}">from period {{balanceview.postmonth}}</a>
-{% endblock %} {# content block #}
+{% endblock content %}

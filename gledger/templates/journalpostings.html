@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %} Postings for journal {{journal_view.extkey}} {% endblock %}
+{% block title %} <title>Postings for journal {{journal_view.extkey}}</title> {% endblock %}
 {% block searches %}
     {% include "searches.html" %}
-{% endblock %} {#  searches #}
+{% endblock searches %}
   {% block content %}
   {% if journal_view %}
   Journal : {{journal_view.extkey}}, status {{journal_view.status}}
@@ -19,4 +19,4 @@
   {% endfor %}
   {% endif %}
    </table>
-  {% endblock %} {# content #}
+  {% endblock content %}

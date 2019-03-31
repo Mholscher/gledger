@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Account {{accountview.account.name}}{% endblock %}
+{% block title %}<title>Account {{accountview.account.name}}</title>{% endblock %}
 {% block searches %}
     {% include "searches.html" %}
-{% endblock %} {#  searches #}
+{% endblock searches %}
 {% block content %}
     <h1>Account {{accountview.account.name}}</h1>
     {% if accountview.account.name %}
@@ -30,6 +30,6 @@
     <div class="inputline">{{ form.role.label(class="lbl") }}  {{ form.role }}</div>
     {{form.update}} {{form.addmore}}
     </form>
-{% endblock %} {# content block #}
+{% endblock content %}
 
 

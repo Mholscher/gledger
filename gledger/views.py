@@ -56,9 +56,13 @@ def accountlist():
     search_for = request.args.get('search_for')
     search_form = SearchForm()
     page_nr = request.args.get('page')
+    if page_nr is None:
+        page_nr = 1
+    else:
+        page_nr = int(page_nr)
     
     try:
-        account_list = accmodel.AccountList(search_string=search_for)
+        account_list = accmodel.AccountList(search_string=search_for, page=page_nr)
     except accmodel.ShortSearchStringError as sse:
         flash(str(sse))
         search_form.search_for.data = search_for
@@ -91,7 +95,7 @@ def accounts(account_name=None):
         parent = accmodel.Accounts.get_by_id(account.parent_id)
         account_form.parent_name.data = parent.name
     # logging.debug('request name '+ request.form.name)
-    if account_form.validate_on_submit():  #TODO validation of existence for parent
+    if account_form.validate_on_submit():
         logging.debug('Validated as correct')
         if account_form.role.data:
             new_role = account_form.role.data
