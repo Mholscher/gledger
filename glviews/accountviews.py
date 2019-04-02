@@ -158,9 +158,18 @@ class AccountListView(list):
     
     The accounts are in a dictionary keyed by the account name, the accounts
     are also in a dictionary, with a key/value pair for each field.
+    
+    The view also holds page information. The length of a page, the page
+    number and the total number of pages are in the view for use on the
+    list page.
     """
     
     def __init__(self, account_list):
         for account in account_list.as_list():
             self.append({"id":account.id, "name":account.name, "role":account.role, "updated_at":account.updated_at.strftime("%d-%m-%Y %H:%M:%S"), "parent":account.parent_id})
-            
+        self.page = account_list.page
+        self.pagelength = account_list.pagelength
+        self.total_pages, remainder =\
+            divmod(account_list.num_records, self.pagelength)
+        if remainder > 0:
+            self.total_pages = self.total_pages + 1

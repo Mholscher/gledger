@@ -6,7 +6,7 @@
 {% endblock searches %}
 {% block content %}
     <h1>Account list</h1>
-    {{ navi(url_for('accountlist')) }}
+    {{ navi(url_for('accountlist'), current_page=accountlist.page) }}
     <table>
         <tr>
             <th> Name </th> <th> Role </th> <th> Last updated </th> 

@@ -372,7 +372,13 @@ class AccountList():
         q = q.limit(pagelength)
         logging.debug('SQL is ' + str(q))
         self.account_list = q.all()
-
+        self.page = page
+        self.pagelength = pagelength
+        q2 = db.session.query(Accounts)
+        if search_string:
+            q2 = q2.filter(Accounts.name.like('%'+search_string+'%'))
+        self.num_records = q2.count()
+        
     def as_list(self):
         """ Return the embedded list """
 

@@ -515,6 +515,13 @@ class TestAccountList(unittest.TestCase):
         """ A search string must be at least 3 characters """
         with self.assertRaises(ValueError) :       
             al = accmodel.AccountList(search_string='dg').as_list()
+
+    def test_list_has_pageinfo(self):
+        """ An account_list has page info """
+        al = accmodel.AccountList(pagelength=3, page=2)
+        self.assertEqual(al.page, 2, 'Wrong or no page in list')
+        self.assertEqual(al.pagelength, 3, 'Wrong or no pagelength in list')
+        self.assertEqual(al.num_records, 11, 'Wrong or no number of records in list')
             
 class TestAccountListView(unittest.TestCase):
     
@@ -537,6 +544,24 @@ class TestAccountListView(unittest.TestCase):
     def test_num_accounts_in_list(self):
         alv = accviews.AccountListView(self.al)
         self.assertEqual(len(alv), 10, 'Not all accounts in list view')
+
+    def test_page_info_in_view(self):
+        """ Page info is placed in view """
+
+        alv = accviews.AccountListView(self.al)
+        self.assertEqual(alv.page, 1, 'Wrong or no page number in view')
+        self.assertEqual(alv.pagelength, 10, 'Wrong or no page length in view')
+        self.assertEqual(alv.total_pages, 2, 'Wrong or no no of pages in view')
+
+    def test_exact_no_of_pages(self):
+        """The total pages is an exact multiple of pagelength """
+
+        self.acc51 = accmodel.Accounts(name='ontvangen rente', role='I')
+        self.acc51.add()
+        self.acc51.updated_at = datetime(2003, 12, 18, hour=10, minute=20, second=44)
+        gledger.db.session.flush()
+        alv3 = accviews.AccountListView(accmodel.AccountList(pagelength=3, page=2))
+        self.assertEqual(alv3.total_pages, 4, 'Wrong or no number of pages')
         
 class TestAccountListViewFunction(unittest.TestCase):
     
@@ -571,34 +596,57 @@ class TestAccountListViewFunction(unittest.TestCase):
         self.assertNotIn(b'software', rv.data, 'Verwacht software NIET, wel aanwezig')
 
 
-class TestBalanceViews(unittest.TestCase):
-    
+class TestAccountListNavigation(unittest.TestCase):
+
     def setUp(self):
+
         create_standard_accountlist_testset(self)
-        
+        self.app = gledger.app.test_client()
+        self.app.testing = True
+
     def tearDown(self):
         gledger.db.session.rollback()
+
+    def test_can_go_first_page(self):
+        """ We see a link to the first page """
+
+        rv = self.app.get('/accountlist?page=2')
+        self.assertIn(b'page=1', rv.data, 'No link to first page')
+
+    def test_can_go_prev_page(self):
+        """ We can go to the previous page """
+
+        rv = self.app.get('/accountlist?page=2')
+        self.assertIn(b'\xe2\x8f\xb4', rv.data, 'No link to previous page')
         
+
+class TestBalanceViews(unittest.TestCase):
+
+    def setUp(self):
+        create_standard_accountlist_testset(self)
+
+    def tearDown(self):
+        gledger.db.session.rollback()
+
     def test_create_balanceview(self):
         """ We can create a view for an account balance """
-        
+
         balance_view = accviews.BalanceView.create_view(id=self.acc45.id)
         self.assertEqual(balance_view.balance, 2611, 'Amount not in view')
-        
+
     def test_invalid_account(self):
         """ An unknown account raises the appropriate error """
-        
+
         with self.assertRaises(accmodel.NoAccountError):
             balance_view = accviews.BalanceView.create_view(name='blaffy')
-            
+
     def test_balance_view_dict(self):
         """ Test a balance view can return a dictionary """
         balance_view = accviews.BalanceView.create_view(id=self.acc45.id)
         bal_as_dict = balance_view.as_dictionary()
         self.assertIn('balance', bal_as_dict, 'Balance not in dictionary for balance view')
         self.assertEqual(bal_as_dict['balance'], '26.11', 'Balance incorrect in dictionary for balance view')
-        
-        
+
 
 class TestAccountBalancesFunction(unittest.TestCase):
     
