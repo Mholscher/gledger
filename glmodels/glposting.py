@@ -21,10 +21,10 @@ new correcting postings. This is because postings are part of a journal,
 a composite of postings that belong together and always need to balance.
 """
 
-from gledger import db
+from datetime import date, datetime
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
-from datetime import date, datetime
+from gledger import db
 from .glaccount import Accounts, postmonth_for, NoAccountError, Postmonths
 
 
@@ -273,7 +273,10 @@ class Postings(db.Model) :
             page = 1
         if not page == 1:
             posts = posts.offset((page - 1) * pagelength)
-        return posts.all()
+        posts = posts.all()
+        num_posts = db.session.query(Postings).filter_by(accounts_id=account.id)
+        num_posts = num_posts.count()
+        return PostingList(posts, page=page, pagelength=pagelength, num_records=num_posts)
         
     def _id_for_account(self, from_name) :
         """ Get an ID for an account for which we only have the name 
@@ -318,3 +321,19 @@ class Postings(db.Model) :
         
         account = Accounts.get_by_id(self.accounts_id)
         account.post_amount(self.debcred, self.amount, self.value_date)
+
+class PostingList(list):
+    """ The posting list holds a list of postings plus The
+    associated page info.
+    
+    The page info is the page number we are  on, the length of a page
+    in records and the total number of available records over all
+    pages.
+    """
+
+    def __init__(self, posting_list, page=1, pagelength=25, num_records=None):
+
+        self.extend(posting_list)
+        self.page = page
+        self.pagelength = pagelength
+        self.num_records = num_records

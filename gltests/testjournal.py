@@ -270,7 +270,8 @@ class TestListPostings(unittest.TestCase):
         post9.add()
         gledger.db.session.flush()
         acc10 = accmodel.Accounts.get_by_name("verkopen")
-        account_postings = posts.Postings.postings_for_account(acc10, month='09-2016')
+        account_postings = \
+            posts.Postings.postings_for_account(acc10, month='09-2016')
         self.assertEqual(len(account_postings), 2, 'Incorrect no. of posts for account')
         
     def test_no_postings_for_account(self):
@@ -280,6 +281,14 @@ class TestListPostings(unittest.TestCase):
         gledger.db.session.flush()
         account_postings = posts.Postings.postings_for_account(acc9)
         self.assertEqual(len(account_postings), 0, 'Postings for new account?!')
+
+    def test_list_has_pageinfo(self):
+        """ The posting list has page info """
+
+        acc11 = accmodel.Accounts.get_by_name("verkopen")
+        account_postings = posts.Postings.postings_for_account(acc11)
+        self.assertEqual(account_postings.page, 1, 'Not on page 1 or not available')
+        self.assertEqual(account_postings.pagelength, 25, 'Pagelength incorrect')
 
 
 class TestPostingView(unittest.TestCase):
@@ -538,6 +547,20 @@ class TestPostingsByAccountView(unittest.TestCase):
         self.assertIn('debcred', posting_view4.as_dict()['postings'][0], 'No debit/credit')
         self.assertIn('postmonth', posting_view4.as_dict()['postings'][0], 'No posting month')
 
+    def test_view_has_page_info(self):
+        """ The posting by account view should have page info """
+
+        posting_view5 = postviews.PostingByAccountView(self.kas_account)
+        self.assertEqual(posting_view5.page, 1, 'Wrong or no view page')
+        self.assertEqual(posting_view5.pagelength, 25, 'Wrong or no view pagelength')
+        self.assertEqual(posting_view5.total_pages, 2, 'Wrong or no number of pages')
+
+    def test_view_has_page_2(self):
+        """ We can access the second page of postings """
+        
+        posting_view6 = postviews.PostingByAccountView(self.kas_account, page=2)
+        self.assertEqual(posting_view6.page, 2, 'Wrong or no view page')        
+
 
 class TestViewPostingsAccount(unittest.TestCase):
 
@@ -575,7 +598,7 @@ class TestViewPostingsAccount(unittest.TestCase):
     def test_amount_in_list(self):
         """ The amounts are in the list """
 
-        rv = self.app.get("/posts/kas", follow_redirects=True)
+        rv = self.app.get("/posts/kas?page=2", follow_redirects=True)
         self.assertIn(b'21.76', rv.data, 'No amount in list')
         self.assertIn(b'Db', rv.data, 'No debit/credit in list')
 

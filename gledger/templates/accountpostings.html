@@ -1,10 +1,13 @@
 {% extends "base.html" %}
+{% from "navi.html" import navi %}
+
 {% block title %}<title> Postings for account {{posting_list.name}} </title> {% endblock %}
 {% block searches %}
     {% include "searches.html" %}
 {% endblock searches %}
 {% block content %}
     Account {{posting_list.name}} Role {{posting_list.role}}
+    {{ navi(url_for('posts',  account_name=posting_list_name),  current_page=posting_list.page, num_pages=posting_list.total_pages) }}
     <table>
         <tr>
             <th> Amount </th> <th> Debit/credit </th> <th> Journal key </th>

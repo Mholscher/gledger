@@ -144,8 +144,8 @@ def balance(account_name, postmonth=None):
     return render_template('balance.html', balanceview=balance_view.as_dictionary(),
                            search_form=search_form) 
 
-@app.route('/posts/<account_name>/month/<postmonth>', strict_slashes=False)
 @app.route('/posts/<account_name>', strict_slashes=False)
+@app.route('/posts/<account_name>/month/<postmonth>', strict_slashes=False)
 def posts(account_name, postmonth=None):
     """ 
     Show postings by account.
@@ -157,8 +157,15 @@ def posts(account_name, postmonth=None):
     """
 
     search_form = SearchForm()
-    account = accmodel.Accounts.get_by_name(account_name)
-    by_account_view = PostingByAccountView(account, month=postmonth).as_dict()
+    try:
+        account = accmodel.Accounts.get_by_name(account_name)
+    except accmodel.NoAccountError as content_error:
+        abort(400, str(content_error))
+    try:
+        by_account_view = PostingByAccountView(account, month=postmonth).as_dict()
+    except accmodel.InvalidPostmonthError as content_error:
+        flash(str(content_error))
+        by_account_view = None
     return render_template('accountpostings.html', search_form=search_form,
                            posting_list=by_account_view)
 
@@ -167,6 +174,7 @@ def journal(journalkey):
     """ Show a journal for  browsing.
     
     The journalkey is the external key of the journal requested
+    TODO create a journal search facility here
     """
 
     search_form = SearchForm()
@@ -178,7 +186,7 @@ def journal(journalkey):
             flash(str(nje))
             journal_view=None
     else:
-        flash('A journal key is required')
+        flash('An existing journal key is required')
         journal_view = None
     return render_template('journalpostings.html', search_form=search_form,
                            journal_view=journal_view)

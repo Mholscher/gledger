@@ -1,5 +1,12 @@
 {% extends "base.html" %}
+{% from "mainmenu.html" import mainmenu %}
+
 {% block title %}<title>Account {{accountview.account.name}}</title>{% endblock %}
+
+{% block menu %}
+    {{ mainmenu(account=accountview.account.name) }}
+{% endblock menu %}
+
 {% block searches %}
     {% include "searches.html" %}
 {% endblock searches %}

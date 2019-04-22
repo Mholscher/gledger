@@ -1,0 +1,9 @@
+{% macro mainmenu(account=None, postmonth=None) -%}
+<div class="menu">
+    <a class="menu-item" href={{ url_for('accountlist') }}>Account list </a>
+    <a class="menu-item" href={{ url_for('createaccount') }}>New account</a>
+    {% if account %}
+        <a class="menu-item" href={{url_for('accounts', account_name=account)}}>Account {{account}} </a>
+    {% endif %}
+</div>
+{%- endmacro %}

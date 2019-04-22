@@ -24,11 +24,12 @@ The postmonths are items that contain functions to process the
 posting periods.
 """
 
-from gledger import db
+import logging
+from datetime import date, datetime
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
-from datetime import date, datetime
-import logging
+from gledger import db
+
 
 
 class NoAccountError(ValueError):

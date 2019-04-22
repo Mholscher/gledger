@@ -18,8 +18,8 @@ a list view to support a list screen of accounts, based on a list
 of model instances.
 """
 
-import glmodels.glaccount as model
 import datetime
+import glmodels.glaccount as model
 
 class AccountView() :
     """ This class collects the data for displaying an existing account

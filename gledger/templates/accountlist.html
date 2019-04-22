@@ -1,12 +1,19 @@
 {% extends "base.html" %}
 {% from "navi.html" import navi %}
+{% from "mainmenu.html" import mainmenu %}
 
+{% block menu %}
+    {{ mainmenu() }}
+{% endblock menu %}
+<div>
 {% block searches %}
     {% include "searches.html" %}
 {% endblock searches %}
 {% block content %}
+    <div class="content-main">
     <h1>Account list</h1>
-    {{ navi(url_for('accountlist'), current_page=accountlist.page) }}
+    {{ navi(url_for('accountlist'), current_page=accountlist.page,
+        num_pages=accountlist.total_pages) }}
     <table>
         <tr>
             <th> Name </th> <th> Role </th> <th> Last updated </th> 
@@ -17,6 +24,8 @@
         </tr>
     {% endfor %}
     </table>
+    </div>
+</div>
 {% endblock content %}
 
 

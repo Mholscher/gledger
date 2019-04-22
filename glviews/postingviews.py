@@ -106,12 +106,19 @@ class PostingByAccountView():
     one account in the list. The list is parameter.
     """
 
-    def __init__(self, account=None, month=None):
+    def __init__(self, account=None, month=None, page=1):
 
         if account is None:
             raise accounts.NoAccountError('An account is required')
         self.account = account
-        self.postings = posts.Postings.postings_for_account(account, month=month)
+        self.postings = posts.Postings.postings_for_account(account,\
+            month=month, page=page)
+        self.page = self.postings.page
+        self.pagelength = self.postings.pagelength
+        self.total_pages, remainder =\
+            divmod(self.postings.num_records, self.pagelength)
+        if remainder > 0:
+            self.total_pages = self.total_pages + 1        
 
     def as_dict(self):
         """ Return this views data as a dictionary - easy
@@ -124,4 +131,10 @@ class PostingByAccountView():
         for posting in self.postings:
             posting_list.append(PostingView(posting).as_dict())
         posting_dict['postings'] = posting_list
+        if self.page:
+            posting_dict['page'] = self.page
+        if self.pagelength:
+            posting_dict['pagelength'] = self.pagelength
+        if self.total_pages:
+            posting_dict['total_pages'] = self.total_pages
         return posting_dict

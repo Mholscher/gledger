@@ -7,6 +7,7 @@
 </head>
 <body>
 <div class=page>
+  {% block menu %}{% endblock menu %} 
   {% block searches %}{% endblock searches %}
   {% for message in get_flashed_messages() %}
     <div class=flash>{{ message }}</div>
