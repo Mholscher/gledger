@@ -101,9 +101,6 @@ class JournalView():
 
 class PostingByAccountView():
     """ The view holds the data of a list of postings by account.
-    
-    It does not really rely on the fact that there are just postings for
-    one account in the list. The list is parameter.
     """
 
     def __init__(self, account=None, month=None, page=1):
@@ -118,23 +115,22 @@ class PostingByAccountView():
         self.total_pages, remainder =\
             divmod(self.postings.num_records, self.pagelength)
         if remainder > 0:
-            self.total_pages = self.total_pages + 1        
+            self.total_pages = self.total_pages + 1 
 
     def as_dict(self):
         """ Return this views data as a dictionary - easy
         access for showing field values on the browser.
         """
-
         acc = self.account
         posting_dict = {'id' : acc.id, 'name' : acc.name, 'role' : acc.role}
         posting_list = []
         for posting in self.postings:
             posting_list.append(PostingView(posting).as_dict())
         posting_dict['postings'] = posting_list
-        if self.page:
+        if self.page is not None:
             posting_dict['page'] = self.page
-        if self.pagelength:
+        if self.pagelength is not None:
             posting_dict['pagelength'] = self.pagelength
-        if self.total_pages:
+        if self.total_pages is not None:
             posting_dict['total_pages'] = self.total_pages
         return posting_dict
