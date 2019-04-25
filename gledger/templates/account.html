@@ -11,7 +11,7 @@
     {% include "searches.html" %}
 {% endblock searches %}
 {% block content %}
-    <h1>Account {{accountview.account.name}}</h1>
+    <h2>Account {{accountview.account.name}}</h2>
     {% if accountview.account.name %}
         <form action="/accounts/{{accountview.account.name}}" method="POST" class="inlineform">
     {% else %}

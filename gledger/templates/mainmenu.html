@@ -6,8 +6,10 @@
         <a class="menu-item" href={{url_for('accounts', account_name=account)}}>Account {{account}} </a>
         {% if postmonth %}
             <a class="menu-item" href={{url_for('balance', account_name=account, postmonth=postmonth)}}>Account balance for {{account}} </a>
+            <a class="menu-item" href={{url_for('posts', account_name=account, postmonth=postmonth)}}>Account postings for {{account}} </a>
         {% else %}
             <a class="menu-item" href={{url_for('balance', account_name=account)}}>Account balance for {{account}} </a>
+            <a class="menu-item" href={{url_for('posts', account_name=account)}}>Account postings for {{account}} </a>
         {% endif %}
     {% endif %}
 </div>

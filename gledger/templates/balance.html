@@ -1,10 +1,16 @@
 {% extends "base.html" %}
 {% block title %}<title>Balance for {{balanceview.name}}</title>{% endblock %}
+{% from "mainmenu.html" import mainmenu %}
+
+{% block menu %}
+    {{ mainmenu(account=balanceview.name, postmonth=balanceview.postmonth) }}
+{% endblock menu %}
+
 {% block searches %}
     {% include "searches.html" %}
 {% endblock searches %}
 {% block content %}
-<h1>Balance for {{balanceview.name}}</h1>
+<h2>Balance for {{balanceview.name}}</h2>
 <br>
 Accounting period {{balanceview.postmonth}}, account balance   {{balanceview.balance}}
 <br><br>

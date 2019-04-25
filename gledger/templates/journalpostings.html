@@ -3,9 +3,15 @@
 {% block searches %}
     {% include "searches.html" %}
 {% endblock searches %}
+{% from "mainmenu.html" import mainmenu %}
+
+{% block menu %}
+    {{ mainmenu() }}
+{% endblock menu %}
+
   {% block content %}
   {% if journal_view %}
-  Journal : {{journal_view.extkey}}, status {{journal_view.status}}
+  <h2>Journal : {{journal_view.extkey}}, status {{journal_view.status}}</h2>
   {% endif %}
       <table>
         <tr>
