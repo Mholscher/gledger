@@ -477,25 +477,25 @@ class TestAccountPostingViewing(unittest.TestCase):
         """ Retrieve the default number of postings -> 25 """
 
         post_list1 = posts.Postings.postings_for_account(self.kas_account)
-        self.assertEqual(len(post_list1), 25, 'Verkeerd aantal boekingen')
+        self.assertEqual(len(post_list1), 25, 'Wrong number of postings')
 
     def test_can_set_pagelength(self):
         """ We can set the pagelength to something diofferent than 25 """
 
         post_list2 = posts.Postings.postings_for_account(self.kas_account, pagelength=12)
-        self.assertEqual(len(post_list2), 12, 'Verkeerd aantal boekingen')
+        self.assertEqual(len(post_list2), 12, 'Wrong number of postings')
 
     def test_page_start_can_differ(self):
         """ We can start at any page """
 
         post_list3 = posts.Postings.postings_for_account(self.kas_account, page=2, pagelength=4)
-        self.assertEqual(post_list3[0].amount, 6065, 'Verkeerd bedrag 1e boeking blad 2')
+        self.assertEqual(post_list3[0].amount, 6065, 'Wrong amount 1st posting page 2')
 
     def test_limit_postings_by_month(self):
         """ We can limit the postings returned to a month """
 
         post_list4 = posts.Postings.postings_for_account(self.kas_account, month='09-2016')
-        self.assertEqual(len(post_list4), 17, 'Aantal boekingen verkeerd')
+        self.assertEqual(len(post_list4), 17, 'Wrong number of postings')
 
 class TestPostingsByAccountView(unittest.TestCase):
 

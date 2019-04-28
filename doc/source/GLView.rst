@@ -1,7 +1,7 @@
 GLViews - the General Ledger views
 ==================================
 
-The GLViews contains the conversions for the display of data. All items are converted to strings and added to a dictionary with a key that enables the views to easily get to the data. *This is based on the way Jinja2 uses data.* The  conversion to strings is done on request. So GLViews is a technical solution, not something a user needs to be aware of.
+The GLViews contains the conversions for the display of data.  GLViews is a technical solution, not something a user needs to be aware of.
 
 Also in his module we find the forms for submitting changes to the system. This is for use with HTML forms.
 
@@ -28,6 +28,11 @@ Postingview
 -----------
 
 This view holds the data of one posting. It include the extkey (key as supplied by the system that originally made the journal) to identify the journal it belongs to.
+
+Posting by account view
+-----------------------
+
+This view holds the postings by account. As usual in "list type" views it is not concerned with how the view is compiled, it just asks the model. It takes as a parameter for which account the list is to be created.
 
 Accountform
 ------------

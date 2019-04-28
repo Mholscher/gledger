@@ -18,7 +18,7 @@
             <th> Amount </th> <th> Debit/credit </th> <th> Journal key </th>
         </tr>
         {% for posting in posting_list.postings %}
-        <tr> <td> {{ posting.amount }} </td> <td> {{ posting.debcred }} </td> <td> {{ posting.extkey }} </td> </tr>
+        <tr> <td> {{ posting.amount }} </td> <td> {{ posting.debcred }} </td> <td><a href={{url_for('journal', journalkey=posting.extkey)}}> {{ posting.extkey }} </a></td> </tr>
         {% endfor %} {# posting #}
     </table>
 {% endblock content %}

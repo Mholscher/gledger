@@ -37,6 +37,21 @@
     <div class="inputline">{{ form.role.label(class="lbl") }}  {{ form.role }}</div>
     {{form.update}} {{form.addmore}}
     </form>
+    
+    <h2> Walk the account structure </h2>
+    
+    Parent: 
+    {%- if accountview.parent -%}
+        <a href={{url_for('accounts', account_name=accountview.parent.name)}}>{{accountview.parent.name}}</a>
+   {% endif %}
+   <p>
+   Children:
+   {% if accountview.children %}
+      {% for child in accountview.children %}
+        <a href={{url_for('accounts', account_name=child.name)}}>{{child.name}}</a>
+        {% endfor %}
+    {% endif %}
+        
 {% endblock content %}
 
 

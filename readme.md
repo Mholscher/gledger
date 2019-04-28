@@ -2,11 +2,11 @@
 
 ## Installing GLedger ##
 
-Install GLedger from Github. There is no way to install it using pip.
+Install GLedger from Github. There currently is no way to install it e.g. using pip.
 
 ## How GLedger is developed ##
 
-GLedger is developed on openSuse Linux, using Python 3.4 and Firebird 2.5 to implement its database. To interface with the database I used SQLAlchemy, taking care to not use Firebird specific constructs. It should run with all database backends SQLAlchemy supports, but no guarantees :=)
+GLedger is developed on openSuse Linux, using Python 3.4 and Firebird 2.5 and MariaDB 10.2 to implement its database. To interface with the database I used SQLAlchemy, taking care to not use Firebird/MariaDB specific constructs. It should run with all database backends SQLAlchemy supports, but no guarantees :=)
 
 ## Details ##
 
@@ -20,6 +20,6 @@ The tests are designed to be run on an empty database. Most tests don't mind 'st
 
 ### Create a database ####
 
-Go into a Python REPL and import glmodels. Then import db from gledger. You can then do do a db.drop_all() and a db.create_all() to recreate the tables.
+Go into a Python REPL. Then import db from gledger. You can then do do a db.drop_all() and a db.create_all() to recreate the tables.
 
 The only thing not recreated **in Firebird** is the sequences. These count on and on, recreate these by hand if necessary.
