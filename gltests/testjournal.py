@@ -609,6 +609,65 @@ class TestViewPostingsAccount(unittest.TestCase):
         self.assertIn(b'21.76', rv.data, 'Amount for 09-2017 not in list')
         self.assertNotIn(b'195.84', rv.data, 'Amount for 08-2017 in list')
 
+
+class TestJournalSearchList(unittest.TestCase):
+
+    def setUp(self):
+
+        create_accounts(self)
+        self.journ13 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='DD956')
+        self.journ13.add()
+        gledger.db.session.flush()
+        posting_to_journal(self.journ13)
+        self.journ14 = posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='XD952')
+        self.journ14.add()
+        gledger.db.session.flush()
+        posting_to_journal(self.journ14)
+        gledger.db.session.flush()
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_can_search_list(self):
+        """ We can create a search list for journals """
+
+        search_list = posts.Journals.journals_for_search(search_string='DD9')
+        self.assertEqual(len(search_list), 1, 'Wrong number of journals found')
+
+    def test_refuse_short_search_string(self):
+        """ A short search string for journals throws an error """
+
+        with self.assertRaises(ValueError):
+            search_list = posts.Journals.journals_for_search(search_string='X')
+        with self.assertRaises(ValueError):
+            search_list = posts.Journals.journals_for_search(search_string='')
+        with self.assertRaises(ValueError):
+            search_list = posts.Journals.journals_for_search(search_string='XD')
+
+
+class TestJournalSearchPaging(unittest.TestCase):
+
+    def setUp(self):
+
+        for i in range(250, 304):
+            posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
+                                extkey='MLD'+str(i))
+        gledger.db.session.flush()
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_page_has_25(self):
+        """ A page should have 25 journal keys """
+
+        search_list = posts.Journals.journals_for_search(search_string='MLD')
+        self.assertEqual(search_list.pagelength, 25, 'Incorrect number of keys on page')
+
+
 def create_posting_to_kas(instance, posting_amount, postmonth, journal_id):
     """ Post an amount to kas for test purposes """
 

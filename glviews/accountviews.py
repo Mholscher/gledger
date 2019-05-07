@@ -74,7 +74,7 @@ class AccountView() :
         if (not hasattr(self, 'account')) or (self.account is None) :
             raise(AttributeError, 'Account should exist and be populated')
         # Dispatch on columns in account, default use value 
-        return {'id': self.account.id, 'name': self.account.name, 'role' : self.account.role }
+        return {'id': self.account.id, 'name': self.account.name, 'role' : model.Accounts.ROLE_NAME[self.account.role] }
     
     def _parent_name_and_id(self) :
         # The check should not be necessary. The contract: call ONLY if parent exists
@@ -166,7 +166,7 @@ class AccountListView(list):
     
     def __init__(self, account_list):
         for account in account_list.as_list():
-            self.append({"id":account.id, "name":account.name, "role":account.role, "updated_at":account.updated_at.strftime("%d-%m-%Y %H:%M:%S"), "parent":account.parent_id})
+            self.append({"id":account.id, "name":account.name, "role":model.Accounts.ROLE_NAME[account.role], "updated_at":account.updated_at.strftime("%d-%m-%Y %H:%M:%S"), "parent":account.parent_id})
         self.page = account_list.page
         self.pagelength = account_list.pagelength
         self.total_pages, remainder =\

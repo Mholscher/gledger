@@ -77,6 +77,7 @@ class Accounts(db.Model):
     """
 
     VALID_ROLES = ['I', 'E', 'A', 'L']
+    ROLE_NAME = {'I':'Income', 'E':'Expense', 'A':'Asset', 'L':'Liability'}
 
     """ The list of valid roles.
 

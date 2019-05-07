@@ -25,7 +25,8 @@ from datetime import date, datetime
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from gledger import db
-from .glaccount import Accounts, postmonth_for, NoAccountError, Postmonths
+from .glaccount import Accounts, postmonth_for, NoAccountError, Postmonths,\
+    ShortSearchStringError
 
 
 class InvalidJournalError(Exception):
@@ -147,6 +148,19 @@ class Journals(db.Model):
         if not journal:
             raise NoJournalError('No journal with key ' + extkey)
         return journal
+
+    @classmethod
+    def journals_for_search(cls, search_string=None, pagelength=25):
+        """ Return all journals that have the search string
+        in their key.
+        """
+
+        if search_string is None or len(search_string) < 3:
+            raise ShortSearchStringError('Search string '+search_string+' too short')
+        journals = db.session.query(Journals)
+        if search_string:
+            journals = journals.filter(Journals.extkey.like('%'+search_string+'%'))
+        return JournalList(journals.all(), pagelength=pagelength)
 
     @classmethod
     def postings_for_key(self, journal_key):
@@ -334,6 +348,21 @@ class PostingList(list):
     def __init__(self, posting_list, page=1, pagelength=25, num_records=None):
 
         self.extend(posting_list)
+        self.page = page
+        self.pagelength = pagelength
+        self.num_records = num_records
+
+class JournalList(list):
+    """ The journalslist lists journals that conform to a search string.
+
+    The search string is not limited here, but it is in the view.
+
+    The list is accompanied by page info. That is to make paging easier.
+    """
+
+    def __init__(self, journal_list, page=1, pagelength=25, num_records=None):
+
+        self.extend(journal_list)
         self.page = page
         self.pagelength = pagelength
         self.num_records = num_records

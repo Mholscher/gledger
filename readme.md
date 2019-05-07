@@ -6,7 +6,7 @@ Install GLedger from Github. There currently is no way to install it e.g. using 
 
 ## How GLedger is developed ##
 
-GLedger is developed on openSuse Linux, using Python 3.4 and Firebird 2.5 and MariaDB 10.2 to implement its database. To interface with the database I used SQLAlchemy, taking care to not use Firebird/MariaDB specific constructs. It should run with all database backends SQLAlchemy supports, but no guarantees :=)
+GLedger is developed on openSuse Linux, using Python 3.4/3.6 and Firebird 2.5 and MariaDB 10.2 to implement its database. To interface with the database I used SQLAlchemy, taking care to not use Firebird/MariaDB specific constructs. It should run with all database backends SQLAlchemy supports, but no guarantees :=)
 
 ## Details ##
 

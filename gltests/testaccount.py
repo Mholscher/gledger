@@ -102,7 +102,14 @@ class TestDBCreation(unittest.TestCase) :
         gledger.db.session.flush()
         self.assertEqual(bal1.account_id, acc6.id, 
                          'Balance not attached to account')
-        
+
+    def test_role_translation(self):
+        """ We can translate the role attribute """
+
+        acc52 = accmodel.Accounts(name='creditors', role='L')
+        gledger.db.session.flush()
+        self.assertEqual(acc52.ROLE_NAME[acc52.role], 'Liability', 'No name found for role') 
+
                     
 class TestDomainProcesses(unittest.TestCase) :
     
@@ -246,6 +253,7 @@ class TestDomainProcesses(unittest.TestCase) :
         self.assertEqual(acc39.current_balance(), 0, 'Account does not open with zero balance?')
         acc39.post_amount('Db', 12.50, datetime.today())
         self.assertEqual(acc39.current_balance(), -12.50, 'Account balance not correct')
+
 
 class TestAccountStructures(unittest.TestCase) :
     
@@ -580,6 +588,13 @@ class TestAccountListViewFunction(unittest.TestCase):
 #        assert b'inkopen' in rv.data
         assert b'bank' in rv.data
         assert b'salaris' in rv.data
+
+    def test_does_return_role(self):
+        """ We return the role name in the list """
+
+        rv = self.app.get('/accountlist')
+        self.assertIn(b'Liability', rv.data, 'Missing role')
+        self.assertIn(b'Expense', rv.data, 'Missing role')
         
     def test_return_list_with_search(self):
         """ requesting a list with parameter returns a smaller list """

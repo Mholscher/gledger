@@ -37,12 +37,18 @@ class AccountMustExist(ValueError):
 class AccountForm(FlaskForm) :
     """ The form for updating accounts.
     
-    All fields of the account can be updated. For now the role is
-    hardcoded in the form. #TODO Should be refactored to come from the model. """
+    All fields of the account can be updated.  
+    """
+
+    # Create the list of choices (account roles
+    local_choices = []
+    for k, v in Accounts.ROLE_NAME.items():
+        item = k, v
+        local_choices.append(item)
     name = StringField('Account', validators=[DataRequired()])
     csrf_token = HiddenField('csrf_token')
     parent_name = StringField('Parent', validators = [AccountMustExist()])
-    role = SelectField('Type', choices = [('A', 'Assets'), ('L', 'Liabilities'), ('I', 'Income'), ('E', 'Expense')])
+    role = SelectField('Type', choices = local_choices)
     update = SubmitField('Update account')
     
 class NewAccountForm(AccountForm) :
