@@ -497,6 +497,7 @@ class TestAccountPostingViewing(unittest.TestCase):
         post_list4 = posts.Postings.postings_for_account(self.kas_account, month='09-2016')
         self.assertEqual(len(post_list4), 17, 'Wrong number of postings')
 
+
 class TestPostingsByAccountView(unittest.TestCase):
 
     def setUp(self):
@@ -653,8 +654,9 @@ class TestJournalSearchPaging(unittest.TestCase):
     def setUp(self):
 
         for i in range(250, 304):
-            posts.Journals(journalstat = posts.Journals.UNPROCESSED,\
-                                extkey='MLD'+str(i))
+            journal = posts.Journals(journalstat=posts.Journals.UNPROCESSED,\
+                            extkey='MLD'+str(i), updated_at=datetime.now())
+            journal.add()
         gledger.db.session.flush()
 
     def tearDown(self):
@@ -665,9 +667,70 @@ class TestJournalSearchPaging(unittest.TestCase):
         """ A page should have 25 journal keys """
 
         search_list = posts.Journals.journals_for_search(search_string='MLD')
-        self.assertEqual(search_list.pagelength, 25, 'Incorrect number of keys on page')
+        self.assertEqual(len(search_list), 25, 'Incorrect number of keys on page')
 
+    def test_can_get_page_3(self):
+        """ We can get the third page with journals """
 
+        search_list = posts.Journals.journals_for_search(search_string='MLD', page=3)
+        self.assertEqual(len(search_list), 4, 'Wrong (' +str(len(search_list))+ ') number of records')
+
+    def test_page_with_subset(self):
+        """ We can get a subset correctly """
+
+        search_list = posts.Journals.journals_for_search(search_string='MLD27')
+        self.assertEqual(len(search_list), 10, 'Incorrect number of keys on page')
+
+    def test_can_see_no_of_pages(self):
+        """ We know how many lines are available """
+
+        search_list = posts.Journals.journals_for_search(search_string='MLD')
+        self.assertEqual( search_list.num_records, 54, 'Number of records not equal attibute')
+
+class TestJournalListView(unittest.TestCase):
+
+    def setUp(self):
+
+        for i in range(120, 205):
+            journal = posts.Journals(journalstat=posts.Journals.UNPROCESSED,\
+                            extkey='TLV'+str(i), updated_at=datetime.now())
+            journal.add()
+        gledger.db.session.flush()
+        self.search_list = posts.Journals.journals_for_search(search_string='TLV')
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_can_make_view(self):
+        """ We can create a view from a search list """
+
+        list_view1 = postviews.JournalListView(self.search_list)
+        self.assertEqual(len(list_view1), 25, 'Wrong number of journals in list view')
+
+    def test_can_create_view_for_second_page(self):
+        """ We can create a view for the second page """
+
+        search_list = posts.Journals.journals_for_search(search_string='TLV', page=2)
+        list_view2 = postviews.JournalListView(search_list)
+        self.assertIn('extkey', list_view2[12], 'extkey missing')
+
+    def test_last_page_correct_no(self):
+        """ The last page should have the correct no of records """
+
+        search_list = posts.Journals.journals_for_search(search_string='TLV', page=4)
+        list_view3 = postviews.JournalListView(search_list)        
+        self.assertEqual(len(list_view3), 10, 'Wrong no of journals on last page')
+
+    def test_view_for_page_info(self):
+        """ The view has page info """
+
+        list_view4 = postviews.JournalListView(self.search_list)
+        self.assertEqual(list_view4.page, 1, 'Wrong or no page number in view')
+        self.assertEqual(list_view4.pagelength, 25, 'Wrong or no page length in view')
+        self.assertEqual(list_view4.total_pages, 4, 'Wrong or no no of pages in view')
+
+        
 def create_posting_to_kas(instance, posting_amount, postmonth, journal_id):
     """ Post an amount to kas for test purposes """
 

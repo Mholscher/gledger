@@ -1,5 +1,7 @@
 """ This module contains the routes that can be visited using the browser.
 Each route has a clear purpose, geared to different uses.
+
+TODO transaction to close the postmonth
 """
 
 import logging

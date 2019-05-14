@@ -150,9 +150,9 @@ class Journals(db.Model):
         return journal
 
     @classmethod
-    def journals_for_search(cls, search_string=None, pagelength=25):
-        """ Return all journals that have the search string
-        in their key.
+    def journals_for_search(cls, search_string=None, page=1, pagelength=25):
+        """ Return journals that have the search string
+        in their key. Uphold paging attributes.
         """
 
         if search_string is None or len(search_string) < 3:
@@ -160,7 +160,16 @@ class Journals(db.Model):
         journals = db.session.query(Journals)
         if search_string:
             journals = journals.filter(Journals.extkey.like('%'+search_string+'%'))
-        return JournalList(journals.all(), pagelength=pagelength)
+        journals = journals.limit(pagelength)
+        if page > 1:
+            journals = journals.offset((page - 1) * pagelength)
+        journals = journals.all()
+        q = db.session.query(Journals)
+        if search_string:
+            q = q.filter(Journals.extkey.like('%'+search_string+'%'))
+        num_records = q.count()
+        return JournalList(journals, page=page, pagelength=pagelength,\
+            num_records=num_records)
 
     @classmethod
     def postings_for_key(self, journal_key):

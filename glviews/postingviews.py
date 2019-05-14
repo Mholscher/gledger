@@ -101,6 +101,8 @@ class JournalView():
 
 class PostingByAccountView():
     """ The view holds the data of a list of postings by account.
+    
+    TODO Extract paging to mixin for reuse
     """
 
     def __init__(self, account=None, month=None, page=1):
@@ -134,3 +136,19 @@ class PostingByAccountView():
         if self.total_pages is not None:
             posting_dict['total_pages'] = self.total_pages
         return posting_dict
+
+class JournalListView(list):
+    """ This class holds the extract for a journallist 
+    for showing on a page
+    """
+
+    def __init__(self, journal_list):
+
+        for journal in journal_list:
+            self.append({'extkey':journal.extkey, 'updated_at':journal.updated_at})
+        self.page = journal_list.page
+        self.pagelength = journal_list.pagelength
+        self.total_pages, remainder =\
+            divmod(journal_list.num_records, self.pagelength)
+        if remainder > 0:
+            self.total_pages += 1
