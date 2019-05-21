@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %} <title>Journal list</title> {% endblock %}
+{% block searches %}
+    {% include "searches.html" %}
+    {% include "journal_search.html" %}
+{% endblock searches %}
+{% from "mainmenu.html" import mainmenu %}
+
+{% block menu %}
+    {{ mainmenu() }}
+{% endblock menu %}
+
+{% from "navi.html" import navi %}
+
+{% block content %}
+    {{navi(url_for('journallist'), current_page=journallist.page,
+        num_pages=journallist.total_pages) }}
+    <table>
+    <tr>
+        <th>Journal key </th><th>Last update</th>
+    </tr>
+    {% if journallist %}
+    {% for journal in journallist -%}
+        <tr>
+            <td><a href={{url_for('journal', journalkey=journal.extkey)}}>{{journal.extkey}}</a></td><td>{{journal.updated_at}}</td>
+        </tr>
+    {% endfor %}
+    {% endif %}
+    </table>
+{% endblock content %}
+

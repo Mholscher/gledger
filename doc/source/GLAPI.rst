@@ -40,3 +40,8 @@ Module glviews postingviews
 ..  automodule:: glviews.postingviews
     :members:
     
+Module glviews forms
+--------------------
+
+..  automodule:: glviews.forms
+    :members:

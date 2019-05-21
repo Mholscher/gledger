@@ -9,8 +9,9 @@ from flask import render_template, flash, request, redirect, url_for, abort
 import glmodels.glaccount as accmodel
 import glmodels.glposting as journalmodel
 from glviews.accountviews import AccountView, AccountListView, BalanceView
-from glviews.postingviews import JournalView, PostingView, PostingByAccountView
-from glviews.forms import AccountForm, NewAccountForm, SearchForm
+from glviews.postingviews import JournalView, PostingView,\
+    PostingByAccountView, JournalListView
+from glviews.forms import AccountForm, NewAccountForm, SearchForm, JournalSearch
 from . import app, db
 
 
@@ -192,3 +193,25 @@ def journal(journalkey):
         journal_view = None
     return render_template('journalpostings.html', search_form=search_form,
                            journal_view=journal_view)
+
+@app.route('/journallist', methods=['GET'])
+def journallist():
+    """ Show a list of journal keys, limited by a search search_string
+    """
+
+    journal_search = JournalSearch()
+
+    search_string = request.args.get('search_string')
+    try:
+        journal_list =\
+            journalmodel.Journals.journals_for_search(search_string=search_string)
+        list_view = JournalListView(journal_list)
+    except accmodel.ShortSearchStringError as sse:
+        flash(str(sse))
+        list_view = JournalListView(journalmodel.JournalList([], page=1,\
+            pagelength=25, num_records=0))
+    if search_string:
+        journal_search.search_for.data = search_string
+    return render_template('journallist.html', journallist=list_view,\
+        search_form=SearchForm(), journal_search=journal_search)
+        

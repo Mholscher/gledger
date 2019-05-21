@@ -155,7 +155,10 @@ class Journals(db.Model):
         in their key. Uphold paging attributes.
         """
 
-        if search_string is None or len(search_string) < 3:
+        if search_string is None or search_string == '':
+            return JournalList([], page=page, pagelength=pagelength,\
+                num_records=0)
+        if len(search_string) < 3:
             raise ShortSearchStringError('Search string '+search_string+' too short')
         journals = db.session.query(Journals)
         if search_string:

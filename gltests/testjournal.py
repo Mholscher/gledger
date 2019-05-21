@@ -644,8 +644,6 @@ class TestJournalSearchList(unittest.TestCase):
         with self.assertRaises(ValueError):
             search_list = posts.Journals.journals_for_search(search_string='X')
         with self.assertRaises(ValueError):
-            search_list = posts.Journals.journals_for_search(search_string='')
-        with self.assertRaises(ValueError):
             search_list = posts.Journals.journals_for_search(search_string='XD')
 
 
@@ -729,6 +727,61 @@ class TestJournalListView(unittest.TestCase):
         self.assertEqual(list_view4.page, 1, 'Wrong or no page number in view')
         self.assertEqual(list_view4.pagelength, 25, 'Wrong or no page length in view')
         self.assertEqual(list_view4.total_pages, 4, 'Wrong or no no of pages in view')
+
+
+class TestJournalListFunctions(unittest.TestCase):
+
+    def setUp(self):
+
+        for i in range(301, 364):
+            journal = posts.Journals(journalstat=posts.Journals.UNPROCESSED,\
+                            extkey='BRH'+str(i), updated_at=datetime.now())
+            journal.add()
+        gledger.db.session.flush()
+
+        self.app = gledger.app.test_client()
+        self.app.testing = True
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_select_list_of_journals(self):
+        """ We can select a small list of journals """
+
+        rv = self.app.get('/journallist?search_string=RH31')
+        self.assertIn(b'BRH311', rv.data, 'Journal not in selection')
+
+    def test_empty_search_empty_list(self):
+        """ An empty search_string returns an empty list """
+
+        rv = self.app.get('/journallist')
+        self.assertNotIn(b'BRH3', rv.data, 'Journals in empty list?')
+
+    def test_short_search_flashes_message(self):
+        """ Entering a short search string flashes a message """
+
+        rv = self.app.get('/journallist?search_string=RH')
+        self.assertIn(b'Search string', rv.data, 'No or incorrect flashed message')
+
+    def test_extkey_is_link(self):
+        """ The extkey is a link to the journal """
+
+        rv = self.app.get('/journallist?search_string=RH31')
+        self.assertIn(b'href=/journal/BRH311', rv.data, 'Journal key not a link')
+
+    def test_can_go_first_page(self):
+        """ We see a link to the first page """
+
+        rv = self.app.get('/journallist?search_string=BRH&page=2')
+        self.assertIn(b'page=1', rv.data, 'No link to first page')
+
+    def test_can_go_prev_page(self):
+        """ We can go to the previous page """
+
+        rv = self.app.get('/journallist?search_string=BRH&page=2')
+        self.assertIn(b'\xe2\x8f\xb4', rv.data, 'No link to previous page')
+
 
         
 def create_posting_to_kas(instance, posting_amount, postmonth, journal_id):

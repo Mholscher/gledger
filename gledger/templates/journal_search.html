@@ -1,0 +1,8 @@
+    <form action="/journallist" method="GET" class="inlineform">
+    {# {{ search_form.csrf_token }}
+       {% if form.csrf_token.errors %}
+        <div class="warning">You have submitted an invalid CSRF token</div>
+    {% endif %} #}
+    <div class="inputline"> {{ journal_search.search_for.label(class="lbl") }} {{ journal_search.search_for }} {{journal_search.start_search}}
+    </div>  
+    </form>
