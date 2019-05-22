@@ -73,13 +73,13 @@ class SearchForm(FlaskForm):
     The form is quite simple.
     """
     
-    search_for = StringField('Search')
+    search_for = StringField('Search account')
     start_search = SubmitField('Find...')
 
 class JournalSearch(FlaskForm):
     """ This form allows searching for a journal with a search term.
 
-    The for is simple.
+    The form is simple.
     """
 
     search_for = StringField('Journal (part of key)')

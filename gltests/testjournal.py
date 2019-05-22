@@ -749,7 +749,7 @@ class TestJournalListFunctions(unittest.TestCase):
     def test_select_list_of_journals(self):
         """ We can select a small list of journals """
 
-        rv = self.app.get('/journallist?search_string=RH31')
+        rv = self.app.get('/journallist?search_for=RH31')
         self.assertIn(b'BRH311', rv.data, 'Journal not in selection')
 
     def test_empty_search_empty_list(self):
@@ -761,25 +761,25 @@ class TestJournalListFunctions(unittest.TestCase):
     def test_short_search_flashes_message(self):
         """ Entering a short search string flashes a message """
 
-        rv = self.app.get('/journallist?search_string=RH')
+        rv = self.app.get('/journallist?search_for=RH')
         self.assertIn(b'Search string', rv.data, 'No or incorrect flashed message')
 
     def test_extkey_is_link(self):
         """ The extkey is a link to the journal """
 
-        rv = self.app.get('/journallist?search_string=RH31')
+        rv = self.app.get('/journallist?search_for=RH31')
         self.assertIn(b'href=/journal/BRH311', rv.data, 'Journal key not a link')
 
     def test_can_go_first_page(self):
         """ We see a link to the first page """
 
-        rv = self.app.get('/journallist?search_string=BRH&page=2')
+        rv = self.app.get('/journallist?search_for=BRH&page=2')
         self.assertIn(b'page=1', rv.data, 'No link to first page')
 
     def test_can_go_prev_page(self):
         """ We can go to the previous page """
 
-        rv = self.app.get('/journallist?search_string=BRH&page=2')
+        rv = self.app.get('/journallist?search_for=BRH&page=2')
         self.assertIn(b'\xe2\x8f\xb4', rv.data, 'No link to previous page')
 
 

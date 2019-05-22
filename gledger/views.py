@@ -200,8 +200,7 @@ def journallist():
     """
 
     journal_search = JournalSearch()
-
-    search_string = request.args.get('search_string')
+    search_string = request.args.get('search_for')
     try:
         journal_list =\
             journalmodel.Journals.journals_for_search(search_string=search_string)

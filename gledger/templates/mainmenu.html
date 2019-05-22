@@ -12,5 +12,6 @@
             <a class="menu-item" href={{url_for('posts', account_name=account)}}>Account postings for {{account}} </a>
         {% endif %}
     {% endif %}
+    <a class="menu-item" href={{ url_for('journallist') }}>Find journals </a>
 </div>
 {%- endmacro %}
