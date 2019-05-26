@@ -316,7 +316,7 @@ class TestPostingView(unittest.TestCase):
                                 value_date = datetime.now(), amount=120, debcred='Cr')
         post11.add()
         gledger.db.session.flush()
-        post11view = postviews.PostingView(post11)
+        post11view = postviews.PostingView(post11.id)
         self.assertEqual(post11view.posting.amount, 120, 'Amount in view incorrect')
 
     def test_posting_no_id_fails(self):
@@ -327,7 +327,7 @@ class TestPostingView(unittest.TestCase):
                                 value_date = datetime.now(), amount=12, debcred='Cr')
         post12.add()
         with self.assertRaises(ValueError):
-            post12view = postviews.PostingView(post12)
+            post12view = postviews.PostingView(post12.id)
 
     def test_view_needs_posting(self):
         """ A postingview needs to be supplied with a posting """
@@ -343,7 +343,7 @@ class TestPostingView(unittest.TestCase):
                                 value_date = datetime.now(), amount=6500, debcred='Cr')
         post13.add()
         gledger.db.session.flush()
-        post13view = postviews.PostingView(post13)
+        post13view = postviews.PostingView(post13.id)
         post13viewdict = post13view.as_dict()
         self.assertIn("id", post13viewdict, 'No id in posting dictionary')
         self.assertEqual(post13viewdict['amount'], '65.00', 'Amount incorrect')
@@ -356,7 +356,7 @@ class TestPostingView(unittest.TestCase):
                                 value_date = datetime.now(), amount=5500, debcred='Db')
         post14.add()
         gledger.db.session.flush()
-        post14view = postviews.PostingView(post14)
+        post14view = postviews.PostingView(post14.id)
         post14viewdict = post14view.as_dict()
         self.assertEqual(post14viewdict['account'], 'kas', 'Wrong account in postview')
 
@@ -365,7 +365,7 @@ class TestPostingView(unittest.TestCase):
 
         one_journal7_posting = gledger.db.session.query(posts.Journals).\
             filter_by(id=self.journ7id).first().journalpostings[0]
-        post15view = postviews.PostingView(one_journal7_posting)
+        post15view = postviews.PostingView(one_journal7_posting.id)
         post15viewdict = post15view.as_dict()
         self.assertEqual(post15viewdict['extkey'], self.journ7extkey, 'Wrong extkey')
 
@@ -389,26 +389,26 @@ class TestJournalView(unittest.TestCase):
     def test_create_journal_view(self):
         """ We can set up a view which holds the journal """
 
-        journal_view1 = postviews.JournalView(posts.Journals.get_by_id(self.journ8id))
+        journal_view1 = postviews.JournalView(self.journ8id)
         self.assertEqual(journal_view1.journal.id, self.journ8id, 'No view created')
 
     def test_journal_view_has_postings(self):
         """ The journal view has a list of postings """
 
-        journal_view2 = postviews.JournalView(posts.Journals.get_by_id(self.journ8id))
+        journal_view2 = postviews.JournalView(self.journ8id)
         self.assertEqual(len(journal_view2.postingviews), 3, 'Incorrect number of postings')
 
     def test_journalview_as_dict(self):
         """ A journalview can return itself as a dictionary """
 
-        journal_view3 = postviews.JournalView(posts.Journals.get_by_id(self.journ8id))
+        journal_view3 = postviews.JournalView(self.journ8id)
         self.assertIn('extkey', journal_view3.as_dict(), 'No extkey in journalview')
         self.assertEqual(journal_view3.as_dict()['extkey'], self.journ8extkey, 'Incorrect extkey')
 
     def test_journalview_has_postingviews(self):
         """ A journalview contains postingviews for the postings """
 
-        journal_view4 = postviews.JournalView(posts.Journals.get_by_id(self.journ8id))
+        journal_view4 = postviews.JournalView(self.journ8id)
         self.assertEqual(len(journal_view4.as_dict()['postings']), 3, 'Incorrect number of postingviews')
         
 class TestViewJournal(unittest.TestCase):
@@ -541,7 +541,7 @@ class TestPostingsByAccountView(unittest.TestCase):
         self.assertIn('name', posting_view3.as_dict(), 'No account name')
 
     def test_view_has_posting_info(self):
-        """ The view dict contains the knfo for postings """
+        """ The view dict contains the info for postings """
 
         posting_view4 = postviews.PostingByAccountView(self.kas_account)
         self.assertIn('amount', posting_view4.as_dict()['postings'][0], 'No posting info')

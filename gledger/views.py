@@ -25,11 +25,11 @@ def index():
 @app.route('/accounts/new', methods=['GET', 'POST'])
 def createaccount():
     """ This page creates a new account in the system
-    
+
     The GET method shows the empty form, when filled out and
     submitted, POST will do the validation and update.
     """
-    
+
     search_form = SearchForm()
     new_account_form = NewAccountForm()
     if new_account_form.validate_on_submit():
@@ -49,13 +49,13 @@ def createaccount():
 @app.route('/accountlist', methods=['GET'], strict_slashes=False)
 def accountlist():
     """accountlist lists accounts from the system.
-    
+
     The accounts shown may be constrained by a search argument.
     The search argument is checked against the account name and
     the account description. Accounts are shown by change date,
     youngest first.
     """
-    
+
     search_for = request.args.get('search_for')
     search_form = SearchForm()
     page_nr = request.args.get('page')
@@ -63,9 +63,9 @@ def accountlist():
         page_nr = 1
     else:
         page_nr = int(page_nr)
-    
+
     try:
-        account_list = accmodel.AccountList(search_string=search_for, page=page_nr)
+        account_list = AccountListView(search_string=search_for, page=page_nr)
     except accmodel.ShortSearchStringError as sse:
         flash(str(sse))
         search_form.search_for.data = search_for
@@ -74,15 +74,15 @@ def accountlist():
     if search_for:
         search_form.search_for.data = search_for
     return render_template('accountlist.html', search_form=search_form,
-                           accountlist=AccountListView(account_list))
+                           accountlist=account_list)
 
 @app.route('/accounts/<account_name>', methods=['GET', 'POST'], strict_slashes=False)
 def accounts(account_name=None):
     """ This is the accounts page of the application
-    
+
     If an account name is given, it shows the information for that account
-    """    
-    
+    """
+
     if account_name is None or account_name == '':
         logging.debug('Aborting: account name is missing')
         abort(500)
@@ -126,12 +126,12 @@ def accounts(account_name=None):
 @app.route('/balance/<account_name>', strict_slashes=False)
 def balance(account_name, postmonth=None):
     """ This route shows the balance of an account
-    
+
     The accountname is the account to show the balance for.
     If no month is given, it shows the current account balance.
     Else it shows the balance for the requested month.
     """
-    
+
     if account_name is None:
         abort(404, 'An account name is mandatory')
     search_form = SearchForm()
@@ -140,19 +140,19 @@ def balance(account_name, postmonth=None):
     else:
         for_month = accmodel.Postmonths.internal(postmonth)
     try:
-        balance_view = BalanceView.create_view(name=account_name, 
+        balance_view = BalanceView.create_view(name=account_name,
                                                postmonth=for_month)
     except (accmodel.NoAccountError, accmodel.InvalidPostmonthError) as content_error:
         abort(400, str(content_error))
     return render_template('balance.html', balanceview=balance_view.as_dictionary(),
-                           search_form=search_form) 
+                           search_form=search_form)
 
 @app.route('/posts/<account_name>', strict_slashes=False)
 @app.route('/posts/<account_name>/month/<postmonth>', strict_slashes=False)
 def posts(account_name, postmonth=None):
-    """ 
+    """
     Show postings by account.
-    
+
     The postings for the account and the month given
     are returned. If no month is requested, it defaults to
     use the current month, but also shows postings of previous
@@ -175,7 +175,7 @@ def posts(account_name, postmonth=None):
 @app.route('/journal/<journalkey>', methods=['GET'])
 def journal(journalkey):
     """ Show a journal for  browsing.
-    
+
     The journalkey is the external key of the journal requested
     TODO create a journal search facility here
     """
@@ -183,11 +183,10 @@ def journal(journalkey):
     search_form = SearchForm()
     if journalkey:
         try:
-            journal = journalmodel.Journals.get_by_key(journalkey)
-            journal_view = JournalView(journal).as_dict()
+            journal_view = JournalView(journal_key=journalkey).as_dict()
         except journalmodel.NoJournalError as nje:
             flash(str(nje))
-            journal_view=None
+            journal_view = None
     else:
         flash('An existing journal key is required')
         journal_view = None
@@ -213,4 +212,4 @@ def journallist():
         journal_search.search_for.data = search_string
     return render_template('journallist.html', journallist=list_view,\
         search_form=SearchForm(), journal_search=journal_search)
-        
+

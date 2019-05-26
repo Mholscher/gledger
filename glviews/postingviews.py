@@ -30,12 +30,12 @@ class PostingView():
     showing to the screen on request.
     """
 
-    def __init__(self, posting=None):
+    def __init__(self, posting_id=None):
 
-        if not posting or (posting.id is None):
+        if posting_id is None:
             raise posts.NoJournalError('A posting is required to create a view')
         else:
-            self.posting = posting
+            self.posting = posts.Postings.get_by_id(posting_id)
 
     def _accountname_for_posting(self):
         """ Get the account name this posting should be applied to """
@@ -63,25 +63,30 @@ class JournalView():
     showing on request.
     """
 
-    def __init__(self, journal=None):
+    def __init__(self, journal_id=None, journal_key=None):
 
-        if journal is None or journal.id is None:
+        if journal_id is None and journal_key is None:
             raise NoJournalError('A valid journal is required to create a JournalView')
-        self.journal = journal
-        self.postingviews = self.createpostingviews_for_journal(journal_id=journal.id)
+        if journal_id:
+            self.journal = posts.Journals.get_by_id(journal_id)
+        else:
+            self.journal = posts.Journals.get_by_key(journal_key)
+        self.postingviews = self.createpostingviews_for_journal(journal_id=self.journal.id)
 
-    def createpostingviews_for_journal(self, journal_id=None, extkey=None):
+    def createpostingviews_for_journal(self, postings=None,\
+                                journal_id=None, extkey=None):
         """ Create a postingview for each of the postings
         in the journal with the id or extkey entered.
         """
 
-        if journal_id:
-            postings = posts.Journals.postings_for_id(journal_id)
-        else:
-            postings = posts.Journals.postings_for_key(extkey)
+        if postings is None:
+            if journal_id:
+                postings = posts.Journals.postings_for_id(journal_id)
+            else:
+                postings = posts.Journals.postings_for_key(extkey)
         postingviews = []
         for posting in postings:
-            postingviews.append(PostingView(posting).as_dict())
+            postingviews.append(PostingView(posting.id).as_dict())
         return postingviews
 
     def as_dict(self):
@@ -127,7 +132,7 @@ class PostingByAccountView():
         posting_dict = {'id' : acc.id, 'name' : acc.name, 'role' : acc.role}
         posting_list = []
         for posting in self.postings:
-            posting_list.append(PostingView(posting).as_dict())
+            posting_list.append(PostingView(posting.id).as_dict())
         posting_dict['postings'] = posting_list
         if self.page is not None:
             posting_dict['page'] = self.page

@@ -542,7 +542,8 @@ class TestAccountListView(unittest.TestCase):
         
     def test_create_account_list_view(self):
         """ We can create a view from an account list """
-        alv = accviews.AccountListView(self.al)
+        
+        alv = accviews.AccountListView()
         account_bank = []
         for account in alv:
             if account['name'] == 'bank':
@@ -550,13 +551,13 @@ class TestAccountListView(unittest.TestCase):
         self.assertEqual(len(account_bank), 1, 'No/more than 1 account bank in view')
         
     def test_num_accounts_in_list(self):
-        alv = accviews.AccountListView(self.al)
+        alv = accviews.AccountListView()
         self.assertEqual(len(alv), 10, 'Not all accounts in list view')
 
     def test_page_info_in_view(self):
         """ Page info is placed in view """
 
-        alv = accviews.AccountListView(self.al)
+        alv = accviews.AccountListView()
         self.assertEqual(alv.page, 1, 'Wrong or no page number in view')
         self.assertEqual(alv.pagelength, 10, 'Wrong or no page length in view')
         self.assertEqual(alv.total_pages, 2, 'Wrong or no no of pages in view')
@@ -568,7 +569,7 @@ class TestAccountListView(unittest.TestCase):
         self.acc51.add()
         self.acc51.updated_at = datetime(2003, 12, 18, hour=10, minute=20, second=44)
         gledger.db.session.flush()
-        alv3 = accviews.AccountListView(accmodel.AccountList(pagelength=3, page=2))
+        alv3 = accviews.AccountListView(pagelength=3, page=2)
         self.assertEqual(alv3.total_pages, 4, 'Wrong or no number of pages')
         
 class TestAccountListViewFunction(unittest.TestCase):

@@ -77,5 +77,10 @@ If not successful, a message will be sent as follows::
         "extkey":"f234";
     }
 
-Where the "f234" is the external key passed by the application. 
+Where the "f234" is the external key passed by the application.
+
+Finding journals by key
+-----------------------
+
+If you have the key to a journal and you want to find that journal, the place to look is the journal list. You can ask for a list of journal keys by (part of) a key. All journals that contain the search string as (part of) the key are listed and are clickable to see all postings in the journal.
 

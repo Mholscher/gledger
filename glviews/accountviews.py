@@ -164,8 +164,11 @@ class AccountListView(list):
     list page.
     """
     
-    def __init__(self, account_list):
-        for account in account_list.as_list():
+    def __init__(self, search_string=None, page=1, pagelength=10):
+
+        account_list = model.AccountList(search_string=search_string,\
+            page=page, pagelength=pagelength)
+        for account in account_list:
             self.append({"id":account.id, "name":account.name, "role":model.Accounts.ROLE_NAME[account.role], "updated_at":account.updated_at.strftime("%d-%m-%Y %H:%M:%S"), "parent":account.parent_id})
         self.page = account_list.page
         self.pagelength = account_list.pagelength

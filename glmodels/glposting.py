@@ -310,7 +310,13 @@ class Postings(db.Model) :
         
         account = Accounts.get_by_name(from_name)
         return account.id
-    
+
+    @classmethod
+    def get_by_id(cls, posting_id):
+        """ Get a posting from its id """
+
+        return db.session.query(Postings).filter_by(id=posting_id).first()
+
     def add(self) :
         """ Add this posting to the session 
         

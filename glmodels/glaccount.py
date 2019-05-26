@@ -348,7 +348,7 @@ class Balances(db.Model):
         return 'Balances(amount = {}, postmonth = {}, account {})'.\
             format(self.amount, self.postmonth, self.account_id)
 
-class AccountList():
+class AccountList(list):
     """ A list of accounts is returned for showing
 
     The search string must be at least 3 characters, to  prevent an overly
@@ -357,7 +357,7 @@ class AccountList():
     search string, return an empty list.
     """
 
-    def __init__(self, search_string=None, pagelength=10, page=1):
+    def __init__(self, search_string=None, page=1, pagelength=10):
         """Initialize the list, using search_string as a selection """
 
         q = db.session.query(Accounts).order_by(Accounts.updated_at.desc())
@@ -374,6 +374,7 @@ class AccountList():
         q = q.limit(pagelength)
         logging.debug('SQL is ' + str(q))
         self.account_list = q.all()
+        self.extend(self.account_list)
         self.page = page
         self.pagelength = pagelength
         q2 = db.session.query(Accounts)
