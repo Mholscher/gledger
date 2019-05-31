@@ -782,6 +782,17 @@ class TestJournalListFunctions(unittest.TestCase):
         rv = self.app.get('/journallist?search_for=BRH&page=2')
         self.assertIn(b'\xe2\x8f\xb4', rv.data, 'No link to previous page')
 
+    def test_can_show_other_page(self):
+        """ There are differences between different pages """
+
+        search_list = posts.Journals.journals_for_search(search_string='BRH', page=1)
+        list_view5 = postviews.JournalListView(search_list)
+        extkeys = []
+        for journal in list_view5:
+            extkeys.append(journal['extkey'])
+        rv2 = self.app.get('/journallist?search_for=BRH&page=2')
+        for extkey in extkeys:
+            self.assertNotIn(extkey.encode(), rv2.data, 'Duplicaten in 2e pagina')
 
         
 def create_posting_to_kas(instance, posting_amount, postmonth, journal_id):

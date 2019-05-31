@@ -199,10 +199,16 @@ def journallist():
     """
 
     journal_search = JournalSearch()
+    page = request.args.get('page')
     search_string = request.args.get('search_for')
     try:
-        journal_list =\
-            journalmodel.Journals.journals_for_search(search_string=search_string)
+        if page:
+            journal_list =\
+                journalmodel.Journals.journals_for_search(search_string=search_string,\
+                    page=int(page))
+        else:
+            journal_list =\
+                journalmodel.Journals.journals_for_search(search_string=search_string)
         list_view = JournalListView(journal_list)
     except accmodel.ShortSearchStringError as sse:
         flash(str(sse))

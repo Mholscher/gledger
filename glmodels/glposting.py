@@ -21,6 +21,7 @@ new correcting postings. This is because postings are part of a journal,
 a composite of postings that belong together and always need to balance.
 """
 
+import logging
 from datetime import date, datetime
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
@@ -160,12 +161,14 @@ class Journals(db.Model):
                 num_records=0)
         if len(search_string) < 3:
             raise ShortSearchStringError('Search string '+search_string+' too short')
-        journals = db.session.query(Journals)
+        journals = db.session.query(Journals).order_by(Journals.extkey.desc())
         if search_string:
             journals = journals.filter(Journals.extkey.like('%'+search_string+'%'))
-        journals = journals.limit(pagelength)
         if page > 1:
-            journals = journals.offset((page - 1) * pagelength)
+            skip_records = (page - 1) * pagelength
+            journals = journals.offset(skip_records)
+        journals = journals.limit(pagelength)
+        logging.debug('Journals SQL is: :' + str(journals))
         journals = journals.all()
         q = db.session.query(Journals)
         if search_string:
@@ -244,7 +247,7 @@ class Postings(db.Model) :
         :debcred: if the account is to be debited or credited
         :value_date: the date the posting should take effect
         :updated_at: The timestamp of the last update
-    
+        TODO add validation of postmonth
     """
     
     __tablename__ = 'postings'
