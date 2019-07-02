@@ -27,7 +27,7 @@ from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from gledger import db
 from .glaccount import Accounts, postmonth_for, NoAccountError, Postmonths,\
-    ShortSearchStringError
+    ShortSearchStringError, InvalidPostmonthError
 
 
 class InvalidJournalError(Exception):
@@ -247,7 +247,6 @@ class Postings(db.Model) :
         :debcred: if the account is to be debited or credited
         :value_date: the date the posting should take effect
         :updated_at: The timestamp of the last update
-        TODO add validation of postmonth
     """
     
     __tablename__ = 'postings'
@@ -338,7 +337,7 @@ class Postings(db.Model) :
             raise InvalidDebitCreditError('Debit credit indicator ' + debitcredit + 
                                           'is invalid')
         return debitcredit
-        
+
     def is_debit(self):
         
         return (self.debcred == 'Db')

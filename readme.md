@@ -23,3 +23,7 @@ The tests are designed to be run on an empty database. Most tests don't mind 'st
 Go into a Python REPL. Then import db from gledger. You can then do do a db.drop_all() and a db.create_all() to recreate the tables.
 
 The only thing not recreated **in Firebird** is the sequences. These count on and on, recreate these by hand if necessary.
+
+### Configuration database
+
+No configuration file is delivered with GLedger. It expects a file "localledger.cfg"to be present. The file "ledger.cfg can serve as a template to create your own configuration.

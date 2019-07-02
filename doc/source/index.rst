@@ -18,6 +18,7 @@ Contents:
    GLModels
    GLView
    Journals
+   YearEnd
    GLAPI
 
 Indices and tables

@@ -32,16 +32,14 @@ Each posting applies an amount to the account in the posting, for the posting mo
 
 The journal
 -----------
-Journals can be entered through the API. Journals, contain postings that will contain the account to post to, the value date and the posting month. The posting month defaults to the current month, but for corrections it is possible to post to another posting month.
-
 Journals are lists of postings where the total of debit amounts and credit amounts is equal. The individual amounts don't need to be equal. For example sales may be balanced by a combination of decreasing the value of stocks and increasing taxes to be paid.
 
-Processing of the postings is done by journal. The journal contains a flag whether it is successfully processed. As all postings are processed in journals that balance, it is guaranteed that the ledger balances. If a journal does not balance, or there is another error in the journal, it is not processed. Either a corrected version will be sent by the system that delivered it and the offending journal will remain as "unposted", or the journal will be repaired by the system that delivered it and it will then be processed. A repair message for a journal that was successfully processed, will be ignored and will remain as "unposted".
+Journals can be entered through the API. Journals, contain postings that will contain the account to post to, the value date and the posting month. The posting month defaults to the current month, but for corrections it is possible to post to another posting month.
+
+Processing of the postings is done by journal. The journal contains a flag whether it is successfully processed. As all postings are processed in journals that balance, it is guaranteed that the ledger balances. If a journal does not balance, or there is another error in the journal, it is not processed. A corrected version should be sent by the system that delivered it. 
 
 The posting month
 -----------------
 To prevent accidental updating of posting months that are considered done, these can be closed. This prevents the system from accepting postings, actually all of the journal containing the offending posting will be rejected.
 
 The system has no opinion on closing the posting month. This will only be done by the user, no automatic processing is available.
-
-
