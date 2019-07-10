@@ -15,7 +15,7 @@ Before the year end processing can be executed, some prerequisites are checked.
 
 *   The end of the accounting year is passed (can't close in the future)
 *   All accounting months of the year to be closed are closed, so no postings can be done anymore
-*   A valid date to close the books is supplied or can be established
+*   A valid date to close the books is supplied or can be established. It must be the first day of the new accounting year
 *   No more than a year has passed since the previous closing
 
 The process of closing the year
@@ -39,4 +39,4 @@ You can pass a date to the script to close at another date. This date must also 
 Automatically establishing the closing date
 -------------------------------------------
 
-The closing date that is automatically established is one year from the previous (latest) closing date.
+The closing date that is automatically established is one year from the previous (latest) closing date. Follows that you need to specify a closing date when you close the accounting year for the first time.

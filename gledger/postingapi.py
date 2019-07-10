@@ -22,6 +22,7 @@ route, it is clear you can not update a journal after delivery.
 
 from flask import Blueprint, jsonify, request
 import glmodels.glposting as postings
+from . import db
 
 postingapi = Blueprint('api', __name__)
 
@@ -72,6 +73,7 @@ def addjournal():
     try:
         journal = request.get_json()
         postings.Journals.create_from_dict(journal)
+        db.session.commit()
     except postings.InvalidJournalError as ije:
         raise InvalidJsonError(str(ije))
     return jsonify(create_success_response(app_message='Journal '+ extkey + ' added'))

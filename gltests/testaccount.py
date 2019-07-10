@@ -169,7 +169,7 @@ class TestDomainProcesses(unittest.TestCase) :
         self.assertEqual(accn.name, acci.name, 'name unequal after read') 
         
     def test_current_balance(self) :
-        
+        """ We can read a balance back """
         acc11 =  accmodel.Accounts(role='L', name='bankloans')
         acc11.add()
         bal3 = accmodel.Balances(postmonth=accmodel.postmonth_for(date.today()), amount=1217, value_date='2015-07-21')
@@ -177,6 +177,7 @@ class TestDomainProcesses(unittest.TestCase) :
         self.assertEqual(acc11.current_balance(), 1217, 'Balance not correctly read back')
         
     def test_history_balance(self) :
+        """ The correct balances are shown for history """
         acc12 =  accmodel.Accounts(role='E', name='officestuff')
         acc12.add()
         add_postmonths([201504, 201506, 201507])
@@ -195,7 +196,8 @@ class TestDomainProcesses(unittest.TestCase) :
         self.assertEqual(acc12.balance_ultimo(201505), 1718, 'Balance may not correct')       
         self.assertEqual(acc12.balance_ultimo(201502), 0, 'Balance february not correct') 
         
-    def test_branch_balance(self) :
+    def test_branch_balance(self):
+        """ The correct balance is shown for different dates """
         add_postmonths([201504, 201507, 201508])
         acc19 = accmodel.Accounts(role='E', name='officeutils')
         acc19.add()
@@ -299,7 +301,7 @@ class TestPostmonthActions(unittest.TestCase):
             pm2 = accmodel.Postmonths(postmonth=201507, monthstat = 'z')
 
     def test_postmonth_no_state(self) :
-        """ We can create a postmonth """
+        """ We cannot create a postmonth that exists """
         pm3 = accmodel.Postmonths(postmonth=201507)
         pm3.add()
         with self.assertRaises(DatabaseError) :
@@ -325,6 +327,26 @@ class TestPostmonthActions(unittest.TestCase):
         with self.assertRaises(accmodel.InvalidPostmonthError):
             month_for = accmodel.Postmonths.internal('012-2018')
 
+    def test_postmonth_extern(self):
+        """ A postmonth is converted to a correct external format """
+
+        pm2 = accmodel.Postmonths(postmonth=201707, monthstat = 'a')
+        pm2.add()
+        gledger.db.session.flush()
+        self.assertEqual(accmodel.Postmonths.external(pm2.postmonth), '07-2017', 'Invalid external postmonth: ' + accmodel.Postmonths.external(pm2.postmonth))
+
+    def test_can_close_postmonth(self):
+        """ We can close a postmonth """
+
+        pm3 = accmodel.Postmonths(postmonth=201709, monthstat = 'a')
+        pm3.add()
+        gledger.db.session.flush()
+        self.assertTrue(pm3.status_can_post(), 'Cannot post to open month')
+        pm3 = gledger.db.session.query(accmodel.Postmonths).filter_by(postmonth=201709).first()
+        pm3.close()
+        gledger.db.session.flush()
+        self.assertFalse(pm3.status_can_post(), 'Can post to closed month')
+        
         
 class TestAccountviews(unittest.TestCase) :
     

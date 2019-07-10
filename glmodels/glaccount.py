@@ -398,6 +398,23 @@ class AccountList(list):
             account_dictionary[account.name] = account
         return account_dictionary
 
+class CloseDates(db.Model):
+    """ This is the history of closed accounting periods.
+    
+    The Close Dates have the following field:
+        :closing_date: The first date of the new accounting
+            period
+    """
+
+    __tablename__ = 'closedats'
+    closing_date = db.Column(db.DateTime, nullable=False, primary_key=True)
+
+    def add(self):
+        """ Add this date to the session """
+
+        db.session.add(self)
+
+
 class Postmonths(db.Model):
 
     __tablename__ = 'postmnths'
@@ -413,6 +430,15 @@ class Postmonths(db.Model):
 
         self.updated_at = datetime.today()
         db.session.add(self)
+
+    def close(self):
+        """ Close the postmonth for posting
+        
+        This will make sure that no more postings are made to this
+        period, like after you have closed the books.
+        """
+
+        self.monthstat = self.CLOSED
 
     @validates('monthstat')
     def validate_monthstat(self, id, monthstat):
@@ -431,7 +457,7 @@ class Postmonths(db.Model):
         # Check the format
         if (not month_string[0:2].isdigit() or not month_string[3:7].isdigit()
                 or month_string[2:3] != '-' or len(month_string) != 7):
-            raise InvalidPostmonthError('The postmonth could not be converted')
+            raise InvalidPostmonthError('The postmonth {0} could not be converted'.format(month_string))
         month = int(month_string[0:2])
         year = int(month_string[3:7])
         return 100 * year + month
