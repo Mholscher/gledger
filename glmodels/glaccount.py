@@ -29,8 +29,9 @@ from datetime import date, datetime
 from sqlalchemy.orm import validates
 from sqlalchemy.orm.exc import NoResultFound
 from gledger import db
+from glmodels import PaginatorMixin
 
-
+query = db.session.query
 
 class NoAccountError(ValueError):
     """ This is thrown when an account requested does not exist.
@@ -108,7 +109,7 @@ class Accounts(db.Model):
         """ Get an account form the database by id """
 
         try:
-            account = db.session.query(Accounts).filter_by(id=requested_id).first()
+            account = query(Accounts).filter_by(id=requested_id).first()
             if not account:
                 raise NoAccountError('No account for id ' + str(requested_id))
             return account
@@ -122,7 +123,7 @@ class Accounts(db.Model):
         The name of an account is pointing to a single account row."""
 
         try:
-            account = db.session.query(Accounts).filter_by(name=requested_name).first()
+            account = query(Accounts).filter_by(name=requested_name).first()
             if not account:
                 raise NoAccountError('No account for ' + str(requested_name))
             return account
@@ -167,15 +168,15 @@ class Accounts(db.Model):
         """
 
         if requested_id:
-            return not (db.session.query(Accounts).filter_by(id=requested_id).all() == [])
+            return not (query(Accounts).filter_by(id=requested_id).all() == [])
         if requested_name:
-            return not (db.session.query(Accounts).filter_by(name=requested_name).all() == [])
+            return not (query(Accounts).filter_by(name=requested_name).all() == [])
         raise NoAccountError('An account id or name is mandatory')
 
     def _balance_for(self):
         """ Set up a query for the balance(s) of this account """
 
-        return db.session.query(Balances).filter_by(accounts=self)
+        return query(Balances).filter_by(accounts=self)
 
     def parentaccount(self):
         """ Get the parent of this account as an account """
@@ -183,7 +184,7 @@ class Accounts(db.Model):
         if hasattr(self, 'parent_account'):
             return self.parent_account
         else:
-            parent_accounts = db.session.query(Accounts).filter_by(id=self.parent_id).all()
+            parent_accounts = query(Accounts).filter_by(id=self.parent_id).all()
             if len(parent_accounts) > 0:
                 self.parentaccount = parent_accounts[0]
                 return parent_accounts[0]
@@ -317,7 +318,7 @@ class Balances(db.Model):
         month
         """
 
-        months_db = db.session.query(Postmonths).filter_by(postmonth=postmonth).all()
+        months_db = query(Postmonths).filter_by(postmonth=postmonth).all()
         if (months_db != []):
             if months_db[0].status_can_post():
                 return postmonth
@@ -360,7 +361,7 @@ class AccountList(list):
     def __init__(self, search_string=None, page=1, pagelength=10):
         """Initialize the list, using search_string as a selection """
 
-        q = db.session.query(Accounts).order_by(Accounts.updated_at.desc())
+        q = query(Accounts).order_by(Accounts.updated_at.desc())
         if search_string:
             if len(search_string) < 3:
                 raise ShortSearchStringError('Search string must be at least 3 characters')
@@ -377,7 +378,7 @@ class AccountList(list):
         self.extend(self.account_list)
         self.page = page
         self.pagelength = pagelength
-        q2 = db.session.query(Accounts)
+        q2 = query(Accounts)
         if search_string:
             q2 = q2.filter(Accounts.name.like('%'+search_string+'%'))
         self.num_records = q2.count()
@@ -481,6 +482,39 @@ class Postmonths(db.Model):
 
         return "{0:02}-{1}".format(self.postmonth % 100, int(self.postmonth / 100))
 
+class PostmonthList(PaginatorMixin, list):
+    """ The list holds a number of postmonths.
+    
+    The list supports paging and returning a list from a certain month
+    which may also be paged.
+    """
+
+    def __init__(self, from_month=None, pagelength=12, page=1):
+
+        super().__init__(self, from_month=from_month, pagelength=pagelength,\
+            page=page)
+        q = query(Postmonths)
+        if from_month:
+            q = q.filter(Postmonths.postmonth >= from_month)
+        q = q.order_by(Postmonths.postmonth)
+        q = self.set_page(q)
+        if self.pagelength:
+            q = self.limit(q)
+        logging.debug('Query ', str(q))
+        self.extend(q.all())
+
+    def num_recs(self):
+        """ Find out the number of records satisfying the query 
+        
+        Do not call this willy-nilly; it always goes to the database
+        to retrieve the current number of records for the query
+        """
+
+        q = query(Postmonths)
+        if self.from_month:
+            q = q.filter(Postmonths.postmonth >= self.from_month)
+        return q.count()
+    
 def postmonth_for(postdate):
     """ Return the postmonth from a postdate
 

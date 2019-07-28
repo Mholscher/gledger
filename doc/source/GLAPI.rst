@@ -26,6 +26,12 @@ Module glmodels glposting
 
 ..  automodule:: glmodels.glposting
     :members:
+
+Module glmodels __init__
+------------------------
+
+..  automodule:: glmodels.__init__
+    :members:
     
 Module glviews accountviews
 ---------------------------

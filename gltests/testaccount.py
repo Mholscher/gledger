@@ -16,6 +16,7 @@
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
+from decimal import Decimal
 import gledger
 import glviews.accountviews as accviews
 import glmodels.glaccount as accmodel
@@ -253,8 +254,8 @@ class TestDomainProcesses(unittest.TestCase) :
         acc39 = accmodel.Accounts(role='I', name='Verkopen')
         acc39.add()
         self.assertEqual(acc39.current_balance(), 0, 'Account does not open with zero balance?')
-        acc39.post_amount('Db', 12.50, datetime.today())
-        self.assertEqual(acc39.current_balance(), -12.50, 'Account balance not correct')
+        acc39.post_amount('Db', Decimal('1250'), datetime.today())
+        self.assertEqual(acc39.current_balance(), -1250, 'Account balance not correct')
 
 
 class TestAccountStructures(unittest.TestCase) :
@@ -346,8 +347,72 @@ class TestPostmonthActions(unittest.TestCase):
         pm3.close()
         gledger.db.session.flush()
         self.assertFalse(pm3.status_can_post(), 'Can post to closed month')
+
+class TestPostmonthList(unittest.TestCase):
+
+    def setUp(self):
         
+        self.pm4 = accmodel.Postmonths(postmonth=201601, monthstat='a')
+        self.pm4.add()
+        self.pm5 = accmodel.Postmonths(postmonth=201605, monthstat='a')
+        self.pm5.add()
+        self.pm6 = accmodel.Postmonths(postmonth=201705, monthstat='c')
+        self.pm6.add()
+        gledger.db.session.flush()
         
+    def tearDown(self) :
+        gledger.db.session.rollback() 
+    
+    def test_return_month_list(self):
+        """ We can return a list of postmonths """
+
+        pml1 = accmodel.PostmonthList()
+        self.assertEqual(len(pml1), 3, 'Wrong no of months returned')
+        self.assertIn(self.pm5, pml1, 'Postmonth missing')
+
+    def test_return_list_from_month(self):
+        """ We can return a list starting at a month """
+
+        pml2 = accmodel.PostmonthList(from_month=201605)
+        self.assertEqual(len(pml2), 2, 'Too many or little months returned')
+
+class TestPostmonthPaging(unittest.TestCase):
+
+    def setUp(self):
+
+        add_postmonths([201605, 201607, 201701, 201706, 201802])
+        gledger.db.session.flush()
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_can_set_pagelength(self):
+        """ We can set a page length for the postmonth list """
+
+        pml3 = accmodel.PostmonthList(pagelength=3)
+        self.assertEqual(len(pml3), 3, 'Wrong length ' + str(len(pml3)) + ' for list')
+
+    def test_can_show_page_2(self):
+        """ We can show a following page of postmonths """
+
+        pml4 = accmodel.PostmonthList(pagelength=3, page=2)
+        self.assertEqual(len(pml4), 2, 'Wrong length ' + str(len(pml4)) + ' for list')
+
+    def test_postmonths_ordered(self):
+        """ The postmonths in the list should be ordered ascending """
+
+        pml5 = accmodel.PostmonthList(pagelength=3, page=2)
+        self.assertEqual(pml5[0].postmonth, 201706, 'Starts at wrong month')
+        self.assertEqual(pml5[1].postmonth, 201802, 'Months not in ascending order')
+
+    def test_can_return_num_pages(self):
+        """ We can get the number of pages """
+
+        pml6 = accmodel.PostmonthList(pagelength=3, page=2)
+        num_pages = pml6.num_pages()
+        self.assertEqual(num_pages, 2, 'Incorrect number of pages: ' + str(num_pages))
+
 class TestAccountviews(unittest.TestCase) :
     
     def tearDown(self) :
