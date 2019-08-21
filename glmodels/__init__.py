@@ -34,7 +34,7 @@ class PaginatorMixin():
         """
 
         nr = self.num_recs()
-        np =  nr // self.pagelength
-        if np * self.pagelength != nr:
+        np, rem =  divmod(nr, self.pagelength)
+        if rem > 0:
             np = np +1
         return np

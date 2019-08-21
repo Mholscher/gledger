@@ -8,7 +8,7 @@ Also in his module we find the forms for submitting changes to the system. This 
 Accountsview
 ------------
 
-The accountsview returns the data from a GL account. Creating an accountsview taps the underlying Accounts instance for the data, calling asDictionary() creates a Dictionary containing the data with fieldnames as the key. The view does not contain any code to keep itself up to date if the underlying data changes. It is advised to re-create the view when the view needs to be produced again. 
+The accountsview returns the data from a GL account. Creating an accountsview taps the underlying Accounts instance for the data, calling as_dictionary() creates a Dictionary containing the data with fieldnames as the key. The view does not contain any code to keep itself up to date if the underlying data changes. It is advised to re-create the view when the view needs to be produced again. 
 
 AccountListview
 ---------------

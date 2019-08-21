@@ -116,7 +116,7 @@ def accounts(account_name=None):
     for error_key, error_value in account_form.errors.items():
         for message in error_value:
             flash('Field ' + error_key + ': ' + str(message))
-    accountview = AccountView.createView(name=account_name).asDictionary()
+    accountview = AccountView.create_view(name=account_name).as_dictionary()
     return render_template('account.html', accountview=accountview,
                            form=account_form, search_form=search_form,
                            localtitle='Account ' +

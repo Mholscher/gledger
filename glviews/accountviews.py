@@ -18,7 +18,7 @@ a list view to support a list screen of accounts, based on a list
 of model instances.
 """
 
-import datetime
+from glmodels import PaginatorMixin
 import glmodels.glaccount as model
 
 class AccountView() :
@@ -41,7 +41,7 @@ class AccountView() :
         self.account = None
         
     @classmethod
-    def createView(cls,  id=None, name=None) :
+    def create_view(cls,  id=None, name=None) :
         """ Creates a view for the id (preferred) or
         name passed as an argument. If the account does
         not exist, caller will receive the exception. It is
@@ -72,7 +72,7 @@ class AccountView() :
         
     def _account_dictionary(self) :
         if (not hasattr(self, 'account')) or (self.account is None) :
-            raise(AttributeError, 'Account should exist and be populated')
+            raiseAttributeError('Account should exist and be populated')
         # Dispatch on columns in account, default use value 
         return {'id': self.account.id, 'name': self.account.name, 'role' : model.Accounts.ROLE_NAME[self.account.role] }
     
@@ -88,7 +88,7 @@ class AccountView() :
             childlist.append({'id' : child.id, 'name': child.name})
         return childlist
             
-    def asDictionary(self) :
+    def as_dictionary(self) :
         """
         Return the accountview as a dictionary.
         
@@ -96,36 +96,36 @@ class AccountView() :
         to create the views, be it json or html. 
         """
         
-        asDictionary = {"account" : self._account_dictionary(), "children" : self._dictionary_from_childlist() }
-        asDictionary["parent"] = self._parent_name_and_id()
-        asDictionary["localtitle"] = 'Account ' + self.account.name
-        return asDictionary
-    
+        as_dictionary = {"account" : self._account_dictionary(), "children" : self._dictionary_from_childlist() }
+        as_dictionary["parent"] = self._parent_name_and_id()
+        as_dictionary["localtitle"] = 'Account ' + self.account.name
+        return as_dictionary
+
 class BalanceView():
     """ This class collects the data for displaying balance info for
     an account.
-    
+
     The view is a data collection which concerns everything
-    viewed on the accounts maintenance screen. 
+    viewed on the accounts maintenance screen.
     """
-    
+
     def __init__(self):
-        
+
         self.id = None
         self.account_name = None
         self.postmonth = None
         self.balance = None
-        
+
     @classmethod
     def create_view(cls, id=None, postmonth=None, name=None):
         """ Create a view for the balance of an account
-        
+
         We prefer the id, which is the primary key. Name is acceptable,
         as it must be unique.
-        
-        The postmonth determines which balance we need, None means latest.        
+
+        The postmonth determines which balance we need, None means latest.
         """
-        
+
         if id:
             account = model.Accounts.get_by_id(id)
         elif name:
@@ -142,37 +142,58 @@ class BalanceView():
             view.balance = account.current_balance()
             view.postmonth = model.postmonth_today()
         return view
-    
+
     def as_dictionary(self):
-        """ Return this view as a dictionary 
+        """ Return this view as a dictionary
         """
-        
+
         as_dictionary = {'id': self.id, 'name': self.account_name}
         as_dictionary['balance'] = "{0:.2f}".format(self.balance/100)
         as_dictionary['postmonth'] = model.Postmonths.external(self.postmonth)
         return as_dictionary
-        
-    
+
+
 class AccountListView(list):
-    """ Gathers the information to display a list of accounts. 
-    
+    """ Gathers the information to display a list of accounts.
+
     The accounts are in a dictionary keyed by the account name, the accounts
     are also in a dictionary, with a key/value pair for each field.
-    
+
     The view also holds page information. The length of a page, the page
     number and the total number of pages are in the view for use on the
     list page.
     """
-    
+
     def __init__(self, search_string=None, page=1, pagelength=10):
 
+        super().__init__()
         account_list = model.AccountList(search_string=search_string,\
             page=page, pagelength=pagelength)
         for account in account_list:
-            self.append({"id":account.id, "name":account.name, "role":model.Accounts.ROLE_NAME[account.role], "updated_at":account.updated_at.strftime("%d-%m-%Y %H:%M:%S"), "parent":account.parent_id})
+            self.append({"id":account.id, "name":account.name,\
+                "role":model.Accounts.ROLE_NAME[account.role],\
+                "updated_at":account.updated_at.strftime("%d-%m-%Y %H:%M:%S"),\
+                "parent":account.parent_id})
         self.page = account_list.page
         self.pagelength = account_list.pagelength
         self.total_pages, remainder =\
             divmod(account_list.num_records, self.pagelength)
         if remainder > 0:
             self.total_pages = self.total_pages + 1
+
+class PostmonthListView(PaginatorMixin, list):
+    """ A list of post months, with all data in external format """
+
+    def __init__(self, from_month=None, pagelength=12, page=1):
+
+        super().__init__(pagelength=pagelength, page=page)
+        if from_month:
+            from_month_int = model.Postmonths.internal(from_month)
+        else:
+            from_month_int = None
+        month_list = model.PostmonthList(from_month=from_month_int, \
+            pagelength=pagelength, page=page)
+        self.total_pages = month_list.num_pages()
+        for month in month_list:
+            self.append({'postmonth' : month.postmonth,\
+                'monthstat' : month.monthstat})

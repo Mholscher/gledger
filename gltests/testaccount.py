@@ -413,6 +413,118 @@ class TestPostmonthPaging(unittest.TestCase):
         num_pages = pml6.num_pages()
         self.assertEqual(num_pages, 2, 'Incorrect number of pages: ' + str(num_pages))
 
+
+class TestPostmonthListView(unittest.TestCase):
+
+    def setUp(self):
+
+        add_postmonths([201606, 201608, 201702, 201711, 201812])
+        gledger.db.session.flush()
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_create_list_view(self):
+        """ We can create a Postmonth List View """
+
+        plv1 = accviews.PostmonthListView()
+        external_postmonth = accmodel.Postmonths.external(plv1[0]['postmonth'])
+        self.assertEqual(external_postmonth, '06-2016', 'Wrong month in 1st item')
+        self.assertEqual(len(plv1), 5, 'Wrong number of views')
+
+    def test_list_from_month(self):
+        """ We can create a listview from a month onwards """
+
+        plv2 = accviews.PostmonthListView(from_month='02-2017')
+        self.assertEqual(len(plv2), 3, 'Wrong number of months in list')
+
+    def test_empty_view(self):
+        """ The view goes undeterred by supplying it with an empty list """
+
+        plv3 = accviews.PostmonthListView(from_month='02-2019')
+        self.assertEqual(len(plv3), 0, 'There should be no months in list')        
+
+    def test_can_set_pagelength(self):
+        """ We can set pagelength on a postmonth list view  """
+
+        plv4 = accviews.PostmonthListView(pagelength=3)
+        self.assertEqual(len(plv4), 3, 'Wrong number of views')
+
+    def test_can_show_page_2(self):
+        """ We can get a following page """
+
+        plv5 = accviews.PostmonthListView(pagelength=3, page=2)
+        self.assertEqual(len(plv5), 2, 'Page 2 should have 2 views')
+
+    def test_view_exposes_total_pages(self):
+        """ The view exposes the total number of pages """
+
+        plv6 = accviews.PostmonthListView(pagelength=3)
+        self.assertEqual(plv6.total_pages, 2,\
+            'Wrong number of pages in list view')
+
+
+class TestPostmonthListUpdates(unittest.TestCase):
+
+    def setUp(self):
+
+        add_postmonths([201606, 201608, 201702, 201711, 201812])
+        self.plr = [(201608, 'c'), (201711, 'a')]
+        gledger.db.session.flush()
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_create_list_from_request(self):
+        """ Create a list of months to be processed """
+
+        plp = list()
+        plp = accmodel.Postmonths.list_to_update(self.plr)
+        pm7 = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.postmonth.in_([201608, 201711])).all()
+        self.assertEqual(len(plp), 2, 'Missing months in list')
+        self.assertIn(pm7[0], plp, 'Postmonth not in list')
+        self.assertIn(pm7[1], plp, 'Postmonth not in list')
+
+    def test_execute_update(self):
+        """ We can update the status flag """
+
+        accmodel.Postmonths.update_from_list(self.plr)
+        gledger.db.session.flush()
+        pm8 = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.postmonth==201608).first()
+        self.assertEqual(pm8.monthstat, 'c', 'Did not close month')
+
+    def test_update_more(self):
+        """ Update more than one month status flag """
+
+        self.plr.append((201702, 'c'))
+        accmodel.Postmonths.update_from_list(self.plr)
+        gledger.db.session.flush()
+        pm9 = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.monthstat=='c').all()
+        self.assertEqual(len(pm9), 2, 'Not all months closed')
+        pm9_list = accmodel.Postmonths.list_to_update(self.plr)
+        self.assertIn(pm9_list[0].postmonth, [201702, 201608], 'Unknown month in result')
+
+    def test_cannot_set_invalid_status(self):
+        """ It must be impossible to set a status to invalid value """
+
+        self.plr.append((201702, 't'))
+        with self.assertRaises(ValueError):
+            accmodel.Postmonths.update_from_list(self.plr)
+            gledger.db.session.flush()
+
+    def test_ignore_missing(self):
+        """ Ignore closing wjhat does not exist """
+        
+        self.plr.append((2, 'c'))
+        accmodel.Postmonths.update_from_list(self.plr)
+        gledger.db.session.flush()
+        pm10 = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.postmonth==2).all()
+        self.assertEqual(len(pm10), 0, 'Wrong month added')
+
+        
+
 class TestAccountviews(unittest.TestCase) :
     
     def tearDown(self) :
@@ -422,14 +534,14 @@ class TestAccountviews(unittest.TestCase) :
         """ Trying to load an accountview for a non-existent account
             should return an error """
         with self.assertRaises(accmodel.NoAccountError) :       
-            accountsView = accviews.AccountView.createView(id=1)
+            accountsView = accviews.AccountView.create_view(id=1)
             
     def test_accountview_load(self) :
         """ creating an accountsview for an account should retain fields """
         acc13 = accmodel.Accounts(name = 'proefbalans', role = 'I')
         acc13.add()
         gledger.db.session.flush()
-        accountsView1 = accviews.AccountView.createView(id=acc13.id)
+        accountsView1 = accviews.AccountView.create_view(id=acc13.id)
         self.assertEqual(accountsView1.account.name, acc13.name, 'Accountsview for wrong account')
         self.assertEqual(accountsView1.account.role, acc13.role, 'Accountsview did not retain field')
     
@@ -439,9 +551,9 @@ class TestAccountviews(unittest.TestCase) :
         acc14 = accmodel.Accounts(name = 'voorziening251', role = 'A')
         acc14.add()
         gledger.db.session.flush()
-        accountsView2 = accviews.AccountView.createView(id=acc14.id)
-        asDictionary = accountsView2.asDictionary()
-        self.assertEqual(accountsView2.asDictionary()["account"]["name"], acc14.name, 'Name should be key in accountsview')
+        accountsView2 = accviews.AccountView.create_view(id=acc14.id)
+        as_dictionary = accountsView2.as_dictionary()
+        self.assertEqual(accountsView2.as_dictionary()["account"]["name"], acc14.name, 'Name should be key in accountsview')
         
     def test_accountview_has_parent(self) :
         """ The accountview contains the parent account """
@@ -452,8 +564,8 @@ class TestAccountviews(unittest.TestCase) :
         gledger.db.session.flush()
         acc16.parent_id = acc15.id
         gledger.db.session.flush()
-        accountsView3 = accviews.AccountView.createView(name = acc16.name)
-        self.assertEqual(accountsView3.asDictionary()["parent"]["name"],acc15. name, 'Parent not set properly in Accountsview') 
+        accountsView3 = accviews.AccountView.create_view(name = acc16.name)
+        self.assertEqual(accountsView3.as_dictionary()["parent"]["name"],acc15. name, 'Parent not set properly in Accountsview') 
     
     def test_accountview_null_parent(self) :
         """ An account with a null parent can be in an accountview """
@@ -464,10 +576,10 @@ class TestAccountviews(unittest.TestCase) :
         gledger.db.session.flush()
         acc18.parent_id = acc17.id
         gledger.db.session.flush()
-        accountsView4 = accviews.AccountView.createView(name = acc17.name)
+        accountsView4 = accviews.AccountView.create_view(name = acc17.name)
         self.assertEqual(accountsView4.parent, None, 'An accountview of an account with no parent should have None as parent')
-        asDictionary = accountsView4.asDictionary()
-        self.assertTrue("parent_id" not in asDictionary)
+        as_dictionary = accountsView4.as_dictionary()
+        self.assertTrue("parent_id" not in as_dictionary)
         
     def test_accountview_children(self) :
         """ The children of an account appear correctly in the view """
@@ -483,9 +595,9 @@ class TestAccountviews(unittest.TestCase) :
         self.ch3.add()
         self.parent.children.append(self.ch3)
         gledger.db.session.flush()
-        accountsView5 = accviews.AccountView.createView(name=self.parent.name)
-        asDictionary = accountsView5.asDictionary()
-        self.assertIn(asDictionary['children'][0]['name'], [self.ch1.name, self.ch2.name, self.ch3.name],
+        accountsView5 = accviews.AccountView.create_view(name=self.parent.name)
+        as_dictionary = accountsView5.as_dictionary()
+        self.assertIn(as_dictionary['children'][0]['name'], [self.ch1.name, self.ch2.name, self.ch3.name],
                                                                'Name in child list should be one of the children')
         
 class TestAccountViewFunction(unittest.TestCase) :

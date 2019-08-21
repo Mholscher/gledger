@@ -13,9 +13,9 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, PasswordField, SubmitField, SelectField,\
-    HiddenField
+    FieldList, FormField, HiddenField, Form
 from wtforms.validators import DataRequired, ValidationError, Length
-from glmodels.glaccount import Accounts
+from glmodels.glaccount import Accounts, Postmonths
 
 class AccountMustExist(ValueError):
     """WTForms validator for an account that must exist.
@@ -84,3 +84,26 @@ class JournalSearch(FlaskForm):
 
     search_for = StringField('Journal (part of key)')
     start_search = SubmitField('Find..')
+
+class PostMonthForm(Form):
+    """ This form holds the postmonth data
+    
+    It is used to process input from the postmonth closing form
+    """
+
+    postmonth = StringField('Post month')
+    local_choices = []
+    item = Postmonths.ACTIVE, 'Active'
+    local_choices.append(item)
+    item = Postmonths.CLOSED, 'Closed'
+    local_choices.append(item)
+    state = SelectField('State', choices=local_choices)
+
+class PostMonthListForm(FlaskForm):
+    """ The form with multiple lines for postmonths
+    
+    Holds  multiple PostMonthForm entries. Each can be updates
+    """
+    
+    postmonths = FieldList(FormField(PostMonthForm))
+    update = SubmitField('Update postmonths')

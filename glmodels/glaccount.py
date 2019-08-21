@@ -469,6 +469,33 @@ class Postmonths(db.Model):
 
         return "{0:02}-{1}".format(postmonth % 100, int(postmonth / 100))
 
+    @staticmethod
+    def list_to_update(postmonths):
+        """ Return a list of Postmonths instances for the list passed
+        
+        The list is assumed to consist of tuples where the first element
+        of the tuple is a postmonth in internal format
+        """
+
+        keylist = [x for (x, _) in postmonths]
+        q = query(Postmonths).filter(Postmonths.postmonth.in_(keylist)).all()
+        return q
+
+    @staticmethod
+    def update_from_list(postmonths):
+        """ Update postmonths from a list of changes
+        
+        The list is assumed to consist of tuples where the first element
+        of the tuple is a postmonth in internal format and the second is
+        the desired monthstat (active, closed, ...)
+        """
+        
+        for postmonth in Postmonths.list_to_update(postmonths):
+            for newdata in postmonths:
+                if newdata[0] == postmonth.postmonth \
+                    and not newdata[1] == postmonth.monthstat:
+                    postmonth.monthstat = newdata[1]
+
     def status_can_post(self):
         """ Returns True is the status of this postmonth
         is active, i.e. posting in it is permitted.
@@ -476,11 +503,17 @@ class Postmonths(db.Model):
 
         return self.monthstat == self.ACTIVE
 
-    def str():
+    def str(self):
         """ Returns the postmonth key as a formatted string
         """
 
         return "{0:02}-{1}".format(self.postmonth % 100, int(self.postmonth / 100))
+
+    def __repr__(self):
+        """ Returns the postmonth key as a formatted string
+        """
+        
+        return self.str()
 
 class PostmonthList(PaginatorMixin, list):
     """ The list holds a number of postmonths.
