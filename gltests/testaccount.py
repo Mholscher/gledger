@@ -19,6 +19,7 @@ import unittest
 from decimal import Decimal
 import gledger
 import glviews.accountviews as accviews
+import glviews.forms as glforms
 import glmodels.glaccount as accmodel
 from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm.exc import NoResultFound
@@ -376,6 +377,29 @@ class TestPostmonthList(unittest.TestCase):
         pml2 = accmodel.PostmonthList(from_month=201605)
         self.assertEqual(len(pml2), 2, 'Too many or little months returned')
 
+    def test_from_last_closing(self):
+        """ If there is one closing date, only months after it are returned 
+        """
+
+        close_date = accmodel.CloseDates(closing_date=datetime(2016, 2, 1))
+        close_date.add()
+        gledger.db.session.flush()
+        pml7 = accmodel.PostmonthList()
+        self.assertNotIn(self.pm4, pml7, 'Postmonth before closing in list')
+
+    def test_from_second_closing(self):
+        """ If there is two closing dates, months after last are returned 
+        """
+
+        close_date = accmodel.CloseDates(closing_date=datetime(2016, 2, 1))
+        close_date.add()
+        close_date = accmodel.CloseDates(closing_date=datetime(2016, 6, 1))
+        close_date.add()
+        gledger.db.session.flush()
+        pml8 = accmodel.PostmonthList()
+        self.assertNotIn(self.pm5, pml8, 'Postmonth before closing in list')
+
+
 class TestPostmonthPaging(unittest.TestCase):
 
     def setUp(self):
@@ -464,6 +488,52 @@ class TestPostmonthListView(unittest.TestCase):
         self.assertEqual(plv6.total_pages, 2,\
             'Wrong number of pages in list view')
 
+    def test_monthlist_form(self):
+        """ We can fill the list form """
+
+        with gledger.app.app_context():
+            pl7 = accmodel.PostmonthList()
+            ptl7 = []
+            for postmonth in pl7:
+                ptl7.append((str(postmonth.postmonth), postmonth.monthstat))
+            plf1 = glforms.PostMonthListForm(postmonths=ptl7)
+        self.assertNotEqual(len(plf1.data['postmonths']), 0, 'No postmonths found')
+        self.assertIn('201606', str(plf1.postmonths), 'Month not in list form')
+        self.assertIn('02-2017', str(plf1.postmonths), 'Edited month not in list form')
+
+    def test_stat_key(self):
+        """ A month status must have a key containing postmonth """
+
+        with gledger.app.app_context():
+            pl8 = accmodel.PostmonthList()
+            ptl8 = []
+            for postmonth in pl8:
+                ptl8.append((str(postmonth.postmonth), postmonth.monthstat))
+            plf2 = glforms.PostMonthListForm(postmonths=ptl8)
+        self.assertNotEqual(len(plf2.data['postmonths']), 0, 'No postmonths found')
+        self.assertEqual(plf2.data['postmonths'][0], 'a', 'Wrong month status')
+
+
+class TestPostmonthTransactions(unittest.TestCase):
+
+    def setUp(self):
+
+        add_postmonths([201606, 201608, 201702, 201711, 201812])
+        self.app = gledger.app.test_client()
+        self.app.testing = True
+
+        gledger.db.session.flush()
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_show_all(self):
+        """ Show all available postmonths """
+
+        rv = self.app.get('/postmonthlist')
+        self.assertIn(b'201702', rv.data, 'Expected month not in response')
+
 
 class TestPostmonthListUpdates(unittest.TestCase):
 
@@ -515,14 +585,13 @@ class TestPostmonthListUpdates(unittest.TestCase):
             gledger.db.session.flush()
 
     def test_ignore_missing(self):
-        """ Ignore closing wjhat does not exist """
+        """ Ignore closing what does not exist """
         
         self.plr.append((2, 'c'))
         accmodel.Postmonths.update_from_list(self.plr)
         gledger.db.session.flush()
         pm10 = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.postmonth==2).all()
         self.assertEqual(len(pm10), 0, 'Wrong month added')
-
         
 
 class TestAccountviews(unittest.TestCase) :

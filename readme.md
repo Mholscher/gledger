@@ -27,3 +27,7 @@ The only thing not recreated **in Firebird** is the sequences. These count on an
 ### Configuration database
 
 No configuration file is delivered with GLedger. It expects a file "localledger.cfg"to be present. The file "ledger.cfg can serve as a template to create your own configuration.
+
+### Intermittent failure of one (1) testing
+
+There is one test which is not guaranteed to always succeed. The order of records in a query with no ordering is not constant, therefor the test test_amount_in_list on TestViewPostingsAccount sometimes failed. Created an issue for that.

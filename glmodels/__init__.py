@@ -15,7 +15,10 @@ class PaginatorMixin():
     def limit(self, q):
         """ Return the query with a limit on returned rows """
 
-        return q.limit(self.pagelength)
+        if self.pagelength > 0:
+            return q.limit(self.pagelength)
+        else:
+            return q
 
     def set_page(self, q):
         """ Return the query starting at this page """

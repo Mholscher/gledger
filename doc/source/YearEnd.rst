@@ -1,5 +1,8 @@
+.. _yearendprocessing:
+
 Year end processing
 ===================
+
 
 Purpose
 -------

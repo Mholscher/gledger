@@ -1,7 +1,5 @@
 """ This module contains the routes that can be visited using the browser.
 Each route has a clear purpose, geared to different uses.
-
-TODO transaction to close the postmonth
 """
 
 import logging
@@ -11,7 +9,8 @@ import glmodels.glposting as journalmodel
 from glviews.accountviews import AccountView, AccountListView, BalanceView
 from glviews.postingviews import JournalView, PostingView,\
     PostingByAccountView, JournalListView
-from glviews.forms import AccountForm, NewAccountForm, SearchForm, JournalSearch
+from glviews.forms import AccountForm, NewAccountForm, SearchForm,\
+    JournalSearch, PostMonthListForm
 from . import app, db
 
 
@@ -219,3 +218,25 @@ def journallist():
     return render_template('journallist.html', journallist=list_view,\
         search_form=SearchForm(), journal_search=journal_search)
 
+@app.route('/test12', methods=['GET', 'POST'])
+def test12():
+    if request.method == 'POST':
+        print(request.form)
+        return redirect(url_for('index'))
+    return render_template('test_template')
+
+
+@app.route('/postmonthlist', methods=['GET', 'POST'])
+def postmonthlist():
+    """ Show a list of postmonths, which you may want to close 
+    """
+
+    search_form = SearchForm()
+    postmonth_list = accmodel.PostmonthList()
+    tuple_list = []
+    for postmonth in postmonth_list:
+        tuple_list.append((postmonth.postmonth, postmonth.monthstat))
+    postmonth_form = PostMonthListForm(postmonths=tuple_list)
+    if postmonth_form.validate_on_submit():
+        print('update here...')
+    return render_template('postmonthlist.html', form=postmonth_form)

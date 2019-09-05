@@ -15,6 +15,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, PasswordField, SubmitField, SelectField,\
     FieldList, FormField, HiddenField, Form
 from wtforms.validators import DataRequired, ValidationError, Length
+from glviews.formfields import SelectPostMonthStatusField
 from glmodels.glaccount import Accounts, Postmonths
 
 class AccountMustExist(ValueError):
@@ -97,7 +98,7 @@ class PostMonthForm(Form):
     local_choices.append(item)
     item = Postmonths.CLOSED, 'Closed'
     local_choices.append(item)
-    state = SelectField('State', choices=local_choices)
+    monthstat = SelectField('State', choices=local_choices)
 
 class PostMonthListForm(FlaskForm):
     """ The form with multiple lines for postmonths
@@ -105,5 +106,11 @@ class PostMonthListForm(FlaskForm):
     Holds  multiple PostMonthForm entries. Each can be updates
     """
     
-    postmonths = FieldList(FormField(PostMonthForm))
-    update = SubmitField('Update postmonths')
+    local_choices = []
+    item = Postmonths.ACTIVE, 'Active'
+    local_choices.append(item)
+    item = Postmonths.CLOSED, 'Closed'
+    local_choices.append(item)
+    postmonths = FieldList(SelectPostMonthStatusField(choices=local_choices))
+    update = SubmitField('Update months')
+    

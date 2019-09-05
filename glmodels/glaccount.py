@@ -92,7 +92,7 @@ class Accounts(db.Model):
     id = db.Column(db.Integer, db.Sequence('account_id_seq'), primary_key=True)
     name = db.Column(db.String(15), nullable=False, unique=True)
     role = db.Column(db.String(1))
-    parent_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), index=True)
     children = db.relationship('Accounts')
     balances = db.relationship('Balances', backref='accounts')
     updated_at = db.Column(db.DateTime)
@@ -522,18 +522,21 @@ class PostmonthList(PaginatorMixin, list):
     which may also be paged.
     """
 
-    def __init__(self, from_month=None, pagelength=12, page=1):
+    def __init__(self, from_month=None, pagelength=None, page=1):
 
         super().__init__(self, from_month=from_month, pagelength=pagelength,\
             page=page)
         q = query(Postmonths)
+        if from_month == None:
+            last_close = query(CloseDates).order_by(CloseDates.closing_date.desc()).first()
+            if last_close:
+                from_month = postmonth_for(last_close.closing_date)
         if from_month:
             q = q.filter(Postmonths.postmonth >= from_month)
         q = q.order_by(Postmonths.postmonth)
         q = self.set_page(q)
         if self.pagelength:
             q = self.limit(q)
-        logging.debug('Query ', str(q))
         self.extend(q.all())
 
     def num_recs(self):

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "navi.html" import navi %}
+{% from "mainmenu.html" import mainmenu %}
+
+{% block menu %}
+    {{ mainmenu() }}
+{% endblock menu %}
+
+{% block content %}
+    <form action="/postmonthlist" method="post" class="inlineform">
+    
+    {{ form.postmonths }}
+ 
+    <br><br>
+    {{ form.update }}
+    </form>
+
+{% endblock content %}

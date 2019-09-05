@@ -43,3 +43,5 @@ The posting month
 To prevent accidental updating of posting months that are considered done, these can be closed. This prevents the system from accepting postings, actually all of the journal containing the offending posting will be rejected.
 
 The system has no opinion on closing the posting month. This will only be done by the user, no automatic processing is available.
+
+In :ref:`yearendprocessing` it is required that all months for the year being closed, are closed for posting.
