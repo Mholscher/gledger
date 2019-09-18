@@ -7,12 +7,18 @@
 {% endblock menu %}
 
 {% block content %}
+    Update the months:
     <form action="/postmonthlist" method="post" class="inlineform">
-    
-    {{ form.postmonths }}
- 
+    <ul>
+   {% for postmonth in form %}
+        <br/><li class="inputline"> {{postmonth[0]}}  <select name="{{postmonth[1]}}">
+                                    <option value='a' {% if postmonth[2] == 'a' %} selected {% endif %}>Active</option>
+                                    <option value='c' {% if postmonth[2] == 'c' %} selected {% endif %}>Closed</option> 
+                                </select></li> 
+   {% endfor %}
+    </ul>
     <br><br>
-    {{ form.update }}
+    <button type="submit">Update months</button>
     </form>
 
 {% endblock content %}

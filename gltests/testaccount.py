@@ -453,20 +453,20 @@ class TestPostmonthListView(unittest.TestCase):
         """ We can create a Postmonth List View """
 
         plv1 = accviews.PostmonthListView()
-        external_postmonth = accmodel.Postmonths.external(plv1[0]['postmonth'])
+        external_postmonth = plv1[0][0]
         self.assertEqual(external_postmonth, '06-2016', 'Wrong month in 1st item')
         self.assertEqual(len(plv1), 5, 'Wrong number of views')
 
     def test_list_from_month(self):
         """ We can create a listview from a month onwards """
 
-        plv2 = accviews.PostmonthListView(from_month='02-2017')
+        plv2 = accviews.PostmonthListView(from_month=201702)
         self.assertEqual(len(plv2), 3, 'Wrong number of months in list')
 
     def test_empty_view(self):
         """ The view goes undeterred by supplying it with an empty list """
 
-        plv3 = accviews.PostmonthListView(from_month='02-2019')
+        plv3 = accviews.PostmonthListView(from_month=201902)
         self.assertEqual(len(plv3), 0, 'There should be no months in list')        
 
     def test_can_set_pagelength(self):
@@ -513,6 +513,47 @@ class TestPostmonthListView(unittest.TestCase):
         self.assertNotEqual(len(plf2.data['postmonths']), 0, 'No postmonths found')
         self.assertEqual(plf2.data['postmonths'][0], 'a', 'Wrong month status')
 
+class TestTempPostmonthListView(unittest.TestCase):
+
+    def setUp(self):
+
+        add_postmonths([201706, 201808, 201902, 201911, 201912])
+        gledger.db.session.flush()
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_list_view_create(self):
+        """ We can create the postmonth list view for all months """
+
+        pl9 = accmodel.PostmonthList()
+        plv7 =accviews.PostmonthListView(pl9)
+        self.assertEqual(len(plv7), 5, 'Incorrect number of months in view')
+        self.assertIn(('02-2019', '201902', 'a'), plv7, 'Missing/wrong postmonth in view')
+        
+    def test_list_view_page_size(self):
+        """ We can get the page size for the list view """
+
+        pl10 = accmodel.PostmonthList(pagelength=3)
+        plv8 = accviews.PostmonthListView(postmonths=pl10)
+        self.assertEqual(plv8.pagelength, 3, 'Pagelength not adjusted')
+        self.assertEqual(len(plv8), 3, 'Actual length not as advertised')
+
+    def test_list_view_page(self):
+        """ We can get the number  for a second page """
+
+        pl11 = accmodel.PostmonthList(pagelength=3, page=2)
+        plv9 = accviews.PostmonthListView(pl11)
+        self.assertEqual(plv9.page, 2, 'Page not as requested')
+
+    def test_number_of_pages(self):
+        """ We can get/set the number of pages """
+
+        pl12 = accmodel.PostmonthList(pagelength=3, page=2)
+        plv10 = accviews.PostmonthListView(pl12)
+        self.assertEqual(plv10.total_pages, 2, 'Incorrect number of pages')        
+
 
 class TestPostmonthTransactions(unittest.TestCase):
 
@@ -534,6 +575,12 @@ class TestPostmonthTransactions(unittest.TestCase):
         rv = self.app.get('/postmonthlist')
         self.assertIn(b'201702', rv.data, 'Expected month not in response')
 
+    def test_show_edited(self):
+        """ Available postmonths are edited """
+
+        rv = self.app.get('/postmonthlist')
+        self.assertIn(b'02-2017', rv.data, 'Expected edited month not in response')
+
 
 class TestPostmonthListUpdates(unittest.TestCase):
 
@@ -541,6 +588,7 @@ class TestPostmonthListUpdates(unittest.TestCase):
 
         add_postmonths([201606, 201608, 201702, 201711, 201812])
         self.plr = [(201608, 'c'), (201711, 'a')]
+        self.pd = {201608:'c', 201711:'a'}
         gledger.db.session.flush()
 
     def tearDown(self):
@@ -572,7 +620,7 @@ class TestPostmonthListUpdates(unittest.TestCase):
         accmodel.Postmonths.update_from_list(self.plr)
         gledger.db.session.flush()
         pm9 = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.monthstat=='c').all()
-        self.assertEqual(len(pm9), 2, 'Not all months closed')
+        self.assertEqual(len(pm9), 2, 'Not all/too many months closed')
         pm9_list = accmodel.Postmonths.list_to_update(self.plr)
         self.assertIn(pm9_list[0].postmonth, [201702, 201608], 'Unknown month in result')
 
@@ -584,15 +632,51 @@ class TestPostmonthListUpdates(unittest.TestCase):
             accmodel.Postmonths.update_from_list(self.plr)
             gledger.db.session.flush()
 
-    def test_ignore_missing(self):
-        """ Ignore closing what does not exist """
+    def test_fail_for_missing(self):
+        """ Fail for non-existing postmonth """
         
         self.plr.append((2, 'c'))
-        accmodel.Postmonths.update_from_list(self.plr)
+        with self.assertRaises(ValueError):
+            accmodel.Postmonths.update_from_list(self.plr)            
+
+    def test_update_from_dict(self):
+        """ Use a dict to pass in changes """
+
+        accmodel.Postmonths.update_from_dict(self.pd)
+        pm11 = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.postmonth==201608).first()
+        self.assertEqual(pm11.monthstat, 'c', 'Postmonth not closed')
+        pm12 = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.postmonth==201711).first()
+        self.assertEqual(pm12.monthstat, 'a', 'Postmonth closed incorrectly')
+
+
+class TestValidatePostmonthUpdates(unittest.TestCase):
+
+    def setUp(self):
+
+        add_postmonths([201806, 201810, 201901, 201902, 201909])
+        self.plr = [(201810, 'c'), (201902, 'a')]
+        self.pds = {'201810':'c', '201902':'a'}
         gledger.db.session.flush()
-        pm10 = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.postmonth==2).all()
-        self.assertEqual(len(pm10), 0, 'Wrong month added')
-        
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_can_convert_month(self):
+        """ Convert a month string to valid postmonth """
+
+        self.pds1 = self.pds.copy()
+        self.pds1['2017112'] = 'c'
+        with self.assertRaises(ValueError):
+            accmodel.Postmonths.update_from_dict(self.pds1)
+
+    def test_no_alphabetic_keys(self):
+        """ A postmonth key should not comntain alpabetics """
+
+        self.pds1 = self.pds.copy()
+        self.pds1['ãnnos'] = 'a'
+        with self.assertRaises(ValueError):
+            accmodel.Postmonths.update_from_dict(self.pds1)
 
 class TestAccountviews(unittest.TestCase) :
     
@@ -792,6 +876,12 @@ class TestAccountList(unittest.TestCase):
         with self.assertRaises(ValueError) :       
             al = accmodel.AccountList(search_string='dg').as_list()
 
+    def test_one_char_search(self):
+        """ A one character search string does not fail """
+
+        with self.assertRaises(ValueError):
+            al = accmodel.AccountList(search_string='n').as_list()
+
     def test_list_has_pageinfo(self):
         """ An account_list has page info """
         al = accmodel.AccountList(pagelength=3, page=2)
@@ -902,6 +992,30 @@ class TestAccountListNavigation(unittest.TestCase):
 
         rv = self.app.get('/accountlist?page=2')
         self.assertIn(b'\xe2\x8f\xb4', rv.data, 'No link to previous page')
+
+
+class TestEmptyAccountListNavigation(unittest.TestCase):
+
+    def setUp(self):
+
+        self.app = gledger.app.test_client()
+        self.app.testing = True
+
+    def tearDown(self):
+        gledger.db.session.rollback()
+
+    def test_can_exec_empty_page(self):
+        """ Navigation exists on empty page """
+
+        rv = self.app.get('/accountlist')
+        self.assertIn(b'page=1', rv.data, 'No link to first page')
+
+    def test_can_search_on_empty_page(self):
+        """ We can search on an empty page and database """
+
+        rv = self.app.get('/accountlist?search_for=n')
+        self.assertIn(b'page=1', rv.data, 'No navigation')
+
         
 
 class TestBalanceViews(unittest.TestCase):

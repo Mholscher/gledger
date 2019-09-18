@@ -12,6 +12,7 @@ from glviews.postingviews import JournalView, PostingView,\
 from glviews.forms import AccountForm, NewAccountForm, SearchForm,\
     JournalSearch, PostMonthListForm
 from . import app, db
+from glviews.tempview import PostmonthListView
 
 
 @app.route('/')
@@ -68,8 +69,10 @@ def accountlist():
     except accmodel.ShortSearchStringError as sse:
         flash(str(sse))
         search_form.search_for.data = search_for
+        account_list = AccountListView()
+        account_list.page = page_nr
         return render_template('accountlist.html', search_form=search_form,
-                               accountlist=dict())
+                               accountlist=account_list)
     if search_for:
         search_form.search_for.data = search_for
     return render_template('accountlist.html', search_form=search_form,
@@ -218,14 +221,6 @@ def journallist():
     return render_template('journallist.html', journallist=list_view,\
         search_form=SearchForm(), journal_search=journal_search)
 
-@app.route('/test12', methods=['GET', 'POST'])
-def test12():
-    if request.method == 'POST':
-        print(request.form)
-        return redirect(url_for('index'))
-    return render_template('test_template')
-
-
 @app.route('/postmonthlist', methods=['GET', 'POST'])
 def postmonthlist():
     """ Show a list of postmonths, which you may want to close 
@@ -234,9 +229,11 @@ def postmonthlist():
     search_form = SearchForm()
     postmonth_list = accmodel.PostmonthList()
     tuple_list = []
-    for postmonth in postmonth_list:
-        tuple_list.append((postmonth.postmonth, postmonth.monthstat))
-    postmonth_form = PostMonthListForm(postmonths=tuple_list)
-    if postmonth_form.validate_on_submit():
-        print('update here...')
+    #for postmonth in postmonth_list:
+        #tuple_list.append((postmonth.postmonth, postmonth.monthstat))
+    #postmonth_form = PostMonthListForm(postmonths=tuple_list)
+    postmonth_form = PostmonthListView(postmonth_list)
+    #if postmonth_form.validate_on_submit():
+    if request.method == 'POST':
+        print('Update here...')
     return render_template('postmonthlist.html', form=postmonth_form)

@@ -477,8 +477,22 @@ class Postmonths(db.Model):
         of the tuple is a postmonth in internal format
         """
 
-        keylist = [x for (x, _) in postmonths]
+        def validate_month(postmonth_string):
+
+            if hasattr(postmonth_string, 'len') and len(postmonth_string) > 6:
+                raise InvalidPostmonthError('Postmonth to long')
+            try:
+                postmonth = int(postmonth_string)
+            except ValueError as ve:
+                raise InvalidPostmonthError('Postmonth must be a number')
+            _, monthno = divmod(postmonth, postmonth / 100)
+            if monthno > 12 or monthno == 0:
+                raise InvalidPostmonthError('Month must be from 1 to 12')
+            return True
+        keylist = [x for (x, _) in postmonths if validate_month(x)]
         q = query(Postmonths).filter(Postmonths.postmonth.in_(keylist)).all()
+        if len(q) != len(keylist):
+            raise InvalidPostmonthError('There was an invalid postmonth in the list')
         return q
 
     @staticmethod
@@ -495,6 +509,17 @@ class Postmonths(db.Model):
                 if newdata[0] == postmonth.postmonth \
                     and not newdata[1] == postmonth.monthstat:
                     postmonth.monthstat = newdata[1]
+
+    @staticmethod
+    def update_from_dict(postmonthdict):
+        """ Update postmonths for a dict of postmonths and statuses.
+        
+        Keys are internal postmonth keys (int with form yyyymm) and
+        a status as value. 
+        """
+
+        postmonthlist = [(k, v) for k, v in postmonthdict.items() ]
+        Postmonths.update_from_list(postmonthlist)
 
     def status_can_post(self):
         """ Returns True is the status of this postmonth
@@ -522,7 +547,7 @@ class PostmonthList(PaginatorMixin, list):
     which may also be paged.
     """
 
-    def __init__(self, from_month=None, pagelength=None, page=1):
+    def __init__(self, from_month=None, pagelength=12, page=1):
 
         super().__init__(self, from_month=from_month, pagelength=pagelength,\
             page=page)

@@ -182,18 +182,21 @@ class AccountListView(list):
             self.total_pages = self.total_pages + 1
 
 class PostmonthListView(PaginatorMixin, list):
-    """ A list of post months, with all data in external format """
+    """ This (temporary) view is used to experiment with raw 
+    form generation, without wtforms
+    """
+    
+    def __init__(self, postmonths=None, from_month=None, page=1,
+                 pagelength=12):
 
-    def __init__(self, from_month=None, pagelength=12, page=1):
-
-        super().__init__(pagelength=pagelength, page=page)
-        if from_month:
-            from_month_int = model.Postmonths.internal(from_month)
-        else:
-            from_month_int = None
-        month_list = model.PostmonthList(from_month=from_month_int, \
-            pagelength=pagelength, page=page)
-        self.total_pages = month_list.num_pages()
-        for month in month_list:
-            self.append({'postmonth' : month.postmonth,\
-                'monthstat' : month.monthstat})
+        if postmonths is None:
+            postmonths = model.PostmonthList(page=page, pagelength=pagelength,
+                                         from_month=from_month)
+        for postmonth in postmonths:
+            self.append((model.Postmonths.external(postmonth.postmonth),\
+                str(postmonth.postmonth), postmonth.monthstat))
+        self.pagelength = postmonths.pagelength
+        self.page = postmonths.page
+        self.total_pages, rem = divmod(postmonths.num_recs(), self.pagelength)
+        if rem > 0:
+            self.total_pages += 1

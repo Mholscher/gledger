@@ -35,6 +35,8 @@ logging.debug('Debug logging')
 
 from glmodels.glaccount import Accounts
 from glmodels.glaccount import Balances
+from glmodels.glaccount import CloseDates
+from glmodels.glaccount import Postmonths
 from glmodels.glposting import Postings
 from glmodels.glposting import Journals
 from . import views
