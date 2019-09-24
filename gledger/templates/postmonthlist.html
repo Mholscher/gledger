@@ -11,6 +11,8 @@
 {% endblock searches %}
 
 {% block content %}
+    {{navi(url_for('postmonthlist'), current_page=form.page,
+        num_pages=form.total_pages) }}
     Update the months:
     <form action="/postmonthlist" method="post" class="inlineform">
     <ul>
