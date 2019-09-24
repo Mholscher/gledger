@@ -10,7 +10,8 @@ from glviews.accountviews import AccountView, AccountListView, BalanceView
 from glviews.postingviews import JournalView, PostingView,\
     PostingByAccountView, JournalListView
 from glviews.forms import AccountForm, NewAccountForm, SearchForm,\
-    JournalSearch, PostMonthListForm
+    JournalSearch
+from werkzeug.exceptions import BadRequest
 from . import app, db
 from glviews.tempview import PostmonthListView
 
@@ -227,13 +228,24 @@ def postmonthlist():
     """
 
     search_form = SearchForm()
-    postmonth_list = accmodel.PostmonthList()
-    tuple_list = []
-    #for postmonth in postmonth_list:
-        #tuple_list.append((postmonth.postmonth, postmonth.monthstat))
-    #postmonth_form = PostMonthListForm(postmonths=tuple_list)
-    postmonth_form = PostmonthListView(postmonth_list)
-    #if postmonth_form.validate_on_submit():
+    from_month = request.args.get('from_month')
+    pageno = request.args.get('page')
     if request.method == 'POST':
-        print('Update here...')
-    return render_template('postmonthlist.html', form=postmonth_form)
+        try:
+            accmodel.Postmonths.update_from_dict(request.form)
+        except accmodel.InvalidPostmonthError as ipe:
+            abort(400)
+        db.session.commit()
+    kws = dict()
+    if from_month:
+        from_month = accmodel.Postmonths.internal(from_month)
+        kws['from_month'] = from_month
+    if pageno:
+        kws[ 'page'] = int(pageno)
+    if len(kws):
+        postmonth_list = accmodel.PostmonthList(**kws)
+    else:
+        postmonth_list = accmodel.PostmonthList()
+    postmonth_form = PostmonthListView(postmonth_list)
+    return render_template('postmonthlist.html', form=postmonth_form,
+                           search_form=search_form)

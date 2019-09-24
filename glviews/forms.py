@@ -86,31 +86,3 @@ class JournalSearch(FlaskForm):
     search_for = StringField('Journal (part of key)')
     start_search = SubmitField('Find..')
 
-class PostMonthForm(Form):
-    """ This form holds the postmonth data
-    
-    It is used to process input from the postmonth closing form
-    """
-
-    postmonth = StringField('Post month')
-    local_choices = []
-    item = Postmonths.ACTIVE, 'Active'
-    local_choices.append(item)
-    item = Postmonths.CLOSED, 'Closed'
-    local_choices.append(item)
-    monthstat = SelectField('State', choices=local_choices)
-
-class PostMonthListForm(FlaskForm):
-    """ The form with multiple lines for postmonths
-    
-    Holds  multiple PostMonthForm entries. Each can be updates
-    """
-    
-    local_choices = []
-    item = Postmonths.ACTIVE, 'Active'
-    local_choices.append(item)
-    item = Postmonths.CLOSED, 'Closed'
-    local_choices.append(item)
-    postmonths = FieldList(SelectPostMonthStatusField(choices=local_choices))
-    update = SubmitField('Update months')
-    

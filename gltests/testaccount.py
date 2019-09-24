@@ -488,32 +488,8 @@ class TestPostmonthListView(unittest.TestCase):
         self.assertEqual(plv6.total_pages, 2,\
             'Wrong number of pages in list view')
 
-    def test_monthlist_form(self):
-        """ We can fill the list form """
 
-        with gledger.app.app_context():
-            pl7 = accmodel.PostmonthList()
-            ptl7 = []
-            for postmonth in pl7:
-                ptl7.append((str(postmonth.postmonth), postmonth.monthstat))
-            plf1 = glforms.PostMonthListForm(postmonths=ptl7)
-        self.assertNotEqual(len(plf1.data['postmonths']), 0, 'No postmonths found')
-        self.assertIn('201606', str(plf1.postmonths), 'Month not in list form')
-        self.assertIn('02-2017', str(plf1.postmonths), 'Edited month not in list form')
-
-    def test_stat_key(self):
-        """ A month status must have a key containing postmonth """
-
-        with gledger.app.app_context():
-            pl8 = accmodel.PostmonthList()
-            ptl8 = []
-            for postmonth in pl8:
-                ptl8.append((str(postmonth.postmonth), postmonth.monthstat))
-            plf2 = glforms.PostMonthListForm(postmonths=ptl8)
-        self.assertNotEqual(len(plf2.data['postmonths']), 0, 'No postmonths found')
-        self.assertEqual(plf2.data['postmonths'][0], 'a', 'Wrong month status')
-
-class TestTempPostmonthListView(unittest.TestCase):
+class TestMorePostmonthListView(unittest.TestCase):
 
     def setUp(self):
 
@@ -568,6 +544,11 @@ class TestPostmonthTransactions(unittest.TestCase):
     def tearDown(self):
 
         gledger.db.session.rollback()
+        #Delete any remaining records
+        pm = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.postmonth.in_([201606, 201608, 201702, 201711, 201812])).all()
+        for postmonth in pm:
+            gledger.db.session.delete(postmonth)
+        gledger.db.session.commit()
 
     def test_show_all(self):
         """ Show all available postmonths """
@@ -580,6 +561,46 @@ class TestPostmonthTransactions(unittest.TestCase):
 
         rv = self.app.get('/postmonthlist')
         self.assertIn(b'02-2017', rv.data, 'Expected edited month not in response')
+
+    def test_get_with_closing_date(self):
+        """ We get a restricted set with a closing date in the DB """
+
+        close_date = accmodel.CloseDates(closing_date=datetime(2017, 1, 1))
+        close_date.add()
+        gledger.db.session.flush()
+        rv = self.app.get('/postmonthlist')
+        self.assertIn(b'02-2017', rv.data, 'Expected edited month not in response')
+        self.assertNotIn(b'08-2016', rv.data, 'Unexpected month in data')
+
+    def test_with_from_month(self):
+        """ We can limit the postmonths through a request argument """
+
+        rv = self.app.get('/postmonthlist?from_month=01-2017')
+        self.assertIn(b'02-2017', rv.data, 'Expected edited month not in response')
+        self.assertNotIn(b'08-2016', rv.data, 'Unexpected month in data')
+
+    def test_request_page_2(self):
+        """ We can request the second page """
+
+        rv = self.app.get('/postmonthlist?page=2')
+        self.assertNotIn(b'12-2018', rv.data, 'Not on (empty) page 2')
+
+    def test_updates_succeed(self):
+        """ We can update the postmonths """
+
+        all_months = {'201606':'c', '201608':'c', '201702':'c',\
+            '201711':'c', '201812':'c'}
+        rv = self.app.post('/postmonthlist', data=all_months)
+        pms = gledger.db.session.query(accmodel.Postmonths).filter(accmodel.Postmonths.monthstat == 'c').all()
+        self.assertEqual(len(pms), 5, 'Not all/too many months closed')
+
+    def test_corrupt_update_is_bad_request(self):
+        """ Corrupted post requests lead to bad request """
+
+        all_months = {'201606':'c', '201608':'c', '201702':'c',\
+            '201707':'c', '201711':'c', '201812':'c'}
+        rv = self.app.post('/postmonthlist', data=all_months)
+        self.assertIn(b'Bad Request', rv.data, 'No Bad Request returned')
 
 
 class TestPostmonthListUpdates(unittest.TestCase):
@@ -628,7 +649,7 @@ class TestPostmonthListUpdates(unittest.TestCase):
         """ It must be impossible to set a status to invalid value """
 
         self.plr.append((201702, 't'))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(accmodel.InvalidPostmonthError):
             accmodel.Postmonths.update_from_list(self.plr)
             gledger.db.session.flush()
 
@@ -636,7 +657,7 @@ class TestPostmonthListUpdates(unittest.TestCase):
         """ Fail for non-existing postmonth """
         
         self.plr.append((2, 'c'))
-        with self.assertRaises(ValueError):
+        with self.assertRaises(accmodel.InvalidPostmonthError):
             accmodel.Postmonths.update_from_list(self.plr)            
 
     def test_update_from_dict(self):
@@ -667,7 +688,7 @@ class TestValidatePostmonthUpdates(unittest.TestCase):
 
         self.pds1 = self.pds.copy()
         self.pds1['2017112'] = 'c'
-        with self.assertRaises(ValueError):
+        with self.assertRaises(accmodel.InvalidPostmonthError):
             accmodel.Postmonths.update_from_dict(self.pds1)
 
     def test_no_alphabetic_keys(self):
@@ -675,7 +696,7 @@ class TestValidatePostmonthUpdates(unittest.TestCase):
 
         self.pds1 = self.pds.copy()
         self.pds1['ãnnos'] = 'a'
-        with self.assertRaises(ValueError):
+        with self.assertRaises(accmodel.InvalidPostmonthError):
             accmodel.Postmonths.update_from_dict(self.pds1)
 
 class TestAccountviews(unittest.TestCase) :

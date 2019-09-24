@@ -6,6 +6,10 @@
     {{ mainmenu() }}
 {% endblock menu %}
 
+{% block searches %}
+    {% include "searches.html" %}
+{% endblock searches %}
+
 {% block content %}
     Update the months:
     <form action="/postmonthlist" method="post" class="inlineform">

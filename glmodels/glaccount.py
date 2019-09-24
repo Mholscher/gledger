@@ -444,7 +444,7 @@ class Postmonths(db.Model):
     @validates('monthstat')
     def validate_monthstat(self, id, monthstat):
         if (monthstat != self.ACTIVE) and (monthstat != self.CLOSED):
-            raise ValueError('Invalid status in postmonth')
+            raise InvalidPostmonthError('Invalid status in postmonth')
         return monthstat
 
     @staticmethod
@@ -506,7 +506,7 @@ class Postmonths(db.Model):
         
         for postmonth in Postmonths.list_to_update(postmonths):
             for newdata in postmonths:
-                if newdata[0] == postmonth.postmonth \
+                if int(newdata[0]) == postmonth.postmonth \
                     and not newdata[1] == postmonth.monthstat:
                     postmonth.monthstat = newdata[1]
 
