@@ -21,6 +21,7 @@ human readable key to a journal, supplied by the source system of the journal.
 
 import glmodels.glaccount as accounts
 import glmodels.glposting as posts
+from glmodels import PaginatorMixin
 
 class PostingView():
     """ The data from a posting, worked out to be in the format for the user
@@ -104,11 +105,8 @@ class JournalView():
         return journal_dict
 
 
-class PostingByAccountView():
-    """ The view holds the data of a list of postings by account.
-    
-    TODO Extract paging to mixin for reuse
-    """
+class PostingByAccountView(PaginatorMixin):
+    """ The view holds the data of a list of postings by account."""
 
     def __init__(self, account=None, month=None, page=1):
 
@@ -117,12 +115,14 @@ class PostingByAccountView():
         self.account = account
         self.postings = posts.Postings.postings_for_account(account,\
             month=month, page=page)
-        self.page = self.postings.page
-        self.pagelength = self.postings.pagelength
-        self.total_pages, remainder =\
-            divmod(self.postings.num_records, self.pagelength)
-        if remainder > 0:
-            self.total_pages = self.total_pages + 1 
+        super().__init__(page=self.postings.page,\
+            pagelength=self.postings.pagelength)
+        self.num_records = self.postings.num_records
+        self.total_pages = self.num_pages()
+        
+    def num_recs(self):
+
+        return self.num_records
 
     def as_dict(self):
         """ Return this views data as a dictionary - easy
@@ -142,15 +142,19 @@ class PostingByAccountView():
             posting_dict['total_pages'] = self.total_pages
         return posting_dict
 
-class JournalListView(list):
+class JournalListView(PaginatorMixin, list):
     """ This class holds the extract for a journallist 
     for showing on a page
+    
+    TODO set up as a "real" paginated view
     """
 
-    def __init__(self, journal_list):
+    def __init__(self, journal_list, page=1, pagelength=25):
 
         for journal in journal_list:
             self.append({'extkey':journal.extkey, 'updated_at':journal.updated_at})
+        #super().__init__(page=journal_list.page,\
+            #pagelength=journal_list.pagelength)
         self.page = journal_list.page
         self.pagelength = journal_list.pagelength
         self.total_pages, remainder =\

@@ -153,7 +153,7 @@ class BalanceView():
         return as_dictionary
 
 
-class AccountListView(list):
+class AccountListView(PaginatorMixin, list):
     """ Gathers the information to display a list of accounts.
 
     The accounts are in a dictionary keyed by the account name, the accounts
@@ -166,20 +166,23 @@ class AccountListView(list):
 
     def __init__(self, search_string=None, page=1, pagelength=10):
 
-        super().__init__()
+        super().__init__(page=page, pagelength=pagelength)
         account_list = model.AccountList(search_string=search_string,\
             page=page, pagelength=pagelength)
+        super().__init__(page=account_list.page,\
+            pagelength=account_list.pagelength)
         for account in account_list:
             self.append({"id":account.id, "name":account.name,\
                 "role":model.Accounts.ROLE_NAME[account.role],\
                 "updated_at":account.updated_at.strftime("%d-%m-%Y %H:%M:%S"),\
                 "parent":account.parent_id})
-        self.page = account_list.page
-        self.pagelength = account_list.pagelength
-        self.total_pages, remainder =\
-            divmod(account_list.num_records, self.pagelength)
-        if remainder > 0:
-            self.total_pages = self.total_pages + 1
+        self.num_records = account_list.num_records
+        self.total_pages = self.num_pages()
+        
+    def num_recs(self):
+        
+        return self.num_records
+
 
 class PostmonthListView(PaginatorMixin, list):
     """ This (temporary) view is used to experiment with raw 
