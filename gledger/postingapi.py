@@ -18,6 +18,8 @@
 """ The module contains the interface for journal producers. The batches
 with postings are delivered to the /journal/new route. As this is the only
 route, it is clear you can not update a journal after delivery.
+
+TODO Create "insert" function to add postings to existing journal
 """
 
 from flask import Blueprint, jsonify, request

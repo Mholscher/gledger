@@ -145,8 +145,6 @@ class PostingByAccountView(PaginatorMixin):
 class JournalListView(PaginatorMixin, list):
     """ This class holds the extract for a journallist 
     for showing on a page
-    
-    TODO set up as a "real" paginated view
     """
 
     def __init__(self, journal_list, page=1, pagelength=25):

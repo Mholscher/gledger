@@ -12,7 +12,7 @@ The example below will contain all possible fields. Fields that are mandatory, w
     {"journal"* : 
         {"function"* : "insert",
          "journalno" : "12"
-         "extkey" : "f234",
+         "extkey"* : "f234",
          "postings"* : 
             [{  "account"* : "verkopen",
                 "currency"* : "EUR",
@@ -44,13 +44,13 @@ The definitions of the fields are as follows:
         in case of an "add", the number of the journal to add the postings to. Ignored for insert.
         
     extkey
-        an optional key to the journal in the system that generated it. If present, will be added to a response. Though it is optional, it is strongly advised to add an extkey to a journal. It enables finding a journals source and is also a search key within the system.
+        a mandatory key to the journal in the system that generated it. It will be added to the response when adding a journal. It enables finding a journals source and is also a search key within the system. These keys are not required to be unique, but it is advisable to make these unique, so that the source of postings is always traceable.
         
     postings
         the list of postings for this journal.
         
     account
-        The account is posting is to be made to.
+        The account this posting is to be made to.
         
     currency
         The currency code of the posting. It is recommended to use the SWIFT currency codes
@@ -67,7 +67,7 @@ The definitions of the fields are as follows:
 The result of the submission if successful will be the following message::
 
     {   "status":"OK";
-        "message":"Journal added"
+        "message":"Journal f234 added"
     }
 
 If not successful, a message will be sent as follows::

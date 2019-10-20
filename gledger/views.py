@@ -180,21 +180,23 @@ def journal(journalkey):
     """ Show a journal for  browsing.
 
     The journalkey is the external key of the journal requested
-    TODO create a journal search facility here
     """
 
     search_form = SearchForm()
+    journal_search = JournalSearch()
     if journalkey:
         try:
             journal_view = JournalView(journal_key=journalkey).as_dict()
         except journalmodel.NoJournalError as nje:
             flash(str(nje))
             journal_view = None
+            journal_search.search_for.data = journalkey
     else:
         flash('An existing journal key is required')
         journal_view = None
     return render_template('journalpostings.html', search_form=search_form,
-                           journal_view=journal_view)
+                           journal_view=journal_view,
+                           journal_search=journal_search)
 
 @app.route('/journallist', methods=['GET'])
 def journallist():

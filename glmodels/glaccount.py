@@ -522,7 +522,7 @@ class Postmonths(db.Model):
         Postmonths.update_from_list(postmonthlist)
 
     def status_can_post(self):
-        """ Returns True is the status of this postmonth
+        """ Returns True if the status of this postmonth
         is active, i.e. posting in it is permitted.
         """
 
