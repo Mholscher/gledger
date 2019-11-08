@@ -3,8 +3,8 @@
 #    This file is part of gledger.
 
 #    gledger is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Lesser General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
+#    it under the terms of the GNU Lesser General Public License as published
+#    by the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 
 #    gledger is distributed in the hope that it will be useful,
@@ -33,6 +33,7 @@ from glmodels import PaginatorMixin
 
 query = db.session.query
 
+
 class NoAccountError(ValueError):
     """ This is thrown when an account requested does not exist.
 
@@ -41,6 +42,7 @@ class NoAccountError(ValueError):
     """
 
     pass
+
 
 class ShortSearchStringError(ValueError):
     """ A search string that is very short is bound to return
@@ -65,6 +67,7 @@ class AccountAlreadyExistsError(ValueError):
 
     pass
 
+
 class Accounts(db.Model):
     """ Accounts models the "immutable" properties of an account
 
@@ -78,7 +81,8 @@ class Accounts(db.Model):
     """
 
     VALID_ROLES = ['I', 'E', 'A', 'L']
-    ROLE_NAME = {'I':'Income', 'E':'Expense', 'A':'Asset', 'L':'Liability'}
+    ROLE_NAME = {'I': 'Income', 'E': 'Expense', 'A': 'Asset',
+                'L': 'Liability'}
 
     """ The list of valid roles.
 
@@ -143,13 +147,15 @@ class Accounts(db.Model):
         Checks are made:
 
             1.   the account to be added doesn't exist
-            2.   the parent account does exist; if not, an exception will be thrown
+            2.   the parent account does exist; if not, an exception will be 
+                    thrown
 
         """
         if not name:
             raise ValueError('name cannot be None')
         if cls.account_exists(requested_name=name):
-            raise AccountAlreadyExistsError('Account with name ' + str(name) + ' already exists')
+            raise AccountAlreadyExistsError('Account with name ' +\
+                                            str(name) + ' already exists')
         account = cls(name=name, role=role)
         parent = None
         if parent_id:
@@ -170,7 +176,8 @@ class Accounts(db.Model):
         if requested_id:
             return not (query(Accounts).filter_by(id=requested_id).all() == [])
         if requested_name:
-            return not (query(Accounts).filter_by(name=requested_name).all() == [])
+            return not (query(Accounts).filter_by(name=requested_name).all()\
+                == [])
         raise NoAccountError('An account id or name is mandatory')
 
     def _balance_for(self):
@@ -215,7 +222,8 @@ class Accounts(db.Model):
                 self.parent_id = parent.id
                 self.updated_at = datetime.today()
             else:
-                raise ValueError('Account ' + repr(new_parent) + ' (new parent) does not exist')
+                raise ValueError('Account ' + repr(new_parent) +\
+                                ' (new parent) does not exist')
         if new_role:
             self.role = new_role
             self.updated_at = datetime.today()
@@ -231,7 +239,7 @@ class Accounts(db.Model):
     def balance_ultimo(self, postmonth, balance_so_far=0):
         """ Return the balance of the account at the end of the postmonth """
 
-        balance_requested = self._balance_for().filter(Balances.postmonth <=\
+        balance_requested = self._balance_for().filter(Balances.postmonth <=
                             postmonth).order_by(Balances.postmonth.desc()).all()
         if balance_requested != []:
             balance_so_far += balance_requested[0].amount
@@ -299,7 +307,7 @@ class Balances(db.Model):
         :id: a sequence number
         :account_id: the sequence number of the account this is the balance of
         :postmonth: the postmonth in the format yyyymm
-        :currency: the currency code (preferably : use ISO)
+        :currency: the currency code (preferably: use ISO)
         :amount: the amount
     """
 
@@ -520,6 +528,26 @@ class Postmonths(db.Model):
 
         postmonthlist = [(k, v) for k, v in postmonthdict.items() ]
         Postmonths.update_from_list(postmonthlist)
+
+    @staticmethod
+    def get_postmonths_between_dates(from_date, to_date, monthstat=None):
+        """ Get postmonths between between two dates.
+        
+        The from_date is included (if it is 2016-01-01 2016-01 is included)
+        and the to_date is not. monthstat is none means "don't care",
+        any value is considered to be a selection criterion.
+
+        Although named "date", both dates are datetime instances
+        """
+
+        from_pm = postmonth_for(from_date)
+        to_pm = postmonth_for(to_date)
+        pmlist = query(Postmonths).\
+            filter(Postmonths.postmonth >= from_pm).\
+            filter(Postmonths.postmonth < to_pm)
+        if monthstat:
+            pmlist = pmlist.filter(Postmonths.monthstat==monthstat)
+        return pmlist.all()
 
     def status_can_post(self):
         """ Returns True if the status of this postmonth

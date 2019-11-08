@@ -27,6 +27,12 @@ Module glmodels glposting
 ..  automodule:: glmodels.glposting
     :members:
 
+Module glmodels glyearend
+--------------------------
+
+..  automodule:: glmodels.glyearend
+    :members:
+
 Module glmodels __init__
 ------------------------
 

@@ -44,7 +44,7 @@ The definitions of the fields are as follows:
         in case of an "add", the number of the journal to add the postings to. Ignored for insert.
         
     extkey
-        a mandatory key to the journal in the system that generated it. It will be added to the response when adding a journal. It enables finding a journals source and is also a search key within the system. These keys are not required to be unique, but it is advisable to make these unique, so that the source of postings is always traceable.
+        a mandatory key to the journal in the system that generated it. It will be added to the response when adding a journal. It enables finding a journals source and is also a search key within the system. These keys are not required to be unique, but it is advisable to make these unique, so that the source of postings is always traceable. "extkey" stands for "external key". GLedger does not assume anything about these keys, the format is at the discretion of the system that submits a journal. 
         
     postings
         the list of postings for this journal.
