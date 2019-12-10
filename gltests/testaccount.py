@@ -670,6 +670,62 @@ class TestPostmonthListUpdates(unittest.TestCase):
         self.assertEqual(pm12.monthstat, 'a', 'Postmonth closed incorrectly')
 
 
+class TestPostmonthSelections(unittest.TestCase):
+
+    def setUp(self):
+
+        add_postmonths([201606, 201608, 201702, 201711, 201812])
+        self.plr = [(201608, 'c'), (201711, 'a')]
+        gledger.db.session.flush()
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_list_status_all(self):
+        """ We can list all available """
+
+        accmodel.Postmonths.update_from_list(self.plr)
+        pml10 = accmodel.Postmonths.get_postmonths_between_dates(datetime(2016, 1, 1),
+                                                                 datetime(2019, 1, 1))
+        self.assertEqual(len(pml10), 5, 'Wrong number of months in list')
+
+    def test_list_only_active(self):
+        """ We can list only active months """
+
+        accmodel.Postmonths.update_from_list(self.plr)
+        pml11 = accmodel.Postmonths.get_postmonths_between_dates(datetime(2016, 1, 1),
+                                                                 datetime(2019, 1, 1),
+                                                                 'a')
+        self.assertEqual(len(pml11), 4, 'Wrong number of active months in list')
+
+    def test_no_months_with_status(self):
+        """ If we request a status that is not there, empty list """
+
+        pml12 = accmodel.Postmonths.get_postmonths_between_dates(datetime(2016, 1, 1),
+                                                                 datetime(2019, 1, 1),
+                                                                 'c')
+        self.assertEqual(len(pml12), 0, 'Closed months should not be in list')
+
+    def test_date_range_empty(self):
+        """ If we request a range that is empty, empty list """
+
+        pml13 = accmodel.Postmonths.get_postmonths_between_dates(datetime(2016, 1, 1),
+                                                                 datetime(2015, 8, 1))
+        self.assertEqual(len(pml13), 0, 'Months in list for empty period')
+
+    def test_conflict_postmonth(self):
+        """ If we request a range that results in same months, empty list """
+
+        pml14 = accmodel.Postmonths.get_postmonths_between_dates(datetime(2016, 1, 1),
+                                                                 datetime(2016, 1, 15))
+        self.assertEqual(len(pml14), 0, 'Months in list for empty period')
+        
+        
+
+    #def test_list_none_with_status(self
+
+
 class TestValidatePostmonthUpdates(unittest.TestCase):
 
     def setUp(self):

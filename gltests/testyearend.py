@@ -17,7 +17,7 @@
 
 import unittest
 from datetime import date, datetime
-from dateutils import relativedelta
+from dateutil.relativedelta import relativedelta
 import logging
 import json
 from sqlalchemy.exc import DatabaseError
@@ -58,6 +58,23 @@ class TestCreateJournal(unittest.TestCase):
                       'Journal should have function')
         self.assertEqual(jrn2['journal']['function'], 'insert',
                          "Invalid function: "+ jrn2['journal']['function'])
+
+    def test_journal_counter_post(self):
+        """ The journal has a posting to a balance account """
+
+        jrn11 = yearend.YearEndJournal(start_next_year=self.start_next_year)
+        self.assertIn('winst', [account['account'] for account \
+            in jrn11['journal']['postings']], 'No profit posting')
+
+    def test_amount_profit(self):
+        """ The amount of profit should balance profit/loss accounts """
+
+        jrn12 = yearend.YearEndJournal(start_next_year=self.start_next_year)
+        for posting in jrn12['journal']['postings']:
+            if posting['account'] == 'winst':
+                winst_posted = posting['amount']
+                debcred = posting['debitcredit']
+        self.assertEqual(winst_posted, 3449, 'Incorrect profit posted')
 
 
 class TestYearEndDateEtc(unittest.TestCase):
@@ -119,6 +136,34 @@ class TestYearEndDateEtc(unittest.TestCase):
         with self.assertRaises(ValueError):
             jrn8 = yearend.YearEndJournal(start_next_year=datetime(2016, 1, 1))
 
+    def test_open_month_after_close(self):
+        """ An open postmonth after close date don't matter """
+
+        pm2 = accmodel.Postmonths(postmonth=201609, monthstat='a')
+        pm2.add()
+        gledger.db.session.flush()
+        jrn9 = yearend.YearEndJournal(start_next_year=datetime(2016, 1, 1))
+        self.assertTrue(jrn9)
+
+
+class TestYearEndSplit(unittest.TestCase):
+
+    def setUp(self):
+
+        create_standard_accountlist_testset(self)
+        create_accounts_for_more(self)
+        gledger.db.session.flush()
+
+    def tearDown(self):
+
+        gledger.db.session.rollback()
+
+    def test_limit_accounts(self):
+        """ We can limit the number of accounts processed """
+
+        jrn10 = yearend.YearEndJournal(start_next_year=datetime(2016, 1, 1), num_accounts=3)
+        self.assertEqual(len(jrn10['journal']['postings']), 4, 'Wrong number of accounts')
+
 
 def create_standard_accountlist_testset(case):
     """ Create a standard list of accounts for different tests """
@@ -136,10 +181,41 @@ def create_standard_accountlist_testset(case):
     case.bal2 = accmodel.Balances(postmonth=201507, amount=8826, value_date='2015-07-18')
     case.acc2.balances.append(case.bal2)
     case.bal3 = accmodel.Balances(postmonth=201507, amount=-1733, value_date='2015-07-19')
+    case.acc4.balances.append(case.bal3) # Careful: bal3 and acc4
     pmlist = gledger.db.session.query(accmodel.Postmonths).\
         filter(accmodel.Postmonths.postmonth.in_([201507, 201506])).all()
     for pm in pmlist:
         pm.monthstat = 'c'
+
+def create_accounts_for_more(case):
+    """ Create a list of accounts for tests involving 'many' accounts """
+    
+    pmlist = gledger.db.session.query(accmodel.Postmonths).\
+        filter(accmodel.Postmonths.postmonth.in_([201507, 201506])).all()
+    for pm in pmlist:
+        pm.monthstat = 'a'
+    case.acc5 = accmodel.Accounts(name='kantoorart', role='E')
+    case.acc5.add()
+    case.bal5 = accmodel.Balances(postmonth=201507, amount=3316, value_date='2015-07-12')
+    case.acc5.balances.append(case.bal5)
+    case.acc6 = accmodel.Accounts(name='declaraties', role='E')
+    case.acc6.add()
+    case.bal6 = accmodel.Balances(postmonth=201507, amount=2566, value_date='2015-07-31')
+    case.acc6.balances.append(case.bal6)
+    case.acc7 = accmodel.Accounts(name='ontvangen rente', role='I')
+    case.acc7.add()
+    case.bal7 = accmodel.Balances(postmonth=201507, amount=5764, value_date='2015-07-18')
+    case.acc7.balances.append(case.bal7)
+    case.acc8 = accmodel.Accounts(name='int late bet', role='E')
+    case.acc8.add()
+    case.bal8 = accmodel.Balances(postmonth=201507, amount=1755, value_date='2015-07-21')
+    case.acc8.balances.append(case.bal8)
+    pmlist = gledger.db.session.query(accmodel.Postmonths).\
+        filter(accmodel.Postmonths.postmonth.in_([201507, 201506])).all()
+    for pm in pmlist:
+        pm.monthstat = 'c'
+
+
 
 
 if __name__ == '__main__':

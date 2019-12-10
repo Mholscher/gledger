@@ -1,9 +1,9 @@
 GLedger GLModels - The GLedger model classes
 ============================================
     
-The GLModels module contains the classes of the General Ledger model.
+Model classes implement the user view of the things in the system.
 
-These models are the building blocks for the application. They contain the fields in the database. The classes with these fields are also the classes where the system calls functions on, to return instances of the classes and to alter the values in the database.
+These models are the building blocks for the application. Users can talk about these classes as "things they use" and think about. For a general ledger system, think of accounts, postings, balances etc.
 
 The account
 -----------

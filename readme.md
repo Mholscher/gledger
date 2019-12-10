@@ -2,7 +2,7 @@
 
 ## Installing GLedger ##
 
-Install GLedger from Github. There currently is no way to install it e.g. using pip.
+Install GLedger from Github. There currently is no way to install it e.g. using pypi.
 
 ## How GLedger is developed ##
 
@@ -22,7 +22,7 @@ The tests are designed to be run on an empty database. Most tests don't mind 'st
 
 Go into a Python REPL. Then import db from gledger. You can then do do a db.drop_all() and a db.create_all() to recreate the tables.
 
-The only thing not recreated **in Firebird** is the sequences. These count on and on, recreate these by hand if necessary.
+The only thing not recreated is the sequences. These count on and on, recreate these by hand if necessary.
 
 ### Configuration database
 
@@ -30,4 +30,4 @@ No configuration file is delivered with GLedger. It expects a file "localledger.
 
 ### Intermittent failure of one (1) testing
 
-There is one test which is not guaranteed to always succeed. The order of records in a query with no ordering is not constant, therefor the test test_amount_in_list on TestViewPostingsAccount sometimes failed. Created an issue for that.
+There is one test which is not guaranteed to always succeed. The order of records in a query with no ordering is not constant, therefore the test test_amount_in_list on TestViewPostingsAccount sometimes failed. Created an issue for that.

@@ -82,7 +82,7 @@ class Accounts(db.Model):
 
     VALID_ROLES = ['I', 'E', 'A', 'L']
     ROLE_NAME = {'I': 'Income', 'E': 'Expense', 'A': 'Asset',
-                'L': 'Liability'}
+                 'L': 'Liability'}
 
     """ The list of valid roles.
 
@@ -100,7 +100,7 @@ class Accounts(db.Model):
     children = db.relationship('Accounts')
     balances = db.relationship('Balances', backref='accounts')
     updated_at = db.Column(db.DateTime)
-    #db.Index('byparent', 'parent_id', 'id')
+#   db.Index('byparent', 'parent_id', 'id')
 
     @validates('role')
     def validate_role(self, id, role):
@@ -147,14 +147,14 @@ class Accounts(db.Model):
         Checks are made:
 
             1.   the account to be added doesn't exist
-            2.   the parent account does exist; if not, an exception will be 
+            2.   the parent account does exist; if not, an exception will be
                     thrown
 
         """
         if not name:
             raise ValueError('name cannot be None')
         if cls.account_exists(requested_name=name):
-            raise AccountAlreadyExistsError('Account with name ' +\
+            raise AccountAlreadyExistsError('Account with name ' +
                                             str(name) + ' already exists')
         account = cls(name=name, role=role)
         parent = None
@@ -176,8 +176,8 @@ class Accounts(db.Model):
         if requested_id:
             return not (query(Accounts).filter_by(id=requested_id).all() == [])
         if requested_name:
-            return not (query(Accounts).filter_by(name=requested_name).all()\
-                == [])
+            return not (query(Accounts).filter_by(name=requested_name).all()
+                        == [])
         raise NoAccountError('An account id or name is mandatory')
 
     def _balance_for(self):
@@ -191,7 +191,8 @@ class Accounts(db.Model):
         if hasattr(self, 'parent_account'):
             return self.parent_account
         else:
-            parent_accounts = query(Accounts).filter_by(id=self.parent_id).all()
+            parent_accounts = query(Accounts).filter_by(id=self.parent_id)\
+                .all()
             if len(parent_accounts) > 0:
                 self.parentaccount = parent_accounts[0]
                 return parent_accounts[0]
@@ -222,8 +223,8 @@ class Accounts(db.Model):
                 self.parent_id = parent.id
                 self.updated_at = datetime.today()
             else:
-                raise ValueError('Account ' + repr(new_parent) +\
-                                ' (new parent) does not exist')
+                raise ValueError('Account ' + repr(new_parent) +
+                                 ' (new parent) does not exist')
         if new_role:
             self.role = new_role
             self.updated_at = datetime.today()
@@ -231,7 +232,8 @@ class Accounts(db.Model):
     def current_balance(self):
         """ Return the last known balance of the account """
 
-        balance_last_known = self._balance_for().order_by(Balances.postmonth.desc()).all()
+        balance_last_known = self._balance_for().order_by(Balances.postmonth.desc())\
+            .all()
         if balance_last_known == []:
             return 0
         return balance_last_known[0].amount
@@ -534,8 +536,9 @@ class Postmonths(db.Model):
         """ Get postmonths between between two dates.
         
         The from_date is included (if it is 2016-01-01 2016-01 is included)
-        and the to_date is not. monthstat is none means "don't care",
-        any value is considered to be a selection criterion.
+        and the to_date is not (if it is 2016-01-01 2016-01 is excluded). 
+        monthstat is none means "don't care",any value is considered to be a 
+        selection criterion.
 
         Although named "date", both dates are datetime instances
         """

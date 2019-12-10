@@ -30,6 +30,8 @@ from .glaccount import Accounts, postmonth_for, NoAccountError, Postmonths,\
     ShortSearchStringError, InvalidPostmonthError
 
 
+query = db.session.query
+
 class InvalidJournalError(Exception):
     """ The base exception for failing journals 
     """
@@ -99,8 +101,7 @@ class Journals(db.Model):
         """
         
         try:
-            journal = db.session.query(Journals).filter_by(id=requested_id).\
-                first()
+            journal = query(Journals).filter_by(id=requested_id).first()
             if not journal:
                 raise NoJournalError('No journal for id ' + str(requested_id))
             return journal
@@ -131,8 +132,7 @@ class Journals(db.Model):
         """ Assemble the postings in journal with id journal_id 
         """
         
-        posts = db.session.query(Postings).filter_by(journals_id=journal_id).\
-                    all()
+        posts = query(Postings).filter_by(journals_id=journal_id).all()
         if posts == []:
             raise NoJournalError('Journal ' + str(journal_id) + ' does not exist')
         return posts
@@ -144,8 +144,7 @@ class Journals(db.Model):
 
         if extkey is None:
             raise NoJournalError('An external key is required')
-        journal = db.session.query(Journals).\
-            filter_by(extkey=extkey).first()
+        journal = query(Journals).filter_by(extkey=extkey).first()
         if not journal:
             raise NoJournalError('No journal with key ' + extkey)
         return journal
@@ -161,7 +160,7 @@ class Journals(db.Model):
                 num_records=0)
         if len(search_string) < 3:
             raise ShortSearchStringError('Search string '+search_string+' too short')
-        journals = db.session.query(Journals).order_by(Journals.extkey.desc())
+        journals = query(Journals).order_by(Journals.extkey.desc())
         if search_string:
             journals = journals.filter(Journals.extkey.like('%'+search_string+'%'))
         if page > 1:
@@ -170,7 +169,7 @@ class Journals(db.Model):
         journals = journals.limit(pagelength)
         logging.debug('Journals SQL is: :' + str(journals))
         journals = journals.all()
-        q = db.session.query(Journals)
+        q = query(Journals)
         if search_string:
             q = q.filter(Journals.extkey.like('%'+search_string+'%'))
         num_records = q.count()
@@ -182,8 +181,7 @@ class Journals(db.Model):
         """ Assemble the posting in the journal by the external key 
         """
         
-        journal = db.session.query(Journals).\
-            filter_by(extkey=journal_key).first()
+        journal = query(Journals).filter_by(extkey=journal_key).first()
         if not journal:
             raise NoJournalError('No journal for key ' + str(journal_key))
         return journal.journalpostings
@@ -291,7 +289,7 @@ class Postings(db.Model) :
         That may return very many postings! 
         """
         
-        posts = db.session.query(Postings).filter_by(accounts_id=account.id)
+        posts = query(Postings).filter_by(accounts_id=account.id)
         posts = posts.order_by(Postings.updated_at.desc())
         if month:
             posts = posts.filter_by(postmonth=Postmonths.internal(month))
@@ -302,7 +300,7 @@ class Postings(db.Model) :
         if not page == 1:
             posts = posts.offset((page - 1) * pagelength)
         posts = posts.all()
-        num_posts = db.session.query(Postings).filter_by(accounts_id=account.id)
+        num_posts = query(Postings).filter_by(accounts_id=account.id)
         num_posts = num_posts.count()
         return PostingList(posts, page=page, pagelength=pagelength, num_records=num_posts)
         
@@ -317,7 +315,7 @@ class Postings(db.Model) :
     def get_by_id(cls, posting_id):
         """ Get a posting from its id """
 
-        return db.session.query(Postings).filter_by(id=posting_id).first()
+        return query(Postings).filter_by(id=posting_id).first()
 
     def add(self) :
         """ Add this posting to the session 

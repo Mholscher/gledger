@@ -16,25 +16,23 @@
 #    along with gledger.  If not, see <http://www.gnu.org/licenses/>.
 
 """ In this module we find the year end related items of
-the models. It is about constructing the journal that will take care of 
+the models. It is about constructing the journal that will take care of
 starting the new year with expense and income accounts zeroised and
 profit taken to the balance sheet.
 """
 
-import logging
-from datetime import date, datetime, timedelta
-from dateutils import relativedelta
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from sqlalchemy import desc
-from sqlalchemy.orm import validates
-from sqlalchemy.orm.exc import NoResultFound
 from gledger import db
-from glmodels import PaginatorMixin
 from glmodels.glaccount import Accounts, CloseDates, Postmonths
 
 
+profit_account_key = "winst"
+
 class YearEndJournal(dict):
 
-    def __init__(self, start_next_year=None):
+    def __init__(self, start_next_year=None, num_accounts=250):
 
         last_close = db.session.query(CloseDates).\
             order_by(desc(CloseDates.closing_date)).first()
@@ -48,32 +46,42 @@ class YearEndJournal(dict):
             self.start_next_year = start_next_year
         else:
             if last_close:
-                self.start_next_year = last_close.closing_date + relativedelta(years=1)
+                self.start_next_year = last_close.closing_date +\
+                    relativedelta(years=1)
             else:
                 raise ValueError('No previous closing date: pass one')
         self._check_postmonths_closed(self.start_next_year)
-        profit_loss_accounts = type(self).get_applicable_accounts()
+        profit_loss_accounts = type(self).get_applicable_accounts(num_accounts=num_accounts)
         postings = list()
+        profit_amount = 0
         for account in profit_loss_accounts:
             postings.append(self.posting_dict_for(account))
-        self["journal"] = {"function": "insert", "postings": postings }
+            counter = account.current_balance() if account.debit_credit() == 'Db'\
+                else - account.current_balance()
+            profit_amount += counter
+        postings.append(self.profit_posting(profit_amount))
+        self["journal"] = {"function": "insert", "postings": postings}
 
     @classmethod
-    def get_applicable_accounts(cls):
+    def get_applicable_accounts(cls, num_accounts=None):
         """ Get all profit and loss accounts having a balance at the time
         of closing the year.
-        
-        This routine just returns the accounts, contains no further 
+
+        This routine just returns the accounts, contains no further
         processing
         TODO Make the query a responsibility of Accounts!
         """
 
-        return db.session.query(Accounts).filter(Accounts.role.in_(['I', 'E'])).all()
+        q = db.session.query(Accounts).filter(Accounts.
+            role.in_(['I', 'E']))
+        if num_accounts:
+            q = q.limit(num_accounts)
+        return q.all()
 
     def _check_postmonths_closed(self, start_next_year):
         """ Check that all postmonths are CloseDates
 
-        The postmonths that should be closed are the ones prior to the 
+        The postmonths that should be closed are the ones prior to the
         start_next_year
         """
 
@@ -92,6 +100,24 @@ class YearEndJournal(dict):
         posting['account'] = account.name
         posting['currency'] = 'EUR'
         posting['amount'] = -1 * account.current_balance()
+        posting['debitcredit'] = account.debit_credit()
+        posting['valuedate'] = self.start_next_year.strftime('%Y-%m-%d')
+        return posting
+
+    def profit_posting(self, for_amount):
+        """ Add the posting for the profit to the journal.
+
+        The amount is considered debit, the account is asked for its sign
+        to get debit/credit. 
+        """
+
+        account = db.session.query(Accounts).\
+            filter(Accounts.name==profit_account_key).first()
+        debit_account = account.is_debit()
+        posting = dict()
+        posting['account'] = account.name
+        posting['currency'] = 'EUR'
+        posting['amount'] = for_amount if debit_account else -1 * amount
         posting['debitcredit'] = account.debit_credit()
         posting['valuedate'] = self.start_next_year.strftime('%Y-%m-%d')
         return posting
