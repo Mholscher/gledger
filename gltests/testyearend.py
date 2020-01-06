@@ -76,6 +76,14 @@ class TestCreateJournal(unittest.TestCase):
                 debcred = posting['debitcredit']
         self.assertEqual(winst_posted, 3449, 'Incorrect profit posted')
 
+    def test_return_json(self):
+        """ Return the journal as a json string """
+
+        jrn14 = yearend.YearEndJournal(start_next_year=self.start_next_year)
+        jrn14s = jrn14.as_json()
+        self.assertIn('inkopen', jrn14s , 'Inkopen not found')
+        self.assertIn('1716', jrn14s, 'Balance  not found')
+
 
 class TestYearEndDateEtc(unittest.TestCase):
 
@@ -163,6 +171,16 @@ class TestYearEndSplit(unittest.TestCase):
 
         jrn10 = yearend.YearEndJournal(start_next_year=datetime(2016, 1, 1), num_accounts=3)
         self.assertEqual(len(jrn10['journal']['postings']), 4, 'Wrong number of accounts')
+
+    def test_no_limit_applies(self):
+        """ We can also ignore the limit """
+
+        jrn13 = yearend.YearEndJournal(start_next_year=datetime(2016, 1, 1), 
+                                       num_accounts=None)
+        self.assertEqual(len(jrn13['journal']['postings']), 7, 'Wrong number of accounts')
+
+# TODO test_no_limit does not test that more than 250 accounts can be 
+# processed!
 
 
 def create_standard_accountlist_testset(case):

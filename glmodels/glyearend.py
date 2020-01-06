@@ -26,6 +26,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import desc
 from gledger import db
 from glmodels.glaccount import Accounts, CloseDates, Postmonths
+from json import dumps
 
 
 profit_account_key = "winst"
@@ -121,3 +122,9 @@ class YearEndJournal(dict):
         posting['debitcredit'] = account.debit_credit()
         posting['valuedate'] = self.start_next_year.strftime('%Y-%m-%d')
         return posting
+    
+    def as_json(self):
+        """ Return the journal as a json string 
+        """
+
+        return dumps(self)
