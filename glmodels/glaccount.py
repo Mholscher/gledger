@@ -100,7 +100,7 @@ class Accounts(db.Model):
     children = db.relationship('Accounts')
     balances = db.relationship('Balances', backref='accounts')
     updated_at = db.Column(db.DateTime)
-#   db.Index('byparent', 'parent_id', 'id')
+    __table_args__ = (db.Index('byparent', 'parent_id', 'id'),)
 
     @validates('role')
     def validate_role(self, id, role):
@@ -320,7 +320,7 @@ class Balances(db.Model):
     value_date = db.Column(db.DateTime, nullable=False)
     amount = db.Column(db.Numeric(precision=14))
     updated_at = db.Column(db.DateTime)
-    db.Index('bymonth', 'account_id', 'postmonth')
+    __table_args__ = (db.Index('bymonth', 'account_id', 'postmonth'),)
 
     @validates('postmonth')
     def validate_postmonth(self, id, postmonth):
