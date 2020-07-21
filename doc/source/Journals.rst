@@ -11,7 +11,7 @@ The example below will contain all possible fields. Fields that are mandatory, w
 
     {"journal"* : 
         {"function"* : "insert",
-         "journalno" : "12"
+         "journalno" : "12",
          "extkey"* : "f234",
          "postings"* : 
             [{  "account"* : "verkopen",

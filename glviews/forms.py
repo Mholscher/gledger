@@ -13,7 +13,7 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, PasswordField, SubmitField, SelectField,\
-    FieldList, FormField, HiddenField, Form
+    HiddenField, Form
 from wtforms.validators import DataRequired, ValidationError, Length
 from glviews.formfields import SelectPostMonthStatusField
 from glmodels.glaccount import Accounts, Postmonths
@@ -41,7 +41,7 @@ class AccountForm(FlaskForm) :
     All fields of the account can be updated.  
     """
 
-    # Create the list of choices (account roles
+    # Create the list of choices (account roles)
     local_choices = []
     for k, v in Accounts.ROLE_NAME.items():
         item = k, v
