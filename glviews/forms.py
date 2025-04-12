@@ -20,18 +20,18 @@ from glmodels.glaccount import Accounts, Postmonths
 
 class AccountMustExist(ValueError):
     """WTForms validator for an account that must exist.
-    
+
     The accounts existence is validated against the database.
     """
-    
+
     message='Account must exist'
-    
+
     def __init__(self, message=None):
         if message:
             self.message=message
-        
+
     def __call__(self, form, field):
-        
+
         if (field.data) and (not Accounts.account_exists(requested_name=field.data)):
             raise ValidationError(self.message)
 
